@@ -93,7 +93,6 @@ export default function DashboardPage() {
 
 <AIInsights /> */}
 
-<MarketingKit productName="Portable Blender" />
 
         </div>
 

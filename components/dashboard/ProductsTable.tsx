@@ -54,9 +54,6 @@ export default function ProductsTable({
       return;
     }
 
-    console.log(data);
-alert(JSON.stringify(data?.[0], null, 2));
-
 setProducts(data || []);
   }
 
