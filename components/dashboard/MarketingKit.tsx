@@ -88,80 +88,86 @@ ${marketing.hashtags}
       </button>
 
       {marketing && (
-        <div className="space-y-6 mt-8"></div>
+        <div className="space-y-6 mt-8">
 
-        <div className="bg-gray-50 rounded-2xl p-5">
-  <div className="flex justify-between items-center mb-2">
-    <h3 className="font-bold text-xl">📘 Facebook Ad</h3>
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">📘 Facebook Ad</h3>
 
-    <button
-      onClick={() => copy(marketing.facebook_ad)}
-      className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-    >
-      Copy
-    </button>
-  </div>
+              <button
+                onClick={() => copy(marketing.facebook_ad)}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
 
-  <p>{marketing.facebook_ad}</p>
-</div>
+            <p>{marketing.facebook_ad}</p>
+          </div>
 
-<div className="bg-gray-50 rounded-2xl p-5">
-  <div className="flex justify-between items-center mb-2">
-    <h3 className="font-bold text-xl">📷 Instagram Caption</h3>
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">📷 Instagram Caption</h3>
 
-    <button
-      onClick={() => copy(marketing.instagram_caption)}
-      className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-    >
-      Copy
-    </button>
-  </div>
+              <button
+                onClick={() => copy(marketing.instagram_caption)}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
 
-  <p>{marketing.instagram_caption}</p>
-</div>
+            <p>{marketing.instagram_caption}</p>
+          </div>
 
-<div className="bg-gray-50 rounded-2xl p-5">
-  <div className="flex justify-between items-center mb-2">
-    <h3 className="font-bold text-xl">🎬 TikTok Hook</h3>
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">🎬 TikTok Hook</h3>
 
-    <button
-      onClick={() => copy(marketing.tiktok_hook)}
-      className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-    >
-      Copy
-    </button>
-  </div>
+              <button
+                onClick={() => copy(marketing.tiktok_hook)}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
 
-  <p>{marketing.tiktok_hook}</p>
-</div>
+            <p>{marketing.tiktok_hook}</p>
+          </div>
 
-<div className="bg-gray-50 rounded-2xl p-5">
-  <div className="flex justify-between items-center mb-2">
-    <h3 className="font-bold text-xl">🔍 SEO Title</h3>
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">🔍 SEO Title</h3>
 
-    <button
-      onClick={() => copy(marketing.seo_title)}
-      className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-    >
-      Copy
-    </button>
-  </div>
+              <button
+                onClick={() => copy(marketing.seo_title)}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
 
-  <p>{marketing.seo_title}</p>
-</div>
+            <p>{marketing.seo_title}</p>
+          </div>
 
-<div className="bg-gray-50 rounded-2xl p-5">
-  <div className="flex justify-between items-center mb-2">
-    <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
 
-    <button
-      onClick={() => copy(marketing.hashtags)}
-      className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-    >
-      Copy
-    </button>
-  </div>
+              <button
+                onClick={() => copy(marketing.hashtags)}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
 
-  <p>{marketing.hashtags}</p>
-</div>
+            <p>{marketing.hashtags}</p>
+          </div>
 
+        </div>
+      )}
+
+    </div>
+  );
+}

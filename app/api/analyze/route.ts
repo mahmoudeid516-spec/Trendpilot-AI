@@ -10,7 +10,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const prompt = body.product;
 
-    input: `
+    const response = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: `
 You are an expert ecommerce product research AI.
 
 Analyze this product:
@@ -20,56 +22,6 @@ ${prompt}
 Return ONLY valid JSON.
 
 {
-  {
-    "name":"",
-    "category":"",
-    "description":"",
-    "buy_price":0,
-    "selling_price":0,
-    "profit":0,
-  
-    "ai_score":0,
-    "trend_score":0,
-  
-    "competition":"Low",
-    "country":"Worldwide",
-  
-    "difficulty":"Medium",
-  
-    "target_audience":"18-35",
-  
-    "marketing_angle":"Problem Solving",
-  
-    "recommendation":"",
-  
-    "pros":[
-      "",
-      "",
-      ""
-    ],
-  
-    "cons":[
-      "",
-      ""
-    ]
-  }
-
-  Rules:
-
-  - AI Score must be between 80 and 99.
-  - Trend Score must be between 80 and 99.
-  - Selling price must always be higher than buy price.
-  - Profit = Selling price - Buy price.
-  - Competition = Low / Medium / High.
-  - Difficulty = Easy / Medium / Hard.
-  - Recommendation = 2 professional sentences.
-  - Pros = exactly 3 items.
-  - Cons = exactly 2 items.
-  - Return JSON only.
-
-Return ONLY a valid JSON object.
-
-{
   "name":"",
   "category":"",
   "description":"",
@@ -77,8 +29,29 @@ Return ONLY a valid JSON object.
   "selling_price":0,
   "profit":0,
   "ai_score":0,
-  "trend_score":0
+  "trend_score":0,
+  "competition":"Low",
+  "country":"Worldwide",
+  "difficulty":"Medium",
+  "target_audience":"18-35",
+  "marketing_angle":"Problem Solving",
+  "recommendation":"",
+  "pros":["","",""],
+  "cons":["",""]
 }
+
+Rules:
+- AI Score must be between 80 and 99.
+- Trend Score must be between 80 and 99.
+- Selling price must always be higher than buy price.
+- Profit = Selling price - Buy price.
+- Competition = Low / Medium / High.
+- Difficulty = Easy / Medium / Hard.
+- Recommendation = 2 professional sentences.
+- Pros = exactly 3 items.
+- Cons = exactly 2 items.
+
+Return ONLY valid JSON.
 `,
     });
 
@@ -91,12 +64,12 @@ Return ONLY a valid JSON object.
       throw new Error("No JSON found.");
     }
 
-    const json = text.slice(start, end + 1);
-    const result = JSON.parse(json);
+    const result = JSON.parse(text.slice(start, end + 1));
 
     return NextResponse.json({
       result,
     });
+
   } catch (err) {
     console.error(err);
 
