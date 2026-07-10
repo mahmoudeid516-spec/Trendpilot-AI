@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+import { openai } from "../../../lib/openai";
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +9,11 @@ export async function POST(req: Request) {
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: `
-You are an expert ecommerce product research AI.
+      You are TrendPilot AI.
+
+You are the world's best ecommerce product research engine.
+
+Your mission is to evaluate products like a senior Shopify consultant, Amazon consultant, Meta Ads strategist and TikTok ecommerce expert.
 
 Analyze this product:
 
@@ -25,33 +25,77 @@ Return ONLY valid JSON.
   "name":"",
   "category":"",
   "description":"",
+
   "buy_price":0,
   "selling_price":0,
   "profit":0,
-  "ai_score":0,
-  "trend_score":0,
+
+  "overall_score":0,
+  "market_score":0,
+  "profit_score":0,
+  "competition_score":0,
+  "viral_score":0,
+
   "competition":"Low",
+  "difficulty":"Easy",
+
   "country":"Worldwide",
-  "difficulty":"Medium",
-  "target_audience":"18-35",
-  "marketing_angle":"Problem Solving",
+
+  "target_audience":"",
+
+  "marketing_angle":"",
+
+  "trend_stage":"Early",
+
   "recommendation":"",
-  "pros":["","",""],
-  "cons":["",""]
+
+  "best_platform":"",
+
+  "best_creative":"",
+
+  "risks":"",
+
+  "pros":[
+    "",
+    "",
+    ""
+  ],
+
+  "cons":[
+    "",
+    ""
+  ],
+
+  "seo_title":"",
+
+  "seo_description":"",
+
+  "hashtags":"",
+
+  "tiktok_hook":"",
+
+  "facebook_ad":""
 }
 
 Rules:
-- AI Score must be between 80 and 99.
-- Trend Score must be between 80 and 99.
-- Selling price must always be higher than buy price.
-- Profit = Selling price - Buy price.
-- Competition = Low / Medium / High.
-- Difficulty = Easy / Medium / Hard.
-- Recommendation = 2 professional sentences.
-- Pros = exactly 3 items.
-- Cons = exactly 2 items.
 
-Return ONLY valid JSON.
+- Return JSON only.
+
+- Never explain.
+
+- Scores must be between 80 and 99.
+
+- Selling price > Buy price.
+
+- Profit = Selling - Buy.
+
+- Recommendation must be professional.
+
+- Pros exactly 3.
+
+- Cons exactly 2.
+
+- Suggest realistic ecommerce values.
 `,
     });
 
@@ -66,20 +110,14 @@ Return ONLY valid JSON.
 
     const result = JSON.parse(text.slice(start, end + 1));
 
-    return NextResponse.json({
-      result,
-    });
+    return NextResponse.json({ result });
 
   } catch (err) {
     console.error(err);
 
     return NextResponse.json(
-      {
-        error: String(err),
-      },
-      {
-        status: 500,
-      }
+      { error: String(err) },
+      { status: 500 }
     );
   }
 }

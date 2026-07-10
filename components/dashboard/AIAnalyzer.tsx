@@ -1,6 +1,13 @@
 "use client";
 
+import { calculateAIScore } from "../../lib/ai/score";
+import { predictSuccess } from "../../lib/ai/prediction";
+import { analyzeCompetition } from "../../lib/ai/competition";
+import { generateMarketing } from "../../lib/ai/marketing";
 import { useState } from "react";
+import { searchProduct } from "../../lib/services/searchProduct";
+import { analyzeProduct } from "../../lib/services/analyzeProduct";
+import { saveProduct } from "../../lib/services/saveProduct";
 import { supabase } from "../../lib/supabase";
 
 type Props = {
@@ -57,6 +64,13 @@ export default function AIAnalyzer({
       }
 
       const productData = analyzeData.result;
+      const aiScore = calculateAIScore(productData);
+
+      const prediction = predictSuccess(productData);
+
+      const competition = analyzeCompetition(productData);
+
+      const marketing = generateMarketing(productData);
 
       if (!productData) {
         throw new Error("No product data returned.");
@@ -75,50 +89,66 @@ export default function AIAnalyzer({
       }
 
       // Save Product
-      const { error } = await supabase.from("products").insert([
-        {
-          name: productData.name,
-          image: searchData.image || "https://picsum.photos/400",
-
-          platform,
-
-          category: productData.category,
-          description: productData.description,
-
-          buy_price: Number(productData.buy_price),
-
-selling_price: Number(productData.selling_price),
-
-profit: Number(productData.profit),
-
-ai_score: Math.round(Number(productData.ai_score)),
-
-trend_score: Math.round(Number(productData.trend_score)),
-
-          supplier: searchData.source || "",
-          supplier_url: searchData.link || "",
-
-          product_url: searchData.link || "",
-          competition: "Medium",
-          country: "Global",
-        },
-      ]);
-
-      if (error) {
-        console.error(error);
-
-        setResult(
-          "❌ Supabase Error:\n" + JSON.stringify(error, null, 2)
-        );
-
-        return;
-      }
+      await saveProduct({
+        name: productData.name,
+      
+        image: searchData.image || "https://picsum.photos/400",
+      
+        platform,
+      
+        category: productData.category,
+      
+        description: productData.description,
+      
+        buy_price: Number(productData.buy_price),
+      
+        selling_price: Number(productData.selling_price),
+      
+        profit: Number(productData.profit),
+      
+        ai_score: aiScore,
+      
+        trend_score: Number(productData.market_score ?? productData.trend_score),
+      
+        supplier: searchData.source || "",
+      
+        supplier_url: searchData.link || "",
+      
+        product_url: searchData.link || "",
+      
+        competition,
+      
+        country: productData.country ?? "Worldwide",
+      
+        recommendation: productData.recommendation ?? "",
+      
+        pros: productData.pros ?? [],
+      
+        cons: productData.cons ?? [],
+      
+        success_probability: prediction.success_probability,
+      
+        trend_stage: prediction.trend_stage,
+      
+        market_saturation: prediction.market_saturation,
+      
+        difficulty: prediction.difficulty,
+      
+        marketing_json: marketing,
+      });
+      
+      setResult("✅ Product saved successfully.");
+      
+      setTimeout(() => {
+        onProductSaved();
+      }, 500);
 
       setResult("✅ Product saved successfully.");
 
       setTimeout(() => {
         onProductSaved();
       }, 500);
+
     } catch (err: any) {
       console.error(err);
       setResult(err.message);
@@ -134,6 +164,7 @@ trend_score: Math.round(Number(productData.trend_score)),
       </h2>
 
       <div className="flex flex-col md:flex-row gap-4">
+
         <select
           value={platform}
           onChange={(e) => setPlatform(e.target.value)}
@@ -150,20 +181,21 @@ trend_score: Math.round(Number(productData.trend_score)),
           placeholder="Enter product name..."
           value={product}
           onChange={(e) => setProduct(e.target.value)}
-          className="flex-1 border rounded-xl px-5 py-4 outline-none"
+          className="flex-1 border rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500"
         />
 
         <button
           onClick={analyzeProduct}
           disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 rounded-xl"
+          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-8 rounded-xl transition"
         >
           {loading ? "Analyzing..." : "Analyze"}
         </button>
+
       </div>
 
       {result && (
-        <div className="mt-6 bg-gray-100 rounded-xl p-4 whitespace-pre-wrap">
+        <div className="mt-6 rounded-xl bg-gray-100 p-4 whitespace-pre-wrap">
           {result}
         </div>
       )}
