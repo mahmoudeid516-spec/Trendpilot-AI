@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
+
 import { calculateAIScore } from "../../lib/ai/score";
 import { predictSuccess } from "../../lib/ai/prediction";
 import { analyzeCompetition } from "../../lib/ai/competition";
 import { generateMarketing } from "../../lib/ai/marketing";
-import { useState } from "react";
+
 import { searchProduct } from "../../lib/services/searchProduct";
 import { analyzeProduct } from "../../lib/services/analyzeProduct";
 import { saveProduct } from "../../lib/services/saveProduct";
+
 import { supabase } from "../../lib/supabase";
 
 type Props = {
@@ -22,7 +25,7 @@ export default function AIAnalyzer({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
 
-  async function analyzeProduct() {
+  async function handleAnalyzeProduct() {
     if (!product.trim()) return;
 
     setLoading(true);
@@ -30,120 +33,138 @@ export default function AIAnalyzer({
 
     try {
       // Search Product
-      const searchRes = await fetch("/api/search-product", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product,
-        }),
-      });
 
-      const searchData = await searchRes.json();
-
-      if (!searchRes.ok) {
-        throw new Error(searchData.error || "Search failed");
-      }
+      const searchData = await searchProduct(product);
 
       // Analyze Product
-      const analyzeRes = await fetch("/api/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product: searchData.name,
-        }),
-      });
 
-      const analyzeData = await analyzeRes.json();
-
-      if (!analyzeRes.ok) {
-        throw new Error(analyzeData.error || "Analyze failed");
-      }
-
-      const productData = analyzeData.result;
-      const aiScore = calculateAIScore(productData);
-
-      const prediction = predictSuccess(productData);
-
-      const competition = analyzeCompetition(productData);
-
-      const marketing = generateMarketing(productData);
+      const productData = await analyzeProduct(
+        searchData.name
+      );
 
       if (!productData) {
-        throw new Error("No product data returned.");
+        throw new Error(
+          "No product data returned."
+        );
       }
 
-      // Check duplicate
-      const { data: existingProduct } = await supabase
-        .from("products")
-        .select("id")
-        .eq("name", productData.name)
-        .limit(1);
+      // AI Engine
 
-      if (existingProduct && existingProduct.length > 0) {
-        setResult("⚠️ Product already exists.");
+      const aiScore =
+        calculateAIScore(productData);
+
+      const prediction =
+        predictSuccess(productData);
+
+      const competition =
+        analyzeCompetition(productData);
+
+      const marketing =
+        generateMarketing(productData);
+
+      // Check duplicate
+
+      const { data: existingProduct } =
+        await supabase
+          .from("products")
+          .select("id")
+          .eq("name", productData.name)
+          .limit(1);
+
+      if (
+        existingProduct &&
+        existingProduct.length > 0
+      ) {
+        setResult(
+          "⚠️ Product already exists."
+        );
+
         return;
       }
 
-      // Save Product
-      await saveProduct({
-        name: productData.name,
-      
-        image: searchData.image || "https://picsum.photos/400",
-      
-        platform,
-      
-        category: productData.category,
-      
-        description: productData.description,
-      
-        buy_price: Number(productData.buy_price),
-      
-        selling_price: Number(productData.selling_price),
-      
-        profit: Number(productData.profit),
-      
-        ai_score: aiScore,
-      
-        trend_score: Number(productData.market_score ?? productData.trend_score),
-      
-        supplier: searchData.source || "",
-      
-        supplier_url: searchData.link || "",
-      
-        product_url: searchData.link || "",
-      
-        competition,
-      
-        country: productData.country ?? "Worldwide",
-      
-        recommendation: productData.recommendation ?? "",
-      
-        pros: productData.pros ?? [],
-      
-        cons: productData.cons ?? [],
-      
-        success_probability: prediction.success_probability,
-      
-        trend_stage: prediction.trend_stage,
-      
-        market_saturation: prediction.market_saturation,
-      
-        difficulty: prediction.difficulty,
-      
-        marketing_json: marketing,
-      });
-      
-      setResult("✅ Product saved successfully.");
-      
-      setTimeout(() => {
-        onProductSaved();
-      }, 500);
+      // Build Product Object
 
-      setResult("✅ Product saved successfully.");
+      const productObject = {
+        name: productData.name,
+
+        image:
+          searchData.image ??
+          "https://picsum.photos/400",
+
+        platform,
+
+        category:
+          productData.category ?? "General",
+
+        description:
+          productData.description ?? "",
+
+        buy_price: Number(
+          productData.buy_price
+        ),
+
+        selling_price: Number(
+          productData.selling_price
+        ),
+
+        profit: Number(
+          productData.profit
+        ),
+
+        ai_score: aiScore,
+
+        trend_score: Number(
+          productData.market_score ??
+            productData.trend_score ??
+            80
+        ),
+
+        supplier:
+          searchData.source ?? "",
+
+        supplier_url:
+          searchData.link ?? "",
+
+        product_url:
+          searchData.link ?? "",
+
+        competition:
+          productData.competition ??
+          "Medium",
+
+        country:
+          productData.country ??
+          "Worldwide",
+
+        recommendation:
+          competition.recommendation,
+
+        pros:
+          productData.pros ?? [],
+
+        cons:
+          productData.cons ?? [],
+
+        success_probability:
+          prediction.success_probability,
+
+        trend_stage:
+          prediction.trend_stage,
+
+        market_saturation:
+          prediction.market_saturation,
+
+        difficulty:
+          prediction.difficulty,
+
+        marketing_json: marketing,
+      };
+
+      await saveProduct(productObject);
+
+      setResult(
+        "✅ Product saved successfully."
+      );
 
       setTimeout(() => {
         onProductSaved();
@@ -151,7 +172,12 @@ export default function AIAnalyzer({
 
     } catch (err: any) {
       console.error(err);
-      setResult(err.message);
+
+      setResult(
+        err.message ??
+          "Something went wrong."
+      );
+
     } finally {
       setLoading(false);
     }
@@ -159,6 +185,7 @@ export default function AIAnalyzer({
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
+
       <h2 className="text-3xl font-bold mb-6">
         🤖 AI Product Analyzer
       </h2>
@@ -185,20 +212,41 @@ export default function AIAnalyzer({
         />
 
         <button
-          onClick={analyzeProduct}
+          onClick={handleAnalyzeProduct}
           disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-8 rounded-xl transition"
+          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-8 py-4 rounded-xl transition"
         >
           {loading ? "Analyzing..." : "Analyze"}
         </button>
 
       </div>
 
+      {loading && (
+        <div className="mt-6">
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-purple-600 animate-pulse w-full"></div>
+          </div>
+
+          <p className="text-sm text-gray-500 mt-2">
+            AI is analyzing the product...
+          </p>
+        </div>
+      )}
+
       {result && (
-        <div className="mt-6 rounded-xl bg-gray-100 p-4 whitespace-pre-wrap">
+        <div
+          className={`mt-6 rounded-xl p-4 whitespace-pre-wrap ${
+            result.startsWith("✅")
+              ? "bg-green-100 text-green-700"
+              : result.startsWith("⚠️")
+              ? "bg-yellow-100 text-yellow-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
           {result}
         </div>
       )}
+
     </div>
   );
 }

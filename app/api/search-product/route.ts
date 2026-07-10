@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  console.log("=== SEARCH ROUTE STARTED ===");
+
   try {
     const { product } = await req.json();
     console.log("SERP API KEY =", process.env.SERPAPI_API_KEY);
@@ -24,22 +26,34 @@ export async function POST(req: Request) {
       `&num=10` +
       `&api_key=${apiKey}`;
 
-    const response = await fetch(url);
+      const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("SERP API request failed.");
     }
 
     const data = await response.json();
+    console.log(JSON.stringify(data, null, 2));
+    console.log("SERP Response:");
+    console.log(JSON.stringify(data, null, 2));
 
-    const items = data.shopping_results || [];
+    const items =
+  data.shopping_results ||
+  data.shopping_results_results ||
+  data.organic_results ||
+  [];
 
-    if (items.length === 0) {
-      return NextResponse.json(
-        { error: "No products found." },
-        { status: 404 }
-      );
-    }
+console.log("Items found:", items.length);
+
+if (items.length === 0) {
+  return NextResponse.json(
+    {
+      error: "No products found.",
+      serpResponse: data
+    },
+    { status: 404 }
+  );
+}
 
     const first = items[0];
 
@@ -61,16 +75,16 @@ export async function POST(req: Request) {
       })),
     });
 
-  } catch (error) {
-    console.error(error);
-
+  }catch (error: any) {
+    console.error("FULL ERROR:", error);
+  
     return NextResponse.json(
       {
-        error: "Search failed.",
+        error: error.message,
+        stack: String(error),
       },
       {
         status: 500,
       }
     );
   }
-}

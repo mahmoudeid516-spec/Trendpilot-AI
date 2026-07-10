@@ -1,3 +1,4 @@
+import AIReport from "./AIReport";
 type Product = {
   image: string;
   name: string;
@@ -220,6 +221,16 @@ export default function ProductDetails({
         </div>
 
       </div>
+
+      <AIReport
+  aiScore={product.ai_score}
+  trendScore={product.trend_score}
+  competition={product.competition}
+  recommendation={
+    product.recommendation ||
+    "This product has strong demand and excellent profit potential."
+  }
+/>
 
     </div>
   );
