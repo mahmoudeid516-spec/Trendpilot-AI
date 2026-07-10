@@ -22,13 +22,24 @@ export async function POST(req: Request) {
       `&num=10` +
       `&api_key=${apiKey}`;
 
-    const response = await fetch(url);
+      const response = await fetch(url);
 
-    if (!response.ok) {
-      throw new Error("SERP API request failed.");
-    }
-
-    const data = await response.json();
+      const data = await response.json();
+      
+      console.log("STATUS:", response.status);
+      console.log("SERP RESPONSE:", JSON.stringify(data, null, 2));
+      
+      if (!response.ok) {
+        return NextResponse.json(
+          {
+            status: response.status,
+            serp: data,
+          },
+          {
+            status: 500,
+          }
+        );
+      }
 
     const items =
       data.shopping_results ||
