@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  console.log("=== SEARCH ROUTE STARTED ===");
-
   try {
     const { product } = await req.json();
+
     const apiKey = process.env.SERPAPI_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "SERPAPI_API_KEY is missing." },
-        { status: 500 }
+        {
+          error: "SERPAPI_API_KEY is missing",
+        },
+        {
+          status: 500,
+        }
       );
     }
 
@@ -22,34 +25,34 @@ export async function POST(req: Request) {
       `&num=10` +
       `&api_key=${apiKey}`;
 
-      const response = await fetch(url);
+    console.log("Searching:", product);
 
-      const data = await response.json();
-      
-      console.log("STATUS:", response.status);
-      console.log("SERP RESPONSE:", JSON.stringify(data, null, 2));
-      
-      if (!response.ok) {
-        return NextResponse.json(
-          {
-            status: response.status,
-            serp: data,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
+    const response = await fetch(url);
 
-    const items =
-      data.shopping_results ||
-      data.organic_results ||
-      [];
+    const data = await response.json();
+
+    console.log("SERP STATUS:", response.status);
+    console.log("SERP RESPONSE:", JSON.stringify(data, null, 2));
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: "SerpAPI request failed",
+          status: response.status,
+          serpResponse: data,
+        },
+        {
+          status: response.status,
+        }
+      );
+    }
+
+    const items = data.shopping_results ?? [];
 
     if (items.length === 0) {
       return NextResponse.json(
         {
-          error: "No products found.",
+          error: "No products found",
           serpResponse: data,
         },
         {
@@ -58,14 +61,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const first = items[0];
-
     return NextResponse.json({
-      name: first.title,
-      image: first.thumbnail,
-      price: first.price,
-      source: first.source,
-      link: first.link,
+      name: items[0].title,
+      image: items[0].thumbnail,
+      price: items[0].price,
+      source: items[0].source,
+      link: items[0].link,
+
       products: items.map((item: any) => ({
         name: item.title,
         image: item.thumbnail,
@@ -76,12 +78,14 @@ export async function POST(req: Request) {
         link: item.link,
       })),
     });
+
   } catch (error: any) {
-    console.error(error);
+    console.error("FULL ERROR:", error);
 
     return NextResponse.json(
       {
         error: error.message,
+        stack: error.stack,
       },
       {
         status: 500,

@@ -27,157 +27,91 @@ export default function AIAnalyzer({
 
   async function handleAnalyzeProduct() {
     if (!product.trim()) return;
-
+  
     setLoading(true);
     setResult("");
-
+  
     try {
       // Search Product
-
       const searchData = await searchProduct(product);
-
+  
       // Analyze Product
-
-      const productData = await analyzeProduct(
-        searchData.name
-      );
-
+      const productData = await analyzeProduct(searchData.name);
+  
       if (!productData) {
-        throw new Error(
-          "No product data returned."
-        );
+        throw new Error("No product data returned.");
       }
-
+  
       // AI Engine
-
-      const aiScore =
-        calculateAIScore(productData);
-
-      const prediction =
-        predictSuccess(productData);
-
-      const competition =
-        analyzeCompetition(productData);
-
-      const marketing =
-        generateMarketing(productData);
-
+      const aiScore = calculateAIScore(productData);
+      const prediction = predictSuccess(productData);
+      const competition = analyzeCompetition(productData);
+      const marketing = generateMarketing(productData);
+  
       // Check duplicate
-
-      const { data: existingProduct } =
-        await supabase
-          .from("products")
-          .select("id")
-          .eq("name", productData.name)
-          .limit(1);
-
-      if (
-        existingProduct &&
-        existingProduct.length > 0
-      ) {
-        setResult(
-          "⚠️ Product already exists."
-        );
-
+      const { data: existingProduct } = await supabase
+        .from("products")
+        .select("id")
+        .eq("name", productData.name)
+        .limit(1);
+  
+      if (existingProduct && existingProduct.length > 0) {
+        setResult("⚠️ Product already exists.");
         return;
       }
-
-      // Build Product Object
-
+  
       const productObject = {
         name: productData.name,
-
-        image:
-          searchData.image ??
-          "https://picsum.photos/400",
-
+        image: searchData.image ?? "https://picsum.photos/400",
         platform,
-
-        category:
-          productData.category ?? "General",
-
-        description:
-          productData.description ?? "",
-
-        buy_price: Number(
-          productData.buy_price
-        ),
-
-        selling_price: Number(
-          productData.selling_price
-        ),
-
-        profit: Number(
-          productData.profit
-        ),
-
+        category: productData.category ?? "General",
+        description: productData.description ?? "",
+        buy_price: Number(productData.buy_price),
+        selling_price: Number(productData.selling_price),
+        profit: Number(productData.profit),
         ai_score: aiScore,
-
         trend_score: Number(
           productData.market_score ??
-            productData.trend_score ??
-            80
+          productData.trend_score ??
+          80
         ),
-
-        supplier:
-          searchData.source ?? "",
-
-        supplier_url:
-          searchData.link ?? "",
-
-        product_url:
-          searchData.link ?? "",
-
-        competition:
-          productData.competition ??
-          "Medium",
-
-        country:
-          productData.country ??
-          "Worldwide",
-
-        recommendation:
-          competition.recommendation,
-
-        pros:
-          productData.pros ?? [],
-
-        cons:
-          productData.cons ?? [],
-
-        success_probability:
-          prediction.success_probability,
-
-        trend_stage:
-          prediction.trend_stage,
-
-        market_saturation:
-          prediction.market_saturation,
-
-        difficulty:
-          prediction.difficulty,
-
+        supplier: searchData.source ?? "",
+        supplier_url: searchData.link ?? "",
+        product_url: searchData.link ?? "",
+        competition: productData.competition ?? "Medium",
+        country: productData.country ?? "Worldwide",
+        recommendation: competition.recommendation,
+        pros: productData.pros ?? [],
+        cons: productData.cons ?? [],
+        success_probability: prediction.success_probability,
+        trend_stage: prediction.trend_stage,
+        market_saturation: prediction.market_saturation,
+        difficulty: prediction.difficulty,
         marketing_json: marketing,
       };
-
+  
       await saveProduct(productObject);
-
-      setResult(
-        "✅ Product saved successfully."
-      );
-
+  
+      setResult("✅ Product saved successfully.");
+  
       setTimeout(() => {
         onProductSaved();
       }, 500);
-
+  
     } catch (err: any) {
-      console.error(err);
-
+      console.error("FULL CLIENT ERROR:", err);
+  
       setResult(
-        err.message ??
-          "Something went wrong."
+        JSON.stringify(
+          {
+            message: err.message,
+            stack: err.stack,
+          },
+          null,
+          2
+        )
       );
-
+  
     } finally {
       setLoading(false);
     }
