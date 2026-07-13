@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import { generateBusinessAdvisor } from "../../lib/ai/businessAdvisor";
 import { calculateAIScore } from "../../lib/ai/score";
 import { predictSuccess } from "../../lib/ai/prediction";
 import { analyzeCompetition } from "../../lib/ai/competition";
@@ -44,9 +44,25 @@ export default function AIAnalyzer({
   
       // AI Engine
       const aiScore = calculateAIScore(productData);
+      productData.trend_score =
+          Number(productData.trend_score ?? 90);
+
+         productData.competition =
+        productData.competition ?? "Low";
+        productData.profit =
+          Number(productData.profit ?? 30);
+
+        productData.selling_price =
+          Number(productData.selling_price ?? 40);
+
       const prediction = predictSuccess(productData);
       const competition = analyzeCompetition(productData);
       const marketing = generateMarketing(productData);
+      const businessAdvisor =
+  generateBusinessAdvisor({
+    ...productData,
+    ai_score: aiScore,
+  });
   
       // Check duplicate
       const { data: existingProduct } = await supabase
@@ -88,6 +104,7 @@ export default function AIAnalyzer({
         market_saturation: prediction.market_saturation,
         difficulty: prediction.difficulty,
         marketing_json: marketing,
+        business_advisor: businessAdvisor,
       };
   
       await saveProduct(productObject);

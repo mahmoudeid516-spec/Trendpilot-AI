@@ -24,7 +24,7 @@ type Product = {
   ai_reason?: string;
 };
 
-type ProductsTableProps = {
+type Props = {
   search: string;
   platform: string;
   refreshKey: number;
@@ -36,7 +36,8 @@ export default function ProductsTable({
   platform,
   refreshKey,
   onSelectProduct,
-}: ProductsTableProps) {
+}: Props) {
+
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -48,147 +49,269 @@ export default function ProductsTable({
       .from("products")
       .select("*")
       .order("ai_score", { ascending: false });
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-setProducts(data || []);
+  
+    console.log("Products:", data);
+    console.log("Error:", error);
+  
+    setProducts(data || []);
   }
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      search === "" ||
-      product.name.toLowerCase().includes(search.toLowerCase());
+  console.log("Products Count:", products.length);
 
-    const matchesPlatform =
-      platform === "All" || product.platform === platform;
+const filtered = products.filter((p) => {
+  const productName = (p.name ?? "").toLowerCase();
+  const searchText = (search ?? "").toLowerCase();
 
-    return matchesSearch && matchesPlatform;
-  });
+  const matchSearch =
+    searchText === "" ||
+    productName.includes(searchText);
+
+  const matchPlatform =
+    platform === "All" ||
+    (p.platform ?? "") === platform;
+
+  return matchSearch && matchPlatform;
+});
+
+console.log("Filtered Count:", filtered.length);
+console.log(filtered);
+  
+   
+  function competitionColor(level:string){
+
+    switch(level){
+
+      case "Low":
+        return "bg-green-100 text-green-700";
+
+      case "Medium":
+        return "bg-yellow-100 text-yellow-700";
+
+      case "High":
+        return "bg-red-100 text-red-700";
+
+      default:
+        return "bg-gray-100";
+
+    }
+
+  }
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
 
-      <h2 className="text-3xl font-bold mb-8">
-        🔥 Today's Winning Products
-      </h2>
+<div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
 
-      <div className="overflow-x-auto">
+<h2 className="text-3xl font-bold mb-8">
 
-        <table className="w-full">
+🔥 Winning Products
 
-          <thead>
+</h2>
 
-            <tr className="border-b">
+<div className="overflow-x-auto">
 
-              <th className="text-left py-5">Product</th>
+<table className="w-full">
 
-              <th>Platform</th>
+<thead>
 
-              <th>AI Score</th>
+<tr className="border-b text-gray-500">
 
-              <th>Profit</th>
+<th className="text-left py-4">
+Product
+</th>
 
-              <th></th>
+<th>
+Platform
+</th>
 
-            </tr>
+<th>
+AI
+</th>
 
-          </thead>
+<th>
+Trend
+</th>
 
-          <tbody>
-          {filteredProducts.map((product) => (
+<th>
+Competition
+</th>
+
+<th>
+Profit
+</th>
+
+<th>
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{filtered.map(product=>(
 
 <tr
-  key={product.id}
-  className="border-b hover:bg-gray-50 transition"
+key={product.id}
+className="border-b hover:bg-purple-50 transition duration-300"
 >
 
-  <td className="py-5">
+<td className="py-6">
 
-    <div className="flex items-center gap-4">
+<div className="flex gap-4 items-center">
 
-      <img
-        src={product.image}
-        alt={product.name}
-        className="w-16 h-16 rounded-xl object-cover"
-      />
+<img
+  src={product.image || "https://picsum.photos/200"}
+  className="w-20 h-20 rounded-2xl object-cover shadow"
+/>
 
-      <div>
+<div>
 
-        <h3 className="font-bold text-lg">
-          {product.name}
-        </h3>
+<h3 className="font-bold text-lg">
 
-        <p className="text-gray-500 text-sm">
-          {product.category}
-        </p>
+{product.name}
 
-      </div>
+</h3>
 
-    </div>
+<p className="text-gray-500">
 
-  </td>
+{product.category}
 
-  <td>
-    {product.platform}
-  </td>
+</p>
 
-  <td>
+</div>
 
-    <span className="text-green-600 font-bold">
-      {product.ai_score}%
-    </span>
+</div>
 
-  </td>
+</td>
 
-  <td>
+<td>
 
-    <span className="font-bold text-purple-600">
-      ${product.profit}
-    </span>
+<span className="font-semibold">
 
-  </td>
+{product.platform}
 
-  <td>
+</span>
 
-  <Link
-  href={`/dashboard/product/${product.id}`}
-  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
-  >
-    View Report
-  </Link>
+</td>
 
-  </td>
+<td className="w-48">
+
+<div className="w-full bg-gray-200 rounded-full h-3">
+
+<div
+
+className="bg-green-500 h-3 rounded-full"
+
+style={{
+width:`${product.ai_score}%`
+}}
+
+>
+
+</div>
+
+</div>
+
+<p className="mt-2 font-bold text-green-600">
+
+{product.ai_score}%
+
+</p>
+
+</td>
+
+<td>
+
+<span className="font-bold text-blue-600">
+
+{product.trend_score}
+
+</span>
+
+</td>
+
+<td>
+
+<span
+
+className={`px-4 py-2 rounded-full text-sm font-bold ${competitionColor(product.competition)}`}
+
+>
+
+{product.competition}
+
+</span>
+
+</td>
+
+<td>
+
+<p className="font-bold text-purple-700 text-lg">
+
+${product.profit}
+
+</p>
+
+</td>
+
+<td>
+
+<div className="flex gap-2">
+
+<a
+href={product.product_url}
+target="_blank"
+className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700"
+>
+
+View
+
+</a>
+
+<a
+href={product.supplier_url}
+target="_blank"
+className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700"
+>
+
+Supplier
+
+</a>
+
+<button
+onClick={() => onSelectProduct(product)}
+className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+>
+Report
+</button>
+
+</div>
+
+</td>
 
 </tr>
 
 ))}
 
-{filteredProducts.length === 0 && (
-
-<tr>
-
-  <td
-    colSpan={5}
-    className="text-center py-12 text-gray-500"
-  >
-    No products found.
-  </td>
-
-</tr>
-
-)}
-
 </tbody>
 
 </table>
 
-</div>
+{filtered.length===0 &&(
+
+<div className="text-center py-20 text-gray-500">
+
+No Products Found
 
 </div>
 
-);
+)}
+
+</div>
+
+</div>
+
+  );
 
 }

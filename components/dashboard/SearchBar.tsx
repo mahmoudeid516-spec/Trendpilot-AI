@@ -5,7 +5,7 @@ type SearchBarProps = {
   setSearch: (value: string) => void;
   platform: string;
   setPlatform: (value: string) => void;
-  onSearch: () => void;
+  onSearch: (search: string, platform: string) => void;
 };
 
 export default function SearchBar({
@@ -40,7 +40,7 @@ export default function SearchBar({
         </select>
 
         <button
-  onClick={onSearch}
+  onClick={() => onSearch(search, platform)}
   className="bg-purple-600 text-white px-8 py-3 rounded-xl hover:bg-purple-700 transition"
 >
   🔥 Find Winning Products

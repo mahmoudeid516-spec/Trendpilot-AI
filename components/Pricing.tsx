@@ -1,3 +1,5 @@
+"use client";
+
 export default function Pricing() {
     const plans = [
       {
@@ -67,9 +69,27 @@ export default function Pricing() {
                   ))}
                 </ul>
   
-                <button className="mt-8 w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700">
-                  Get Started
-                </button>
+                <button
+  onClick={async () => {
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Unable to start checkout.");
+    }
+  }}
+  className="mt-8 w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition"
+>
+  Get Started
+</button>
               </div>
             ))}
           </div>

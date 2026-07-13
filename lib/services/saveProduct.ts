@@ -53,6 +53,9 @@ export async function saveProduct(product: any) {
 
     marketing_json:
       product.marketing_json ?? {},
+
+      business_advisor:
+  product.business_advisor ?? {},
   };
 
   const { error } = await supabase

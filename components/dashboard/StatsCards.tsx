@@ -7,13 +7,22 @@ type Props = {
   refreshKey: number;
 };
 
+type Stats = {
+  totalProducts: number;
+  shopifyProducts: number;
+  avgScore: number;
+  avgProfit: number;
+};
+
 export default function StatsCards({
   refreshKey,
 }: Props) {
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [avgScore, setAvgScore] = useState(0);
-  const [avgProfit, setAvgProfit] = useState(0);
-  const [shopifyProducts, setShopifyProducts] = useState(0);
+  const [stats, setStats] = useState<Stats>({
+    totalProducts: 0,
+    shopifyProducts: 0,
+    avgScore: 0,
+    avgProfit: 0,
+  });
 
   useEffect(() => {
     loadStats();
@@ -26,85 +35,105 @@ export default function StatsCards({
 
     if (error || !data) return;
 
-    setTotalProducts(data.length);
+    const totalProducts = data.length;
 
-    const shopify = data.filter(
+    const shopifyProducts = data.filter(
       (p: any) => p.platform === "Shopify"
     ).length;
 
-    setShopifyProducts(shopify);
+    const avgScore =
+      totalProducts === 0
+        ? 0
+        : Math.round(
+            data.reduce(
+              (sum: number, p: any) =>
+                sum + Number(p.ai_score || 0),
+              0
+            ) / totalProducts
+          );
 
-    if (data.length === 0) {
-      setAvgScore(0);
-      setAvgProfit(0);
-      return;
-    }
+    const avgProfit =
+      totalProducts === 0
+        ? 0
+        : Math.round(
+            data.reduce(
+              (sum: number, p: any) =>
+                sum + Number(p.profit || 0),
+              0
+            ) / totalProducts
+          );
 
-    const score =
-      data.reduce(
-        (sum: number, p: any) => sum + Number(p.ai_score || 0),
-        0
-      ) / data.length;
-
-    const profit =
-      data.reduce(
-        (sum: number, p: any) => sum + Number(p.profit || 0),
-        0
-      ) / data.length;
-
-    setAvgScore(Math.round(score));
-    setAvgProfit(Math.round(profit));
+    setStats({
+      totalProducts,
+      shopifyProducts,
+      avgScore,
+      avgProfit,
+    });
   }
 
   const cards = [
     {
       title: "Products",
-      value: totalProducts,
+      value: stats.totalProducts,
       icon: "📦",
-      color: "text-blue-600",
+      color: "from-blue-500 to-cyan-500",
+      subtitle: "Database",
     },
     {
       title: "Shopify",
-      value: shopifyProducts,
+      value: stats.shopifyProducts,
       icon: "🛒",
-      color: "text-green-600",
+      color: "from-green-500 to-emerald-500",
+      subtitle: "Winning Products",
     },
     {
       title: "AI Score",
-      value: `${avgScore}%`,
+      value: `${stats.avgScore}%`,
       icon: "🤖",
-      color: "text-purple-600",
+      color: "from-purple-500 to-indigo-500",
+      subtitle: "Average",
     },
     {
       title: "Avg Profit",
-      value: `$${avgProfit}`,
+      value: `$${stats.avgProfit}`,
       icon: "💰",
-      color: "text-orange-600",
+      color: "from-orange-500 to-red-500",
+      subtitle: "Per Product",
     },
   ];
 
   return (
-    <div className="grid md:grid-cols-4 gap-6 my-8">
+    <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4 my-8">
       {cards.map((card) => (
         <div
           key={card.title}
-          className="bg-white rounded-2xl shadow-lg p-6"
+          className="relative overflow-hidden rounded-3xl bg-white p-7 shadow-lg border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
         >
-          <div className="text-4xl mb-3">
-            {card.icon}
+          <div
+            className={`absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-gradient-to-br ${card.color} opacity-10`}
+          />
+
+          <div className="relative z-10">
+            <div
+              className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r ${card.color} text-3xl shadow-lg`}
+            >
+              {card.icon}
+            </div>
+
+            <p className="mt-6 text-sm font-medium uppercase tracking-wide text-gray-500">
+              {card.title}
+            </p>
+
+            <h2 className="mt-2 text-4xl font-extrabold text-gray-900">
+              {card.value}
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              {card.subtitle}
+            </p>
           </div>
-
-          <p className="text-gray-500">
-            {card.title}
-          </p>
-
-          <h2
-            className={`text-4xl font-bold mt-2 ${card.color}`}
-          >
-            {card.value}
-          </h2>
         </div>
       ))}
-    </div>
+    </section>
   );
 }
