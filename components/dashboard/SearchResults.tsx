@@ -5,6 +5,13 @@ type Props = {
 };
 
 export default function SearchResults({ results }: Props) {
+
+  const sortedResults = [...results].sort(
+    (a, b) =>
+      (b.opportunity_score ?? 0) -
+      (a.opportunity_score ?? 0)
+  );
+
   return (
     <div className="mt-10">
       <h2 className="text-3xl font-bold mb-6">
@@ -12,11 +19,33 @@ export default function SearchResults({ results }: Props) {
       </h2>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {results.map((product, index) => (
+     
+       
+{sortedResults.map((product: any, index: number) => (
           <div
             key={index}
             className="bg-white rounded-2xl shadow hover:shadow-xl transition p-5"
           >
+            <div className="absolute top-3 left-3 z-10">
+
+<span
+  className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
+    product.opportunity_score >= 90
+      ? "bg-green-600"
+      : product.opportunity_score >= 70
+      ? "bg-yellow-500"
+      : "bg-red-600"
+  }`}
+>
+  {product.opportunity_score >= 90
+    ? "🏆 Winning Product"
+    : product.opportunity_score >= 70
+    ? "⭐ Good Opportunity"
+    : "⚠️ Avoid"}
+</span>
+
+</div>
+            
             <img
               src={product.image}
               alt={product.name}

@@ -82,7 +82,7 @@ setRefreshKey((prev) => prev + 1);
 
         <div className="max-w-7xl mx-auto">
 
-          <DashboardHero />
+          <DashboardHero totalProducts={0} winningProducts={0} /> 
 
           <StatsCards refreshKey={refreshKey} />
 

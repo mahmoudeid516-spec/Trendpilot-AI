@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { getProfile } from "../../services/profile";
 
-export default function DashboardHero() {
+type Props = {
+  totalProducts: number;
+  winningProducts: number;
+};
+
+export default function DashboardHero({
+  totalProducts,
+  winningProducts,
+}: Props) {
   const [name, setName] = useState("User");
 
   useEffect(() => {
@@ -99,7 +107,7 @@ export default function DashboardHero() {
               </p>
 
               <h2 className="mt-2 text-5xl font-bold">
-                247
+              {totalProducts}
               </h2>
 
               <p className="mt-3 text-yellow-300 font-semibold">
@@ -113,7 +121,7 @@ export default function DashboardHero() {
               </p>
 
               <h2 className="mt-2 text-5xl font-bold">
-                68
+              {winningProducts}
               </h2>
 
               <p className="mt-3 text-cyan-300 font-semibold">

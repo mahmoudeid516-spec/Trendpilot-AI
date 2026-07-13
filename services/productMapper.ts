@@ -32,52 +32,70 @@ export function mapApifyProduct(product: any): Product {
       ? "Medium"
       : "Low";
 
-  return {
-    id: Number(product.productId ?? Date.now()),
-
-    name: product.title ?? "Unknown Product",
-
-    image: product.imageUrl ?? "",
-
-    category: product.categoryName ?? "General",
-
-    platform: "AliExpress",
-
-    supplier: "AliExpress",
-
-    supplier_url: product.storeUrl ?? "",
-
-    product_url: product.productUrl ?? "",
-
-    buy_price: price,
-
-    selling_price: Math.round(price * 2.5 * 100) / 100,
-
-    profit: Math.round(price * 1.5 * 100) / 100,
-
-    sales: sold,
-
-    reviews: Number(product.reviewsCount ?? 0),
-
-    country: "Global",
-
-    competition,
-
-    ai_score: aiScore,
-
-    trend_score: trendScore,
-
-    description: product.title ?? "",
-
-    opportunity_score:
-      aiScore * 0.4 +
-      trendScore * 0.3 +
-      Math.min(price * 2, 100) * 0.2 +
-      (competition === "Low"
-        ? 100
-        : competition === "Medium"
-        ? 70
-        : 30) *
-        0.1,
-  };
-}
+      return {
+        // Identity
+        id: Number(product.productId ?? Date.now()),
+        source: "AliExpress",
+        platform: "AliExpress",
+      
+        // Basic Info
+        name: product.title ?? "Unknown Product",
+        description: product.title ?? "",
+        image: product.imageUrl ?? "",
+        category: product.categoryName ?? "General",
+        brand: product.brandName ?? "",
+      
+        // Links
+        product_url: product.productUrl ?? "",
+        supplier: "AliExpress",
+        supplier_url: product.storeUrl ?? "",
+      
+        // Store
+        store_name: product.storeName ?? "",
+        store_rating: Number(product.storeRating ?? 0),
+        supplier_rating: Number(product.storeRating ?? 0),
+      
+        // Pricing
+        currency: "USD",
+        buy_price: price,
+        selling_price: Math.round(price * 2.5 * 100) / 100,
+        profit: Math.round(price * 1.5 * 100) / 100,
+        roi: price > 0 ? Math.round(((price * 1.5) / price) * 100) : 0,
+      
+        // Market
+        sales: sold,
+        orders: sold,
+        reviews: Number(product.reviewsCount ?? 0),
+        country: "Global",
+      
+        // Shipping
+        shipping_days: 10,
+      
+        // AI
+        ai_score: aiScore,
+        trend_score: trendScore,
+        opportunity_score:
+  aiScore * 0.4 +
+  trendScore * 0.3 +
+  Math.min(price * 2, 100) * 0.2 +
+  (
+    competition === "Low"
+      ? 100
+      : competition === "Medium"
+      ? 70
+      : 30
+  ) * 0.1,
+      
+        // Competition
+        competition,
+        trend_direction: "Stable",
+        seasonality: "Evergreen",
+      
+        // Ads
+        cpm: 0,
+        cpa: 0,
+      
+        // AI Reason
+        ai_reason: "",
+      };
+    }

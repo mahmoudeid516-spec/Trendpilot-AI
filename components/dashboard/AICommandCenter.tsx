@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import ProductComparison from "./ProductComparison";
 import { aiSearch } from "../../services/aiSearch";
 import { productSearch } from "../../services/productSearch";
 import {

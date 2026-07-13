@@ -3,9 +3,15 @@ import { useState } from "react";
 import { analyzeProduct } from "../../services/decisionEngine";
 import { generateMarketing } from "../../lib/services/generateMarketing";
 import { analyzeMarket } from "../../services/marketAnalyzer";
+import SimilarProducts from "./SimilarProducts";
+import { calculateROI } from "../../services/roiCalculator";
+import type { Product } from "../../types/Product";
+import { generateBusinessPlan } from "../../services/businessCoach";
+
 
 type Props = {
-  product: any;
+  product: Product;
+  allProducts?: Product[];
 };
 
 function ScoreBar({
@@ -34,7 +40,10 @@ function ScoreBar({
   );
 }
 
-export default function ProductDetails({ product }: Props) {
+export default function ProductDetails({
+  product,
+  allProducts = [],
+}: Props) {
   if (!product) return null;
 
   const [marketing, setMarketing] = useState("");
@@ -58,6 +67,13 @@ async function handleGenerateMarketing() {
 const decision = analyzeProduct(product);
 const market = analyzeMarket(product);
 const aiScore = decision.confidence;
+const plan = generateBusinessPlan(product);
+const roi = calculateROI(
+  Number(product.buy_price),
+  Number(product.selling_price),
+  200,
+  50
+);
 const winning = decision.winningProbability;
 
 const profit = Math.min(
@@ -246,139 +262,212 @@ const profit = Math.min(
 
         <div className="space-y-6">
 
-          <div className="rounded-2xl bg-purple-50 p-6">
+  <div className="rounded-2xl bg-blue-50 p-6">
 
-            <h3 className="font-bold text-xl">
-              🤖 AI Recommendation
-            </h3>
-
-            <p className="mt-3 text-gray-600 leading-7">
-  {product.ai_reason ||
-    `AI Analysis
-
-• High demand detected in ${product.country}.
-
-• Estimated profit is $${product.profit} per sale.
-
-• Competition level: ${product.competition}.
-
-• Recommended platform: ${product.platform}.
-
-• This product has excellent viral potential and is suitable for TikTok Ads, Instagram Reels and Shopify stores.
-
-• Recommended action: Launch immediately with video creatives.`}
-</p>
-
-          </div>
-
-          <div className="rounded-2xl bg-blue-50 p-6">
-
-  <h3 className="font-bold text-xl mb-4">
-    📊 AI Market Analysis
-  </h3>
-
-  <div className="space-y-3">
-
-  <div>
-  <div className="flex justify-between mb-1">
-    <span>🔥 Viral Potential</span>
-    <span>{market.viralPotential}%</span>
-  </div>
-
-  <div className="w-full h-3 bg-gray-200 rounded-full">
-    <div
-      className="h-3 bg-pink-500 rounded-full"
-      style={{
-        width: `${market.viralPotential}%`,
-      }}
-    />
-  </div>
-</div>
-
-    
-      🌱 Evergreen Score:
-      <div>
-  <div className="flex justify-between mb-1">
-    <span>🔥 Viral Potential</span>
-    <span>{market.viralPotential}%</span>
-  </div>
-
-  <div className="w-full h-3 bg-gray-200 rounded-full">
-    <div
-      className="h-3 bg-pink-500 rounded-full"
-      style={{
-        width: `${market.viralPotential}%`,
-      }}
-    />
-  </div>
-</div>
-
-    <p>
-      📉 Market Saturation:
-      <div>
-  <div className="flex justify-between mb-1">
-    <span>🔥 Viral Potential</span>
-    <span>{market.viralPotential}%</span>
-  </div>
-
-  <div className="w-full h-3 bg-gray-200 rounded-full">
-    <div
-      className="h-3 bg-pink-500 rounded-full"
-      style={{
-        width: `${market.viralPotential}%`,
-      }}
-    />
-  </div>
-</div>
-      💰 Recommended Budget:
-      <strong> ${market.recommendedBudget}</strong>
-    </p>
-
-    <p>
-      📢 Estimated CPM:
-      <strong> ${market.cpm}</strong>
-    </p>
-
-    <p>
-      🎯 Estimated CPA:
-      <strong> ${market.cpa}</strong>
-    </p>
-
-  </div>
-
-</div>
-          <div className="flex gap-4">
-
-          <button
-  onClick={handleGenerateMarketing}
-  disabled={loading}
-  className="flex-1 rounded-xl bg-purple-600 text-white py-4 font-bold hover:bg-purple-700 disabled:opacity-50 transition"
->
-  {loading ? "Generating..." : "🚀 Generate Marketing"}
-</button>
-
-            <button className="flex-1 rounded-xl bg-green-600 text-white py-4 font-bold hover:bg-green-700 transition">
-              🛒 Import to Shopify
-            </button>
-
-          </div>
-
-          {marketing && (
-  <div className="mt-8 rounded-2xl border bg-gray-50 p-6">
-    <h3 className="text-2xl font-bold mb-4">
-      🤖 AI Marketing Strategy
+    <h3 className="font-bold text-xl mb-4">
+      📊 AI Market Analysis
     </h3>
 
-    <pre className="whitespace-pre-wrap text-sm leading-7">
-      {marketing}
-    </pre>
-  </div>
-)}
+    <div className="space-y-3">
 
+      <div>
+        <div className="flex justify-between mb-1">
+          <span>🔥 Viral Potential</span>
+          <span>{market.viralPotential}%</span>
         </div>
+
+        <div className="w-full h-3 bg-gray-200 rounded-full">
+          <div
+            className="h-3 bg-pink-500 rounded-full"
+            style={{ width: `${market.viralPotential}%` }}
+          />
+        </div>
+      </div>
+
+      <p>
+        💰 Recommended Budget:
+        <strong> ${market.recommendedBudget}</strong>
+      </p>
+
+      <p>
+        📢 Estimated CPM:
+        <strong> ${market.cpm}</strong>
+      </p>
+
+      <p>
+        🎯 Estimated CPA:
+        <strong> ${market.cpa}</strong>
+      </p>
+
+    </div>
+
+  </div>
+
+  <div className="flex gap-4">
+
+    <button
+      onClick={handleGenerateMarketing}
+      disabled={loading}
+      className="flex-1 rounded-xl bg-purple-600 text-white py-4 font-bold hover:bg-purple-700 disabled:opacity-50 transition"
+    >
+      {loading ? "Generating..." : "🚀 Generate Marketing"}
+    </button>
+
+    <button className="flex-1 rounded-xl bg-green-600 text-white py-4 font-bold hover:bg-green-700 transition">
+      🛒 Import to Shopify
+    </button>
+
+  </div>
+
+  {marketing && (
+    <div className="mt-8 rounded-2xl border bg-gray-50 p-6">
+      <h3 className="text-2xl font-bold mb-4">
+        🤖 AI Marketing Strategy
+      </h3>
+
+      <pre className="whitespace-pre-wrap text-sm leading-7">
+        {marketing}
+      </pre>
+    </div>
+  )}
+
+  {/* AI Business Coach */}
+
+  <div className="rounded-2xl bg-green-50 border border-green-200 p-6">
+
+    <h3 className="text-2xl font-bold mb-5">
+      💼 AI Business Coach
+    </h3>
+
+    <div className="grid md:grid-cols-2 gap-6">
+
+      <div>
+
+        <p className="mb-3">
+          <strong>Verdict:</strong> {plan.verdict}
+        </p>
+
+        <p className="mb-3">
+          <strong>Suggested Selling Price:</strong> ${plan.sellingPrice}
+        </p>
+
+        <p className="mb-3">
+          <strong>Expected Profit:</strong> ${plan.expectedProfit}
+        </p>
+
+        <p className="mb-3">
+          <strong>Daily Budget:</strong> ${plan.dailyBudget}
+        </p>
+
+        <p>
+          <strong>Break-even Sales:</strong> {plan.breakEvenSales} sales/day
+        </p>
 
       </div>
 
-    </section>
-  );
+      <div>
+
+        <p className="mb-3">
+          <strong>Best Platform:</strong> {plan.bestPlatform}
+        </p>
+
+        <p className="font-bold mb-2">
+          Best Countries
+        </p>
+
+        <ul className="list-disc ml-5 space-y-1">
+
+          {plan.bestCountries.map((country) => (
+            <li key={country}>{country}</li>
+          ))}
+
+        </ul>
+
+        <p className="font-bold mt-5 mb-2">
+          Launch Strategy
+        </p>
+
+        <ol className="list-decimal ml-5 space-y-1">
+
+          {plan.strategy.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+
+        </ol>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {/* ROI Calculator */}
+
+  <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-6">
+
+    <h3 className="text-2xl font-bold mb-5">
+      💰 ROI Calculator
+    </h3>
+
+    <div className="space-y-3">
+
+      <div className="flex justify-between">
+        <span>Revenue</span>
+        <strong>${roi.revenue.toFixed(2)}</strong>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Product Cost</span>
+        <strong>${roi.productCost.toFixed(2)}</strong>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Advertising</span>
+        <strong>${(roi.totalCost - roi.productCost).toFixed(2)}</strong>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Net Profit</span>
+        <strong className="text-green-600">
+          ${roi.profit.toFixed(2)}
+        </strong>
+      </div>
+
+      <div className="mt-5">
+
+        <p className="mb-2 font-bold">
+          ROI
+        </p>
+
+        <div className="w-full h-4 bg-gray-200 rounded-full">
+
+          <div
+            className="h-4 bg-green-500 rounded-full"
+            style={{
+              width: `${Math.min(100, Math.max(0, roi.roi))}%`,
+            }}
+          />
+
+        </div>
+
+        <p className="mt-2 text-center text-2xl font-bold">
+          {roi.roi}%
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<SimilarProducts
+  current={product}
+  products={allProducts}
+/>
+
+</section>);
 }
