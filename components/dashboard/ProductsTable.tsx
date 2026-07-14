@@ -25,6 +25,7 @@ type Product = {
 };
 
 type Props = {
+  products?: Product[];
   search: string;
   platform: string;
   refreshKey: number;
@@ -32,13 +33,14 @@ type Props = {
 };
 
 export default function ProductsTable({
+  products: searchResults = [],
   search,
   platform,
   refreshKey,
   onSelectProduct,
 }: Props) {
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [savedProducts, setSavedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     loadProducts();
@@ -46,32 +48,39 @@ export default function ProductsTable({
 
   async function loadProducts() {
     const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("ai_score", { ascending: false });
+  .from("products")
+  .select("*");
   
     console.log("Products:", data);
     console.log("Error:", error);
   
-    setProducts(data || []);
+    setSavedProducts(data || []);
   }
 
-  console.log("Products Count:", products.length);
+  const displayProducts =
+  searchResults.length > 0
+    ? searchResults
+    : savedProducts;
 
-const filtered = products.filter((p) => {
-  const productName = (p.name ?? "").toLowerCase();
-  const searchText = (search ?? "").toLowerCase();
+  console.log("Products Count:", displayProducts.length);
 
-  const matchSearch =
-    searchText === "" ||
-    productName.includes(searchText);
-
-  const matchPlatform =
-    platform === "All" ||
-    (p.platform ?? "") === platform;
-
-  return matchSearch && matchPlatform;
-});
+  const filtered = displayProducts.filter((p) => {
+    const productName = (p.name ?? "").toLowerCase();
+    const searchText = (search ?? "").toLowerCase();
+  
+    const matchSearch =
+      searchText === "" ||
+      productName.includes(searchText);
+  
+    const matchPlatform =
+      platform === "All" ||
+      (p.platform ?? "") === platform;
+  
+    return matchSearch && matchPlatform;
+  });
+  const sorted = [...filtered].sort((a, b) => {
+    return (b.ai_score ?? 0) - (a.ai_score ?? 0);
+  });
 
 console.log("Filtered Count:", filtered.length);
 console.log(filtered);
@@ -149,7 +158,7 @@ Profit
 
 <tbody>
 
-{filtered.map(product=>(
+{sorted.map(product => (
 
 <tr
 key={product.id}

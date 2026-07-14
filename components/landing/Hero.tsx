@@ -1,46 +1,57 @@
 "use client";
-
+import DashboardPreview from "./DashboardPreview";
 import Link from "next/link";
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden">
 
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50" />
 
       <div className="relative max-w-7xl mx-auto px-8 py-24">
 
         <div className="grid lg:grid-cols-2 gap-20 items-center">
 
-          {/* Left */}
+          {/* LEFT */}
 
           <div>
 
+            {/* Badge */}
+
             <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-5 py-2 text-sm font-semibold">
-              🚀 AI Powered Ecommerce Platform
+              🏆 Trusted by Shopify & Amazon Sellers
             </span>
+
+            {/* Heading */}
 
             <h1 className="mt-8 text-6xl font-extrabold leading-tight tracking-tight">
 
               Find Winning Products
+
               <br />
 
               <span className="text-purple-600">
-                Before Everyone Else.
+
+                Before They Go Viral
+
               </span>
 
             </h1>
 
+            {/* Description */}
+
             <p className="mt-8 text-xl text-gray-600 leading-9">
 
-              TrendPilot AI helps ecommerce sellers discover
-              profitable products, analyze competitors,
-              generate marketing campaigns and launch faster
-              using artificial intelligence.
+              Discover winning products with AI. Analyze competitors,
+              estimate profit, generate marketing campaigns and launch
+              your next bestseller in minutes.
 
             </p>
 
-            <div className="flex flex-wrap gap-5 mt-12">
+            {/* Buttons */}
+
+            <div className="flex flex-wrap gap-5 mt-10">
 
               <Link
                 href="/register"
@@ -49,13 +60,29 @@ export default function Hero() {
                 🚀 Start Free Trial
               </Link>
 
-              <button className="rounded-2xl border border-gray-300 px-8 py-5 font-bold hover:bg-gray-100 transition">
+              <button className="rounded-2xl border border-gray-300 bg-white px-8 py-5 font-bold hover:bg-gray-100 transition">
                 ▶ Watch Demo
               </button>
 
             </div>
 
-            <div className="flex flex-wrap gap-10 mt-14">
+            {/* Rating */}
+
+            <div className="mt-10 flex items-center gap-3 text-gray-500">
+
+              <span className="text-yellow-500 text-xl">
+                ★★★★★
+              </span>
+
+              <span>
+                Rated 4.9/5 by ecommerce sellers
+              </span>
+
+            </div>
+
+            {/* Stats */}
+
+            <div className="flex flex-wrap gap-12 mt-14">
 
               <div>
 
@@ -95,19 +122,61 @@ export default function Hero() {
 
             </div>
 
+            {/* Supported Platforms */}
+
+            <div className="mt-14">
+
+              <p className="text-gray-400 text-sm mb-6 uppercase tracking-widest">
+
+                SUPPORTED PLATFORMS
+
+              </p>
+
+              <div className="flex flex-wrap gap-10 items-center opacity-70">
+
+                <img
+                  src="/logos/shopify.svg"
+                  alt="Shopify"
+                  className="h-8"
+                />
+
+                <img
+                  src="/logos/amazon.svg"
+                  alt="Amazon"
+                  className="h-8"
+                />
+
+                <img
+                  src="/logos/tiktok.svg"
+                  alt="TikTok"
+                  className="h-8"
+                />
+
+                <img
+                  src="/logos/aliexpress.svg"
+                  alt="AliExpress"
+                  className="h-8"
+                />
+
+              </div>
+
+            </div>
+
           </div>
 
-          {/* Right */}
+          {/* RIGHT */}
 
-          <div>
+          <div className="relative">
 
-            <div className="rounded-[40px] bg-white shadow-2xl border border-gray-100 p-8">
+            {/* Glow */}
 
-              <img
-                src="/dashboard-preview.png"
-                alt="TrendPilot Dashboard"
-                className="rounded-3xl"
-              />
+            <div className="absolute -inset-8 rounded-[50px] bg-purple-500/10 blur-3xl" />
+
+            {/* Dashboard */}
+
+            <div className="relative rounded-[40px] border border-gray-200 bg-white p-6 shadow-[0_40px_100px_rgba(124,58,237,.20)] lg:scale-110 transition duration-500 hover:scale-[1.13]">
+
+            <DashboardPreview />
 
             </div>
 

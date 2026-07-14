@@ -4,7 +4,7 @@ export default function Pricing() {
     const plans = [
       {
         name: "Starter",
-        price: "$19",
+        price: "$29",
         features: [
           "50 Products / Day",
           "Basic AI Analysis",
@@ -74,16 +74,33 @@ export default function Pricing() {
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan: plan.name,
+        }),
       });
-
+      
       const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
+      
+      console.log("Checkout Response:", data);
+      
+      if (!res.ok) {
+        alert(data.error || "Checkout failed");
+        return;
       }
-    } catch (error) {
+      
+      window.location.href = data.url;
+    } 
+    catch (error: any) {
       console.error(error);
-      alert("Unable to start checkout.");
+    
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Unknown error");
+      }
     }
   }}
   className="mt-8 w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition"

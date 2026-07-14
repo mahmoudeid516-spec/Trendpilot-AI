@@ -19,6 +19,8 @@ import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
 import ProGate from "../../components/dashboard/ProGate";
 import { importProducts } from "../../lib/importers/importProducts";
+import { searchAliExpress } from "../../services/providers/aliexpress";
+import { mapApifyProduct } from "../../services/productMapper";
 import { dummyProducts } from "../../lib/importers/dummyProducts";
 
 export default function DashboardPage() {
@@ -29,6 +31,7 @@ export default function DashboardPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     async function checkUser() {
@@ -55,8 +58,26 @@ export default function DashboardPage() {
       alert("Please enter a product name.");
       return;
     }
+    const products = await searchAliExpress({
+      keyword: searchText,
+    });
+    console.log("RAW PRODUCTS");
+console.log(products);
+console.log("COUNT:", products.length);
+    
+    const mappedProducts = products.map(mapApifyProduct);
 
-    setSearch(searchText);
+    console.log("MAPPED PRODUCTS");
+console.log(mappedProducts);
+console.log("COUNT:", mappedProducts.length);
+
+// اعرض النتائج فورًا
+setSearchResults(mappedProducts);
+
+// احفظها في الخلفية
+await importProducts(mappedProducts);
+
+setSearch(searchText);
 setPlatform(selectedPlatform);
 setRefreshKey((prev) => prev + 1);
 
@@ -125,15 +146,20 @@ setRefreshKey((prev) => prev + 1);
 />
 
 <ProductsTable
+  products={searchResults}
   refreshKey={refreshKey}
   search={search}
   platform={platform}
-  onSelectProduct={setSelectedProduct}
+  onSelectProduct={(product) => {
+    setSelectedProduct(product);
+    setShowProductModal(true);
+  }}
 />
 
 */}
 
 <ProductsTable
+  products={searchResults}
   refreshKey={refreshKey}
   search={search}
   platform={platform}

@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
 
     const actorId = "dky0rE40JOyXui6TR";
 
+    console.log("Searching:", search);
+
     const response = await fetch(
       `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}`,
       {
@@ -32,17 +34,35 @@ export async function GET(req: NextRequest) {
       }
     );
 
+    console.log("Status:", response.status);
+
+    if (!response.ok) {
+      const text = await response.text();
+
+      console.error(text);
+
+      return NextResponse.json(
+        {
+          error: text,
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
     const products = await response.json();
-    console.log(products[0]);
+
+    console.log("Products Found:", products.length);
 
     return NextResponse.json(products);
 
-  } catch (e: any) {
-    console.error(e);
+  } catch (error: any) {
+    console.error(error);
 
     return NextResponse.json(
       {
-        error: e?.message || String(e),
+        error: error.message,
       },
       {
         status: 500,

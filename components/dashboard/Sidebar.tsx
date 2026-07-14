@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 import {
   LayoutDashboard,
   Sparkles,
@@ -14,6 +15,18 @@ import {
 
 export default function Sidebar() {
   const pathname = usePathname();
+
+  const router = useRouter();
+
+  async function handleLogout() {
+    console.log("Logout Clicked");
+  
+    const { error } = await supabase.auth.signOut();
+  
+    console.log(error);
+  
+    router.push("/login");
+  }
 
   const menu = [
     {
@@ -90,7 +103,10 @@ export default function Sidebar() {
 
       <div className="p-5 border-t">
 
-        <button className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition">
+      <button
+  onClick={handleLogout}
+  className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition"
+>
           <LogOut size={18} />
           Logout
         </button>

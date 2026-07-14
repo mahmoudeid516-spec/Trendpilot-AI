@@ -40,7 +40,18 @@ export interface Product {
   // AI Scores
   ai_score: number;
   trend_score: number;
+  viral_score: number;
   opportunity_score?: number;
+
+  // New AI Scores
+  demand_score?: number;
+  confidence_score?: number;
+  risk_score?: number;
+  winning_probability?: number;
+
+  // Decision
+  decision: string;
+  ai_reason?: string;
 
   // Competition
   competition: "Low" | "Medium" | "High";
@@ -50,7 +61,4 @@ export interface Product {
   // Ads
   cpm?: number;
   cpa?: number;
-
-  // AI
-  ai_reason?: string;
 }

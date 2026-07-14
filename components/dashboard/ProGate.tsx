@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 type Props = {
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export default function ProGate({ children }: Props) {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState("Free");
 
@@ -38,6 +41,25 @@ export default function ProGate({ children }: Props) {
     loadPlan();
   }, []);
 
+  async function handleUpgrade() {
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        router.push(data.url);
+      } else {
+        alert("Unable to start checkout.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong.");
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
@@ -57,17 +79,24 @@ export default function ProGate({ children }: Props) {
         </h2>
 
         <p className="mt-4 text-purple-100">
-          Upgrade to Pro to unlock AI Analyzer,
-          Product Research, AI Marketing,
-          Sales Forecast and all premium tools.
+          Upgrade to Pro to unlock:
         </p>
 
-        <a
-          href="/"
-          className="inline-block mt-8 bg-white text-purple-700 px-8 py-4 rounded-xl font-bold"
+        <ul className="mt-6 space-y-2 text-purple-100">
+          <li>✅ Unlimited Product Search</li>
+          <li>✅ AI Product Analyzer</li>
+          <li>✅ AI Marketing Generator</li>
+          <li>✅ Sales Forecast</li>
+          <li>✅ Winning Product Reports</li>
+          <li>✅ Future Premium Features</li>
+        </ul>
+
+        <button
+          onClick={handleUpgrade}
+          className="mt-8 bg-white text-purple-700 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition"
         >
-          Upgrade to Pro
-        </a>
+          Upgrade to Pro - $29/month
+        </button>
 
       </div>
     );

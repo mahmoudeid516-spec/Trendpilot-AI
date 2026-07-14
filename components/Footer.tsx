@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="bg-[#09090B] text-white border-t border-gray-800">
@@ -15,20 +19,18 @@ export default function Footer() {
             </h2>
 
             <p className="mt-6 text-gray-400 leading-8 max-w-md">
-
               The AI Operating System for Ecommerce.
 
               Discover winning products, analyze trends,
               generate marketing campaigns and launch faster
               using artificial intelligence.
-
             </p>
 
             <div className="flex gap-4 mt-8">
 
               <a
                 href="#"
-                className="w-11 h-11 rounded-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center transition"
+                className="w-11 h-11 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition"
               >
                 𝕏
               </a>
@@ -69,19 +71,19 @@ export default function Footer() {
             <ul className="space-y-4 text-gray-400">
 
               <li>
-                <a href="#">Features</a>
+                <Link href="/">Features</Link>
               </li>
 
               <li>
-                <a href="#">Pricing</a>
+                <Link href="/pricing">Pricing</Link>
               </li>
 
               <li>
-                <a href="#">Dashboard</a>
+                <Link href="/dashboard">Dashboard</Link>
               </li>
 
               <li>
-                <a href="#">API</a>
+                <Link href="/register">Start Free Trial</Link>
               </li>
 
             </ul>
@@ -99,19 +101,19 @@ export default function Footer() {
             <ul className="space-y-4 text-gray-400">
 
               <li>
-                <a href="#">About</a>
+                <Link href="/about">About</Link>
               </li>
 
               <li>
-                <a href="#">Blog</a>
+                <Link href="/contact">Contact</Link>
               </li>
 
               <li>
-                <a href="#">Careers</a>
+                <Link href="/login">Login</Link>
               </li>
 
               <li>
-                <a href="#">Contact</a>
+                <Link href="/register">Register</Link>
               </li>
 
             </ul>
@@ -127,10 +129,8 @@ export default function Footer() {
             </h3>
 
             <p className="text-gray-400 mb-5">
-
               Join our newsletter and receive AI ecommerce
               tips every week.
-
             </p>
 
             <input
@@ -140,9 +140,7 @@ export default function Footer() {
             />
 
             <button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 transition rounded-xl py-3 font-bold">
-
               Subscribe
-
             </button>
 
           </div>
@@ -152,24 +150,26 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center">
 
           <p className="text-gray-500">
-
             © 2026 TrendPilot AI. All rights reserved.
-
           </p>
 
-          <div className="flex gap-6 mt-6 md:mt-0 text-gray-500">
+          <div className="flex flex-wrap gap-6 mt-6 md:mt-0 text-gray-500">
 
-            <a href="#">
+            <Link href="/privacy">
               Privacy Policy
-            </a>
+            </Link>
 
-            <a href="#">
+            <Link href="/terms">
               Terms of Service
-            </a>
+            </Link>
 
-            <a href="#">
-              Cookies
-            </a>
+            <Link href="/contact">
+              Contact
+            </Link>
+
+            <Link href="/about">
+              About
+            </Link>
 
           </div>
 
