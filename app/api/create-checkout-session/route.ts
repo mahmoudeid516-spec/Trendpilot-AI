@@ -1,80 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "../../../lib/stripe";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
 
-export async function POST(req: NextRequest) {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-06-24.dahlia",
+});
+
+export async function POST(req: Request) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: req.headers.get("Authorization") ?? "",
-          },
-        },
-      }
-    );
+    const { planId, userId } = await req.json();
 
-    const {
-      data: { session: authSession },
-    } = await supabase.auth.getSession();
+    const priceIds: Record<string, string> = {
+      pro: process.env.STRIPE_PRO_PRICE_ID!,
+      premium: process.env.STRIPE_PREMIUM_PRICE_ID!,
+    };
 
-    if (!authSession) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
-
+    const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-
-            product_data: {
-              name: "TrendPilot AI Pro",
-            },
-
-            recurring: {
-              interval: "month",
-            },
-
-            unit_amount: 2900,
-          },
-
+          price: priceIds[planId],
           quantity: 1,
         },
       ],
-
+      mode: "subscription",
       metadata: {
-        userId: authSession.user.id,
-        email: authSession.user.email ?? "",
+        userId,
       },
-
-      success_url: "http://localhost:3000/success",
-
-      cancel_url: "http://localhost:3000/cancel",
+      success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL}/#pricing`,
     });
 
-    return NextResponse.json({
-      url: checkoutSession.url,
-    });
+    return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error(error);
-
+    console.error("Stripe Error:", error);
     return NextResponse.json(
-      {
-        error: error.message,
-      },
-      {
-        status: 500,
-      }
+      { error: error.message },
+      { status: 500 }
     );
   }
 }

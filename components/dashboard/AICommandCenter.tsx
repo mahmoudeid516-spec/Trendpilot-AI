@@ -1,163 +1,59 @@
 "use client";
 
-import { runProductEngine } from "../../services/engine/ProductEngine";
 import { useState } from "react";
-import ProductComparison from "./ProductComparison";
-import { aiSearch } from "../../services/aiSearch";
-import { getBestProduct,scoreProducts, } from "../../services/businessAdvisor";
-import type { Product } from "../../types/Product";
-import SearchInput from "./SearchInput";
-import SuggestionChips from "./SuggestionChips";
-import AIRecommendation from "./AIRecommendation";
-import SearchResults from "./SearchResults";
-import { searchProducts } from "../../services/productSearch";
 
-export default function AICommandCenter() {
-  const [prompt, setPrompt] = useState("");
-  const [results, setResults] = useState<Product[]>([]);
+type AICommandCenterProps = {
+  onAnalyze: (
+    searchText: string,
+    selectedPlatform: string
+  ) => Promise<void>;
+};
+
+export default function AICommandCenter({
+  onAnalyze,
+}: AICommandCenterProps) {
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleAskAI() {
-    if (!prompt.trim()) return;
+  const handleAction = async () => {
+    if (!query.trim()) return;
 
     setLoading(true);
 
     try {
-      const filters = await aiSearch(prompt);
-
-      console.log("FILTERS:", filters);
-
-      const keyword =
-  filters.keyword ||
-  filters.search ||
-  prompt;
-
-const platform =
-  filters.platform || "All";
-
-const products = await runProductEngine(
-  keyword,
-  platform
-);
-
-setResults(products);
-    } catch (error) {
-      console.error(error);
+      // استخدم "all" كمنصة افتراضية إذا لم يكن هذا الكمبوننت يحتوي على اختيار منصة
+      await onAnalyze(query, "all");
     } finally {
       setLoading(false);
     }
-  }
-  
-  const bestProduct = getBestProduct(results);
+  };
 
   return (
-    <section className="mb-10 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl">
+    <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl border border-slate-700">
+      <h2 className="text-xl font-bold mb-4">Ask AI Insight</h2>
 
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 p-8 text-white">
+      <p className="text-slate-400 text-sm mb-6">
+        Get a professional breakdown of product profitability and market
+        trends.
+      </p>
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
-          <div>
-
-            <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-              AI Copilot
-            </span>
-
-            <h2 className="mt-5 text-4xl font-bold">
-              Ask TrendPilot AI
-            </h2>
-
-            <p className="mt-3 max-w-2xl text-purple-100">
-              Find winning products, compare niches,
-              discover profitable opportunities and receive
-              AI-powered business recommendations.
-            </p>
-
-          </div>
-
-          <div className="rounded-2xl bg-white/10 p-6 backdrop-blur">
-
-            <p className="text-sm text-purple-200">
-              AI Status
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-green-300">
-              ● Online
-            </h3>
-
-            <p className="mt-3 text-sm text-purple-100">
-              GPT Connected
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <div className="p-8">
-
-        <SearchInput
-          prompt={prompt}
-          setPrompt={setPrompt}
-          loading={loading}
-          onSearch={handleAskAI}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Enter product name..."
+          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
 
-        <div className="mt-6">
-          <SuggestionChips
-            onSelect={setPrompt}
-          />
-        </div>
-
-        {loading && (
-
-          <div className="mt-8 rounded-2xl border border-purple-100 bg-purple-50 p-6">
-
-            <div className="animate-pulse space-y-4">
-
-              <div className="h-5 w-48 rounded bg-purple-200" />
-
-              <div className="h-4 w-full rounded bg-purple-100" />
-
-              <div className="h-4 w-4/5 rounded bg-purple-100" />
-
-            </div>
-
-          </div>
-
-        )}
-
-        {!loading && bestProduct && (
-
-          <>
-
-            <div className="mt-8">
-
-              <AIRecommendation
-                product={bestProduct}
-              />
-
-            </div>
-
-            <div className="mt-8">
-
-              <SearchResults
-                results={results}
-              />
-
-<ProductComparison
-    products={results}
-/>
-
-            </div>
-
-          </>
-
-        )}
-
+        <button
+          onClick={handleAction}
+          disabled={loading}
+          className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl font-bold transition disabled:opacity-50"
+        >
+          {loading ? "Analyzing..." : "Ask AI"}
+        </button>
       </div>
-
-    </section>
+    </div>
   );
 }

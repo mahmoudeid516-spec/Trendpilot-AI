@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "react-hot-toast"; // تم إضافة الإشعار
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -82,6 +83,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-white text-gray-900 antialiased">
+        {/* الـ Toaster هنا عشان يظهر الإشعارات في أي مكان في الموقع */}
+        <Toaster position="top-right" />
         {children}
       </body>
     </html>
