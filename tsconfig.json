@@ -30,6 +30,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/api/stripe/checkout/route.ts.bak"  ],
+, "app/api/stripe/checkout/route.ts"  ],
   "exclude": ["node_modules"]
 }

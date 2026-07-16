@@ -1,5 +1,3 @@
-import { mapApifyProduct } from "./productMapper";
-
 function competitionScore(level: string) {
   switch (level) {
     case "Low":
@@ -27,80 +25,109 @@ function calculateOpportunityScore(product: {
   sales: number;
   reviews: number;
 }) {
+
   let score = 0;
 
-  // AI Analysis (25%)
+  // AI
   score += product.ai_score * 0.25;
 
-  // Trend (20%)
+  // Trend
   score += product.trend_score * 0.20;
 
-  // Viral Potential (15%)
+  // Viral
   score += product.viral_score * 0.15;
 
-  // Profit (15%)
+  // Profit
   score += Math.min(product.profit * 4, 100) * 0.15;
 
-  // ROI (10%)
+  // ROI
   score += Math.min(product.roi, 100) * 0.10;
 
-  // Competition (10%)
+  // Competition
   score += competitionScore(product.competition) * 0.10;
 
-  // Cheap products sell easier
-  if (product.buy_price >= 10 && product.buy_price <= 35)
-    score += 3;
+  // Cheap Products
+  if (product.buy_price >= 5 && product.buy_price <= 30)
+    score += 5;
 
-  // High sales
-  if (product.sales >= 1000)
-    score += 4;
+  // High Sales
+  if (product.sales >= 5000)
+    score += 8;
+  else if (product.sales >= 1000)
+    score += 5;
 
   // Reviews
-  if (product.reviews >= 200)
+  if (product.reviews >= 1000)
+    score += 5;
+  else if (product.reviews >= 300)
     score += 3;
 
   return Math.min(100, Number(score.toFixed(1)));
 }
 
 export function scoreProducts(products: any[]) {
+
   const scored = products.map((product) => {
 
-    const mapped = mapApifyProduct(product);
-
     const opportunity = calculateOpportunityScore({
-      ai_score: mapped.ai_score,
-      trend_score: mapped.trend_score,
-      viral_score: mapped.viral_score,
-      profit: mapped.profit,
-      roi: mapped.roi ?? 0,
-      competition: mapped.competition,
-      buy_price: mapped.buy_price,
-      sales: mapped.sales,
-      reviews: mapped.reviews,
+
+      ai_score: Number(product.ai_score ?? 0),
+
+      trend_score: Number(product.trend_score ?? 0),
+
+      viral_score: Number(product.viral_score ?? 0),
+
+      profit: Number(product.profit ?? 0),
+
+      roi: Number(product.roi ?? 0),
+
+      competition: product.competition ?? "Medium",
+
+      buy_price: Number(product.buy_price ?? 0),
+
+      sales: Number(product.sales ?? 0),
+
+      reviews: Number(product.reviews ?? 0),
+
     });
 
     return {
-      ...mapped,
+
+      ...product,
+
       opportunity_score: opportunity,
+
+      winning_probability: Math.round(
+        opportunity * 0.6 +
+        Number(product.ai_score ?? 0) * 0.4
+      ),
 
       decision:
         opportunity >= 90
-          ? "Strong Buy"
+          ? "🔥 Strong Buy"
           : opportunity >= 75
-          ? "Test First"
-          : "Avoid",
+          ? "🟡 Test First"
+          : "❌ Avoid",
+
     };
+
   });
 
   return scored.sort(
-    (a, b) => (b.opportunity_score ?? 0) - (a.opportunity_score ?? 0)
+    (a, b) =>
+      (b.opportunity_score ?? 0) -
+      (a.opportunity_score ?? 0)
   );
 }
 
 export function getBestProduct(products: any[]) {
+
   if (!products.length) return null;
 
   return [...products].sort(
-    (a, b) => (b.opportunity_score ?? 0) - (a.opportunity_score ?? 0)
+    (a, b) =>
+      (b.opportunity_score ?? 0) -
+      (a.opportunity_score ?? 0)
   )[0];
+
 }

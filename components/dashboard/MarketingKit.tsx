@@ -62,17 +62,17 @@ ${marketing.hashtags}
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
+    <div className="mt-8 rounded-3xl border border-gray-200 bg-white p-8 shadow-2xl">
 
       <div className="flex items-center justify-between mb-6">
 
         <h2 className="text-3xl font-bold">
-          🚀 AI Marketing Kit
+          🚀 AI Marketing Studio
         </h2>
 
         <button
           onClick={copyAll}
-          className="bg-gray-900 text-white px-5 py-2 rounded-xl"
+          className="rounded-xl bg-gray-900 px-5 py-2 font-semibold text-white transition hover:bg-black"
         >
           Copy All
         </button>
@@ -82,7 +82,7 @@ ${marketing.hashtags}
       <button
         onClick={generateMarketing}
         disabled={loading}
-        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl"
+        className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 font-bold text-white transition hover:scale-105 hover:shadow-xl"
       >
         {loading ? "Generating..." : "Generate Marketing Kit"}
       </button>
@@ -90,13 +90,14 @@ ${marketing.hashtags}
       {marketing && (
         <div className="space-y-6 mt-8">
 
-          <div className="bg-gray-50 rounded-2xl p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:shadow-md">
+
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-xl">📘 Facebook Ad</h3>
 
               <button
                 onClick={() => copy(marketing.facebook_ad)}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+                className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
               >
                 Copy
               </button>
@@ -105,7 +106,7 @@ ${marketing.hashtags}
             <p>{marketing.facebook_ad}</p>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:shadow-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-xl">📷 Instagram Caption</h3>
 
@@ -120,7 +121,7 @@ ${marketing.hashtags}
             <p>{marketing.instagram_caption}</p>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:shadow-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-xl">🎬 TikTok Hook</h3>
 
@@ -135,7 +136,7 @@ ${marketing.hashtags}
             <p>{marketing.tiktok_hook}</p>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:shadow-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-xl">🔍 SEO Title</h3>
 
@@ -150,7 +151,7 @@ ${marketing.hashtags}
             <p>{marketing.seo_title}</p>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-5">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm transition hover:shadow-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
 
@@ -169,5 +170,5 @@ ${marketing.hashtags}
       )}
 
     </div>
-  );
-}
+ 
+)}

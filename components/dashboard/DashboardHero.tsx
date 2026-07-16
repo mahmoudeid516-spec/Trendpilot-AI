@@ -44,11 +44,14 @@ export default function DashboardHero({
           <div>
 
             <span className="inline-flex items-center rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-purple-100">
-              🚀 TrendPilot AI Dashboard
+            🔥 AI Powered Ecommerce Dashboard
             </span>
 
             <h1 className="mt-6 text-5xl font-extrabold leading-tight">
               Welcome back,
+              <p className="mt-3 text-purple-200 text-lg">
+  Ready to discover your next winning product?
+</p>
               <br />
               <span className="text-yellow-300">{name}</span>
             </h1>
@@ -77,7 +80,7 @@ export default function DashboardHero({
                 </p>
 
                 <h3 className="font-bold text-green-300">
-                  ● Online
+                🟢 GPT + Market Scanner Active
                 </h3>
               </div>
 
@@ -133,6 +136,30 @@ export default function DashboardHero({
               <p className="text-sm text-purple-200">
                 Success Rate
               </p>
+
+              <div className="col-span-2 rounded-3xl bg-white/10 p-6 backdrop-blur">
+
+  <p className="text-sm uppercase tracking-wider text-purple-200">
+    Quick Actions
+  </p>
+
+  <div className="mt-5 flex flex-wrap gap-4">
+
+    <button className="rounded-xl bg-white px-5 py-3 font-semibold text-purple-700 hover:bg-purple-100 transition">
+      🔍 Find Products
+    </button>
+
+    <button className="rounded-xl bg-purple-500 px-5 py-3 font-semibold text-white hover:bg-purple-600 transition">
+      🤖 Ask AI
+    </button>
+
+    <button className="rounded-xl bg-indigo-500 px-5 py-3 font-semibold text-white hover:bg-indigo-600 transition">
+      📈 Analytics
+    </button>
+
+  </div>
+
+</div>
 
               <h2 className="mt-2 text-5xl font-bold">
                 96%

@@ -22,6 +22,7 @@ import { importProducts } from "../../lib/importers/importProducts";
 import { searchAliExpress } from "../../services/providers/aliexpress";
 import { mapApifyProduct } from "../../services/productMapper";
 import { dummyProducts } from "../../lib/importers/dummyProducts";
+import AICopilot from "../../components/dashboard/AICopilot";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -32,6 +33,21 @@ export default function DashboardPage() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const totalProducts = searchResults.length;
+
+const winningProducts = searchResults.filter(
+  (p) => Number(p.aiScore || 0) >= 90
+).length;
+
+const averageAIScore =
+  totalProducts > 0
+    ? Math.round(
+        searchResults.reduce(
+          (sum, p) => sum + Number(p.aiScore || 0),
+          0
+        ) / totalProducts
+      )
+    : 0;
 
   useEffect(() => {
     async function checkUser() {
@@ -58,14 +74,13 @@ export default function DashboardPage() {
       alert("Please enter a product name.");
       return;
     }
-    const products = await searchAliExpress({
-      keyword: searchText,
-    });
+    const products = await searchAliExpress(searchText);
+    
     console.log("RAW PRODUCTS");
 console.log(products);
 console.log("COUNT:", products.length);
     
-    const mappedProducts = products.map(mapApifyProduct);
+    const mappedProducts = products;
 
     console.log("MAPPED PRODUCTS");
 console.log(mappedProducts);
@@ -73,6 +88,7 @@ console.log("COUNT:", mappedProducts.length);
 
 // اعرض النتائج فورًا
 setSearchResults(mappedProducts);
+alert(`${mappedProducts.length} Products Found`);
 
 // احفظها في الخلفية
 await importProducts(mappedProducts);
@@ -103,9 +119,16 @@ setRefreshKey((prev) => prev + 1);
 
         <div className="max-w-7xl mx-auto">
 
-          <DashboardHero totalProducts={0} winningProducts={0} /> 
+        <DashboardHero
+  totalProducts={searchResults.length}
+  winningProducts={
+    searchResults.filter(
+      (p) => Number(p.ai_Score || 0) >= 90
+    ).length
+  }
+/>
 
-          <StatsCards refreshKey={refreshKey} />
+<StatsCards refreshKey={refreshKey} />
 
           <BusinessOverview />
 
@@ -126,7 +149,7 @@ setRefreshKey((prev) => prev + 1);
               onClick={loadDummyProducts}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl"
             >
-              Import Demo Products
+              🚀 Import Demo Products
             </button>
           </div>
 
@@ -189,7 +212,9 @@ setRefreshKey((prev) => prev + 1);
 
       <MarketingKit
         productName={selectedProduct.name}
+
       />
+      <AICopilot />
 
     </div>
 

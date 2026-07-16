@@ -22,10 +22,29 @@ const data = [
 
 export default function TrendChart() {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mt-8">
+    <div className="mt-8 rounded-3xl border border-gray-200 bg-white p-8 shadow-xl">
       <h2 className="text-2xl font-bold mb-6">
-        📈 Product Trend
+      📈 AI Market Trend Analysis
       </h2>
+
+      <div className="mb-6 flex flex-wrap gap-4">
+
+  <div className="rounded-xl bg-purple-50 px-4 py-3">
+    <p className="text-xs text-gray-500">Trend Score</p>
+    <h3 className="text-2xl font-bold text-purple-700">98%</h3>
+  </div>
+
+  <div className="rounded-xl bg-green-50 px-4 py-3">
+    <p className="text-xs text-gray-500">Growth</p>
+    <h3 className="text-2xl font-bold text-green-600">+42%</h3>
+  </div>
+
+  <div className="rounded-xl bg-blue-50 px-4 py-3">
+    <p className="text-xs text-gray-500">Forecast</p>
+    <h3 className="text-2xl font-bold text-blue-600">Bullish</h3>
+  </div>
+
+</div>
 
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={data}>
@@ -38,12 +57,15 @@ export default function TrendChart() {
           <Tooltip />
 
           <Line
-            type="monotone"
-            dataKey="trend"
-            stroke="#7C3AED"
-            strokeWidth={4}
-          />
-        </LineChart>
+  type="monotone"
+  dataKey="trend"
+  stroke="#7C3AED"
+  strokeWidth={5}
+  dot={{ r: 5 }}
+  activeDot={{ r: 8 }}
+/>
+
+  </LineChart>
       </ResponsiveContainer>
     </div>
   );

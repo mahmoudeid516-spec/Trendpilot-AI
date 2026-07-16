@@ -1,183 +1,295 @@
 import type { Product } from "../types/Product";
 
 export function mapApifyProduct(product: any): Product {
+  // ==============================
+  // Products القادمة من Supabase
+  // ==============================
+
+  if (product.name) {
+    return {
+      ...product,
+
+      id: Number(product.id),
+
+      source:
+        product.platform === "Amazon"
+          ? "Amazon"
+          : product.platform === "Shopify"
+          ? "Shopify"
+          : "AliExpress",
+
+      platform: product.platform || "AliExpress",
+
+      name: product.name,
+      description: product.description || "",
+
+      image:
+        product.image ||
+        product.image_url ||
+        "",
+
+      category: product.category || "General",
+      brand: product.brand || "",
+
+      product_url: product.product_url || "",
+      supplier: product.supplier || "AliExpress",
+      supplier_url: product.supplier_url || "",
+
+      store_name: product.store_name || "",
+      store_rating: Number(product.store_rating || 0),
+      supplier_rating: Number(product.supplier_rating || 0),
+
+      currency: product.currency || "USD",
+
+      buy_price: Number(product.buy_price || 0),
+      selling_price: Number(product.selling_price || 0),
+
+      profit: Number(product.profit || 0),
+      roi: Number(product.roi || 0),
+
+      sales: Number(product.sales || 0),
+      orders: Number(product.orders || product.sales || 0),
+      reviews: Number(product.reviews || 0),
+
+      country: product.country || "Global",
+
+      shipping_days: Number(product.shipping_days || 10),
+
+      ai_score: Number(product.ai_score || 0),
+      trend_score: Number(product.trend_score || 0),
+      viral_score: Number(product.viral_score || 0),
+      opportunity_score: Number(product.opportunity_score || 0),
+
+      demand_score: Number(product.demand_score || 0),
+      confidence_score: Number(product.confidence_score || 0),
+      risk_score: Number(product.risk_score || 0),
+      winning_probability: Number(product.winning_probability || 0),
+
+      decision: product.decision || "Test First",
+
+      ai_reason: product.ai_reason || "",
+
+      competition: product.competition || "Medium",
+
+      trend_direction: product.trend_direction || "Stable",
+
+      seasonality: product.seasonality || "Evergreen",
+
+      cpm: Number(product.cpm || 0),
+      cpa: Number(product.cpa || 0),
+    };
+  }
+
+  // ==============================
+  // AliExpress API
+  // ==============================
+
+  const title =
+    product.itemTitle ||
+    product.title ||
+    product.productTitle ||
+    product.subject ||
+    product.name ||
+    "Unknown Product";
+
+  const image =
+    product.itemMainPic ||
+    product.imageUrl ||
+    product.image ||
+    product.mainImage ||
+    product.imageUrls?.[0] ||
+    "";
+
   const price =
-    Number(product.priceCurrentMin) ||
-    parseFloat(
-      String(product.priceCurrent ?? "").replace(/[^\d.]/g, "")
-    ) ||
-    Number(product.priceOriginalMin) ||
-    parseFloat(
-      String(product.priceOriginal ?? "").replace(/[^\d.]/g, "")
-    ) ||
+    Number(product.salePrice) ||
+    Number(product.targetSalePrice) ||
+    Number(product.originalPrice) ||
+    Number(product.targetOriginalPrice) ||
+    Number(product.sale_price) ||
+    Number(product.sale_price_usd) ||
+    Number(product.price) ||
+    Number(product.priceMin) ||
+    Number(product.priceMax) ||
     0;
 
-  const rating = Number(product.ratingValue ?? 0);
-  const sold = Number(product.soldCount ?? 0);
-  const reviewCount = Number(product.reviewCount ?? 0);
+  const sold =
+    Number(product.orders) ||
+    Number(product.trade) ||
+    Number(product.tradeCount) ||
+    Number(product.sales) ||
+    Number(product.sold) ||
+    0;
 
-  // AI Score
+  const reviews =
+    Number(product.reviewCount) ||
+    Number(product.reviews) ||
+    Number(product.feedbackCount) ||
+    0;
+
+  const rating =
+    Number(product.evaluateRate) ||
+    Number(product.evaluationRate) ||
+    Number(product.rating) ||
+    Number(product.score) ||
+    0;
+
   const aiScore = Math.min(
     100,
-    Math.round(rating * 20 + Math.min(sold / 20, 40))
+    Math.round(
+      rating * 20 +
+      Math.min(sold / 20, 40)
+    )
   );
 
-  // Trend Score
   const trendScore = Math.min(
     100,
-    Math.round(rating * 20)
+    Math.round(
+      aiScore * 0.95
+    )
   );
 
-  // Viral Score
   const viralScore = Math.min(
     100,
     Math.round(
-      rating * 15 +
-      Math.min(sold / 50, 40) +
-      Math.min(reviewCount / 20, 20)
+      aiScore * 0.90
     )
   );
 
-  // Competition
-  const competition =
-    sold > 100
-      ? "High"
-      : sold > 30
-      ? "Medium"
-      : "Low";
-
-  // Selling Price
-  const sellingPrice =
-    Math.round(price * 2.8 * 100) / 100;
-
-  // Profit
-  const profit =
-    Math.round((sellingPrice - price) * 100) / 100;
-
-  // ROI
-  const roi =
-    price > 0
-      ? Math.round((profit / price) * 100)
-      : 0;
-
-  // Opportunity Score
-  const opportunityScore = Number(
-    (
-      aiScore * 0.35 +
-      trendScore * 0.25 +
-      Math.min(profit * 2, 100) * 0.20 +
-      (competition === "Low"
-        ? 100
-        : competition === "Medium"
-        ? 70
-        : 30) * 0.10 +
-      (price <= 30 ? 10 : 0)
-    ).toFixed(1)
-  );
-
-  // Demand Score
-  const demandScore = Math.min(
+  const opportunity = Math.min(
     100,
     Math.round(
-      sold / 10 +
-      reviewCount / 30 +
-      rating * 15
+      aiScore * 0.7 +
+      Math.min(sold / 50, 30)
     )
   );
 
-  // Risk Score
-  const riskScore =
-    competition === "High"
-      ? 80
-      : competition === "Medium"
-      ? 45
-      : 15;
-
-  // Confidence Score
-  const confidenceScore = Math.min(
-    100,
-    Math.round(
-      aiScore * 0.4 +
-      trendScore * 0.3 +
-      demandScore * 0.3
-    )
-  );
-
-  // Winning Probability
-  const winningProbability = Math.min(
-    100,
-    Math.round(
-      opportunityScore * 0.5 +
-      confidenceScore * 0.5
-    )
-  );
-
-  // Decision
-  const decision =
-    opportunityScore >= 90
-      ? "Strong Buy"
-      : opportunityScore >= 75
-      ? "Test First"
-      : "Avoid";
+  console.log("====== RAW PRODUCT ======");
+  console.log({
+    title,
+    price,
+    sold,
+    reviews,
+    rating,
+    raw: product,
+  });
 
   return {
-    id: Number(product.productId ?? Date.now()),
+    id: Number(product.itemId || Date.now()),
 
     source: "AliExpress",
+
     platform: "AliExpress",
 
-    name: product.title ?? "Unknown Product",
-    description: product.title ?? "",
-    image: product.imageUrl ?? "",
+    name: title,
 
-    category: product.categoryName ?? "General",
-    brand: product.brandName ?? "",
+    description:
+      product.description ||
+      "",
 
-    product_url: product.productUrl ?? "",
+    image,
+
+    category:
+      product.category ||
+      "General",
+
+    brand:
+      product.brand ||
+      "",
+
+    product_url:
+      product.itemUrl ||
+      product.productUrl ||
+      `https://www.aliexpress.com/item/${product.itemId}.html`,
 
     supplier: "AliExpress",
-    supplier_url: product.storeUrl ?? "",
 
-    store_name: product.storeName ?? "",
+    supplier_url: "",
 
-    store_rating: Number(product.storeRating ?? 0),
-    supplier_rating: Number(product.storeRating ?? 0),
+    store_name:
+      product.storeName ||
+      "",
 
-    currency: "USD",
+    store_rating:
+      Number(product.storeRating || 0),
+
+    supplier_rating:
+      Number(product.storeRating || 0),
+
+    currency:
+      product.currency ||
+      "USD",
 
     buy_price: price,
-    selling_price: sellingPrice,
-    profit,
-    roi,
+
+    selling_price:
+      Number((price * 2.5).toFixed(2)),
+
+    profit:
+      Number((price * 1.5).toFixed(2)),
+
+    roi:
+      price > 0
+        ? 150
+        : 0,
 
     sales: sold,
+
     orders: sold,
-    reviews: reviewCount,
 
-    country: "Global",
+    reviews,
 
-    shipping_days: 10,
+    country:
+      product.shipTo ||
+      "Global",
+
+    shipping_days:
+      Number(product.shippingDays || 10),
 
     ai_score: aiScore,
+
     trend_score: trendScore,
+
     viral_score: viralScore,
-    opportunity_score: opportunityScore,
 
-    competition,
+    opportunity_score: opportunity,
 
-    trend_direction: "Stable",
-    seasonality: "Evergreen",
+    demand_score: sold,
 
-    cpm: 0,
-    cpa: 0,
+    confidence_score: aiScore,
+
+    risk_score:
+      sold > 500
+        ? 20
+        : sold > 100
+        ? 40
+        : 70,
+
+    winning_probability: opportunity,
+
+    decision:
+      opportunity >= 85
+        ? "Strong Buy"
+        : opportunity >= 65
+        ? "Test First"
+        : "Avoid",
 
     ai_reason: "",
 
-    decision,
+    competition:
+      sold > 1000
+        ? "High"
+        : sold > 100
+        ? "Medium"
+        : "Low",
 
-    demand_score: demandScore,
-    risk_score: riskScore,
-    confidence_score: confidenceScore,
-    winning_probability: winningProbability,
+    trend_direction:
+      "Stable",
+
+    seasonality:
+      "Evergreen",
+
+    cpm: 0,
+
+    cpa: 0,
   };
 }

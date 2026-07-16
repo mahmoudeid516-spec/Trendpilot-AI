@@ -46,22 +46,22 @@ export default function SearchResults({ results }: Props) {
 
 </div>
             
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-52 object-cover rounded-xl"
-            />
+<img
+  src={product.image || "https://picsum.photos/400/400"}
+  alt={product.name || "Product"}
+  className="w-full h-52 object-cover rounded-xl"
+/>
 
             <h3 className="font-bold mt-4 line-clamp-2">
-              {product.name}
+            {product.name || "Unknown Product"}
             </h3>
 
             <p className="text-gray-500 mt-2">
-              ⭐ {product.ai_score / 20} • {product.sales.toLocaleString()} Sold
+            ⭐ {(product.ai_score ?? 0) / 20} • {(product.sales ?? 0).toLocaleString()} Sold
             </p>
 
             <p className="text-2xl font-bold text-green-600 mt-3">
-              ${product.buy_price.toFixed(2)}
+            ${Number(product.buy_price ?? 0).toFixed(2)}
             </p>
 
             <div className="grid grid-cols-2 gap-3 mt-5">

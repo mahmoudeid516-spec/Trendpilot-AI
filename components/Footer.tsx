@@ -1,59 +1,69 @@
 "use client";
 
 import Link from "next/link";
+import {
+  FaXTwitter,
+  FaInstagram,
+  FaLinkedin,
+  FaYoutube,
+} from "react-icons/fa6";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#09090B] text-white border-t border-gray-800">
+    <footer className="bg-[#09090B] border-t border-gray-800 text-white">
 
       <div className="max-w-7xl mx-auto px-8 py-20">
 
-        <div className="grid lg:grid-cols-5 gap-12">
+        <div className="grid lg:grid-cols-5 gap-14">
 
           {/* Logo */}
 
           <div className="lg:col-span-2">
 
-            <h2 className="text-4xl font-extrabold text-purple-500">
-              TrendPilot AI
-            </h2>
+            <img
+              src="/logos/trendpilot.jpeg"
+              alt="TrendPilot AI"
+              className="h-16 w-auto"
+            />
 
-            <p className="mt-6 text-gray-400 leading-8 max-w-md">
-              The AI Operating System for Ecommerce.
+            <p className="mt-8 max-w-md text-gray-400 leading-8">
 
-              Discover winning products, analyze trends,
-              generate marketing campaigns and launch faster
-              using artificial intelligence.
+              Discover winning ecommerce products before they go viral.
+              Analyze competitors, estimate profit, generate marketing
+              campaigns and launch faster using artificial intelligence.
+
             </p>
 
-            <div className="flex gap-4 mt-8">
+            {/* Social */}
+
+            <div className="flex gap-4 mt-10">
 
               <a
                 href="#"
-                className="w-11 h-11 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 hover:bg-black transition"
               >
-                𝕏
+                <FaXTwitter size={18} />
               </a>
 
               <a
                 href="#"
-                className="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 hover:bg-blue-600 transition"
               >
-                in
+                <FaLinkedin size={18} />
               </a>
 
               <a
                 href="#"
-                className="w-11 h-11 rounded-full bg-pink-600 hover:bg-pink-700 flex items-center justify-center transition"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 hover:bg-pink-600 transition"
               >
-                IG
+                <FaInstagram size={18} />
               </a>
 
               <a
                 href="#"
-                className="w-11 h-11 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 hover:bg-red-600 transition"
               >
-                ▶
+                <FaYoutube size={18} />
               </a>
 
             </div>
@@ -64,26 +74,40 @@ export default function Footer() {
 
           <div>
 
-            <h3 className="font-bold text-xl mb-6">
+            <h3 className="mb-7 text-xl font-bold">
               Product
             </h3>
 
             <ul className="space-y-4 text-gray-400">
 
               <li>
-                <Link href="/">Features</Link>
+                <a href="#features" className="hover:text-white transition">
+                  Features
+                </a>
               </li>
 
               <li>
-                <Link href="/pricing">Pricing</Link>
+                <a href="#pricing" className="hover:text-white transition">
+                  Pricing
+                </a>
               </li>
 
               <li>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-white transition"
+                >
+                  Dashboard
+                </Link>
               </li>
 
               <li>
-                <Link href="/register">Start Free Trial</Link>
+                <Link
+                  href="/register"
+                  className="hover:text-white transition"
+                >
+                  Start Free Trial
+                </Link>
               </li>
 
             </ul>
@@ -94,26 +118,34 @@ export default function Footer() {
 
           <div>
 
-            <h3 className="font-bold text-xl mb-6">
+            <h3 className="mb-7 text-xl font-bold">
               Company
             </h3>
 
             <ul className="space-y-4 text-gray-400">
 
               <li>
-                <Link href="/about">About</Link>
+                <Link href="/about" className="hover:text-white transition">
+                  About
+                </Link>
               </li>
 
               <li>
-                <Link href="/contact">Contact</Link>
+                <Link href="/contact" className="hover:text-white transition">
+                  Contact
+                </Link>
               </li>
 
               <li>
-                <Link href="/login">Login</Link>
+                <Link href="/login" className="hover:text-white transition">
+                  Login
+                </Link>
               </li>
 
               <li>
-                <Link href="/register">Register</Link>
+                <Link href="/register" className="hover:text-white transition">
+                  Register
+                </Link>
               </li>
 
             </ul>
@@ -124,22 +156,26 @@ export default function Footer() {
 
           <div>
 
-            <h3 className="font-bold text-xl mb-6">
+            <h3 className="mb-7 text-xl font-bold">
               Stay Updated
             </h3>
 
-            <p className="text-gray-400 mb-5">
-              Join our newsletter and receive AI ecommerce
-              tips every week.
+            <p className="mb-6 text-gray-400 leading-7">
+
+              Join thousands of ecommerce founders and receive
+              AI tips, winning products and market insights every week.
+
             </p>
 
             <input
               type="email"
-              placeholder="Email address"
-              className="w-full rounded-xl bg-gray-900 border border-gray-700 px-4 py-3 outline-none focus:border-purple-500"
+              placeholder="Enter your email"
+              className="w-full rounded-2xl border border-gray-700 bg-gray-900 px-5 py-4 outline-none focus:border-purple-500 transition"
             />
 
-            <button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 transition rounded-xl py-3 font-bold">
+            <button
+              className="mt-5 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 py-4 font-bold transition hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-700/30"
+            >
               Subscribe
             </button>
 
@@ -147,27 +183,31 @@ export default function Footer() {
 
         </div>
 
-        <div className="border-t border-gray-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center">
+        {/* Bottom */}
+
+        <div className="mt-20 border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between">
 
           <p className="text-gray-500">
+
             © 2026 TrendPilot AI. All rights reserved.
+
           </p>
 
           <div className="flex flex-wrap gap-6 mt-6 md:mt-0 text-gray-500">
 
-            <Link href="/privacy">
+            <Link href="/privacy" className="hover:text-white transition">
               Privacy Policy
             </Link>
 
-            <Link href="/terms">
+            <Link href="/terms" className="hover:text-white transition">
               Terms of Service
             </Link>
 
-            <Link href="/contact">
+            <Link href="/contact" className="hover:text-white transition">
               Contact
             </Link>
 
-            <Link href="/about">
+            <Link href="/about" className="hover:text-white transition">
               About
             </Link>
 

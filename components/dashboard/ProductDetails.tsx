@@ -128,13 +128,28 @@ const profit = Math.min(
       FINAL AI DECISION
     </p>
 
-    <h2 className="text-4xl font-bold mt-2">
+    <h2 className="text-5xl font-bold mt-2">
       {decision.verdict}
     </h2>
 
     <p className="mt-3 text-purple-100">
       Winning Probability {decision.winningProbability}%
     </p>
+    <div className="mt-5 flex flex-wrap gap-3">
+
+<span className="rounded-full bg-white/20 px-4 py-2 text-sm">
+  🛒 {product.platform}
+</span>
+
+<span className="rounded-full bg-white/20 px-4 py-2 text-sm">
+  🌍 {product.country}
+</span>
+
+<span className="rounded-full bg-white/20 px-4 py-2 text-sm">
+  💰 ${product.profit} Profit
+</span>
+
+</div>
 
   </div>
 
@@ -190,26 +205,26 @@ const profit = Math.min(
   <img
     src={product.image}
     alt={product.name}
-    className="w-full rounded-2xl shadow-lg object-cover"
+    className="w-full h-[420px] rounded-3xl object-cover border border-gray-200 shadow-2xl"
   />
 
   <div className="grid grid-cols-2 gap-3 mt-5">
 
-    <div className="bg-gray-100 rounded-xl p-4">
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
       <p className="text-gray-500 text-sm">Buy Price</p>
       <p className="font-bold text-xl">
         ${product.buy_price}
       </p>
     </div>
 
-    <div className="bg-gray-100 rounded-xl p-4">
+    <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
       <p className="text-gray-500 text-sm">Selling Price</p>
       <p className="font-bold text-xl">
         ${product.selling_price}
       </p>
     </div>
 
-    <div className="bg-green-100 rounded-xl p-4">
+    <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
       <p className="text-gray-500 text-sm">Profit</p>
       <p className="font-bold text-green-700 text-xl">
         ${product.profit}
@@ -265,7 +280,7 @@ const profit = Math.min(
   <div className="rounded-2xl bg-blue-50 p-6">
 
     <h3 className="font-bold text-xl mb-4">
-      📊 AI Market Analysis
+      📊 AI Market Intelligence
     </h3>
 
     <div className="space-y-3">

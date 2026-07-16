@@ -1,20 +1,16 @@
 "use client";
 
+import { runProductEngine } from "../../services/engine/ProductEngine";
 import { useState } from "react";
 import ProductComparison from "./ProductComparison";
 import { aiSearch } from "../../services/aiSearch";
-import { productSearch } from "../../services/productSearch";
-import {
-  getBestProduct,
-  scoreProducts,
-} from "../../services/businessAdvisor";
-
+import { getBestProduct,scoreProducts, } from "../../services/businessAdvisor";
 import type { Product } from "../../types/Product";
-
 import SearchInput from "./SearchInput";
 import SuggestionChips from "./SuggestionChips";
 import AIRecommendation from "./AIRecommendation";
 import SearchResults from "./SearchResults";
+import { searchProducts } from "../../services/productSearch";
 
 export default function AICommandCenter() {
   const [prompt, setPrompt] = useState("");
@@ -31,20 +27,27 @@ export default function AICommandCenter() {
 
       console.log("FILTERS:", filters);
 
-      const products = await productSearch(filters);
+      const keyword =
+  filters.keyword ||
+  filters.search ||
+  prompt;
 
-      console.log("PRODUCTS:", products);
+const platform =
+  filters.platform || "All";
 
-      const scoredProducts = scoreProducts(products);
+const products = await runProductEngine(
+  keyword,
+  platform
+);
 
-      setResults(scoredProducts);
+setResults(products);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   }
-
+  
   const bestProduct = getBestProduct(results);
 
   return (
@@ -142,6 +145,10 @@ export default function AICommandCenter() {
               <SearchResults
                 results={results}
               />
+
+<ProductComparison
+    products={results}
+/>
 
             </div>
 

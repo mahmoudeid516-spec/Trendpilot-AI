@@ -1,19 +1,55 @@
-export async function productSearch(filters: any) {
-  const search =
-  filters?.keyword ||
-  filters?.query ||
-  filters?.search ||
-  "wireless earbuds";
+import { supabase } from "../lib/supabase";
+import { searchAliExpress } from "./providers/aliexpress";
+import { calculateProductsMetrics } from "./BusinessMetrics";
+import { scoreProducts } from "./businessAdvisor";
 
-console.log("SEARCH KEYWORD:", search);
+export async function searchProducts(
+  keyword: string,
+  platform = "All"
+) {
+  // 1️⃣ ابحث في قاعدة البيانات أولاً
+  let query = supabase.from("products").select("*");
 
-  const response = await fetch(
-    `/api/discover?search=${encodeURIComponent(search)}`
-  );
-
-  if (!response.ok) {
-    throw new Error("Product Search Failed");
+  if (keyword.trim()) {
+    query = query.ilike("name", `%${keyword}%`);
   }
 
-  return await response.json();
+  if (platform !== "All") {
+    query = query.eq("platform", platform);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error(error);
+  }
+
+  // إذا وجدنا نتائج في قاعدة البيانات نرجعها فورًا
+  if (data && data.length > 0) {
+    console.log("Loaded from Supabase");
+    return data;
+  }
+
+  console.log("Nothing found in Supabase...");
+  console.log("Searching AliExpress...");
+
+  // 2️⃣ جلب منتجات حقيقية
+  const products = await searchAliExpress(keyword);
+
+  // 3️⃣ حساب الربح والـ ROI
+  const metrics = calculateProductsMetrics(products);
+
+  // 4️⃣ حساب الـ Opportunity Score
+  const ranked = scoreProducts(metrics);
+
+  // 5️⃣ حفظ النتائج في Supabase
+  if (ranked.length) {
+    await supabase
+      .from("products")
+      .upsert(ranked, {
+        onConflict: "id",
+      });
+  }
+
+  return ranked;
 }
