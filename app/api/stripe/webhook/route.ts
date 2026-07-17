@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { stripe } from "../../../../lib/stripe";
+import { getStripe } from "../../../../lib/stripe";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -23,16 +18,21 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
 
   try {
+    const stripe = getStripe();
+
     event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err: any) {
-    console.error("Webhook verification failed:", err.message);
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Invalid webhook signature.";
+
+    console.error("Webhook verification failed:", message);
 
     return NextResponse.json(
-      { error: err.message },
+      { error: message },
       { status: 400 }
     );
   }
@@ -42,12 +42,24 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
 
       const userId = session.metadata?.userId;
+      const plan = session.metadata?.plan ?? "Pro";
 
       if (userId) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !serviceRoleKey) {
+          throw new Error(
+            "Supabase admin credentials are not configured for webhook processing."
+          );
+        }
+
+        const supabase = createClient(supabaseUrl, serviceRoleKey);
+
         const { error } = await supabase
           .from("profiles")
           .update({
-            plan: "Pro",
+            plan,
             subscription_status: "active",
           })
           .eq("id", userId);

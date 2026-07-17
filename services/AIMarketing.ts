@@ -1,6 +1,17 @@
-import { openai } from "./OpenAI";
+import { getOpenAI } from "./OpenAI";
 
-export async function generateMarketing(product: any) {
+type MarketingProduct = {
+  name?: string;
+  category?: string;
+  selling_price?: number;
+  profit?: number;
+  platform?: string;
+  ai_score?: number;
+};
+
+export async function generateMarketing(product: MarketingProduct) {
+  const openai = getOpenAI();
+
   const prompt = `
 You are an expert Shopify marketing strategist.
 

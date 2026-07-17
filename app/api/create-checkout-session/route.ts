@@ -1,76 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "../../../lib/stripe";
 import { createClient } from "@supabase/supabase-js";
+import { createCheckoutSession, normalizePlan } from "../../../lib/billing";
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: req.headers.get("Authorization") ?? "",
-          },
-        },
-      }
-    );
+    const authHeader = req.headers.get("authorization") ?? "";
 
-    const {
-      data: { session: authSession },
-    } = await supabase.auth.getSession();
-
-    if (!authSession) {
+    if (!authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
+    const body = (await req.json().catch(() => ({}))) as {
+      plan?: unknown;
+    };
 
-      payment_method_types: ["card"],
+    const plan = normalizePlan(body.plan);
 
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-
-            product_data: {
-              name: "TrendPilot AI Pro",
-            },
-
-            recurring: {
-              interval: "month",
-            },
-
-            unit_amount: 2900,
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
           },
-
-          quantity: 1,
         },
-      ],
+      }
+    );
 
-      metadata: {
-        userId: authSession.user.id,
-        email: authSession.user.email ?? "",
-      },
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-      success_url: "http://localhost:3000/success",
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-      cancel_url: "http://localhost:3000/cancel",
+    const origin =
+      req.headers.get("origin") ??
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      "http://localhost:3000";
+
+    const checkoutSession = await createCheckoutSession({
+      plan,
+      userId: user.id,
+      email: user.email ?? "",
+      origin,
     });
 
     return NextResponse.json({
       url: checkoutSession.url,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
+
+    const message =
+      error instanceof Error ? error.message : "Checkout session failed.";
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,

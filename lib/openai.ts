@@ -1,8 +1,17 @@
 import OpenAI from "openai";
 
-console.log("OPENAI KEY:", process.env.OPENAI_API_KEY?.slice(0, 15));
-console.log("KEY LENGTH:", process.env.OPENAI_API_KEY?.length);
+let openaiClient: OpenAI | null = null;
 
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+export function getOpenAI(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured.");
+  }
+
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey });
+  }
+
+  return openaiClient;
+}

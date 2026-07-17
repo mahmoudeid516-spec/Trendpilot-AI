@@ -21,10 +21,6 @@ export async function getProfile() {
   console.log("Current User:", user);
   console.log("Profile Data:", data);
 
-  if (error) {
-    console.error(error);
-    return null;
-  }
-return data;
+  return data;
 
 }

@@ -7,10 +7,12 @@ import { supabase } from "../../lib/supabase";
 export default function SuccessPage() {
   const router = useRouter();
 
-  const [status, setStatus] = useState("Activating your subscription...");
+  const [status, setStatus] = useState(
+    "Payment received. Finalizing subscription activation..."
+  );
 
   useEffect(() => {
-    async function activatePlan() {
+    async function checkSessionAndContinue() {
       try {
         const {
           data: { session },
@@ -21,21 +23,9 @@ export default function SuccessPage() {
           return;
         }
 
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            plan: "Pro",
-            subscription_status: "active",
-          })
-          .eq("id", session.user.id);
-
-        if (error) {
-          console.error(error);
-          setStatus("Something went wrong while activating your plan.");
-          return;
-        }
-
-        setStatus("Subscription activated successfully!");
+        setStatus(
+          "Subscription activation is in progress. You can continue to your dashboard."
+        );
 
         setTimeout(() => {
           router.replace("/dashboard");
@@ -47,7 +37,7 @@ export default function SuccessPage() {
       }
     }
 
-    activatePlan();
+    checkSessionAndContinue();
   }, [router]);
 
   return (

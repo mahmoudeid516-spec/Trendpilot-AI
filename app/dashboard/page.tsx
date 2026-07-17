@@ -10,31 +10,38 @@ import BusinessOverview from "../../components/dashboard/BusinessOverview";
 import AIInsights from "../../components/dashboard/AIInsights";
 import AICommandCenter from "../../components/dashboard/AICommandCenter";
 import SearchBar from "../../components/dashboard/SearchBar";
-import Filters from "../../components/dashboard/Filters";
-import AIAnalyzer from "../../components/dashboard/AIAnalyzer";
 import ProductsTable from "../../components/dashboard/ProductsTable";
 import ProductDetails from "../../components/dashboard/ProductDetails";
 import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
-import ProGate from "../../components/dashboard/ProGate";
 import { importProducts } from "../../lib/importers/importProducts";
 import { searchAliExpress } from "../../services/providers/aliexpress";
 import { mapApifyProduct } from "../../services/productMapper";
 import { dummyProducts } from "../../lib/importers/dummyProducts";
+import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const hasSupabaseClient = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState("All");
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
 
   useEffect(() => {
     async function checkUser() {
+      if (!hasSupabaseClient) {
+        router.replace("/login");
+        return;
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -45,7 +52,7 @@ export default function DashboardPage() {
     }
 
     checkUser();
-  }, [router]);
+  }, [hasSupabaseClient, router]);
 
   async function handleSearch(
     searchText: string,

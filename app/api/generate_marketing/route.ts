@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { openai } from "../../../lib/openai";
+import { getOpenAI } from "../../../lib/openai";
 
 export async function POST(req: Request) {
   try {
+    const openai = getOpenAI();
+
     const { product } = await req.json();
 
     const prompt = `
@@ -47,10 +49,13 @@ Return beautiful markdown.
       marketing: response.output_text,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Marketing generation failed.";
+
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,

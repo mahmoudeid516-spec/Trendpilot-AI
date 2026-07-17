@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { openai } from "../../../lib/openai";
+import { getOpenAI } from "../../../lib/openai";
 
 export async function POST(req: Request) {
   try {
+    const openai = getOpenAI();
+
     const { product } = await req.json();
 
     const response = await openai.responses.create({
@@ -87,12 +89,15 @@ High
       result,
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err);
+
+    const message =
+      err instanceof Error ? err.message : "Analyze request failed.";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,

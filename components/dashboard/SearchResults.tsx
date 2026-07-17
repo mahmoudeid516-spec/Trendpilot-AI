@@ -21,7 +21,10 @@ export default function SearchResults({ results }: Props) {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
      
        
-{sortedResults.map((product: any, index: number) => (
+{sortedResults.map((product: Product, index: number) => {
+  const opportunity = product.opportunity_score ?? 0;
+
+  return (
           <div
             key={index}
             className="bg-white rounded-2xl shadow hover:shadow-xl transition p-5"
@@ -30,16 +33,16 @@ export default function SearchResults({ results }: Props) {
 
 <span
   className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
-    product.opportunity_score >= 90
+    opportunity >= 90
       ? "bg-green-600"
-      : product.opportunity_score >= 70
+      : opportunity >= 70
       ? "bg-yellow-500"
       : "bg-red-600"
   }`}
 >
-  {product.opportunity_score >= 90
+  {opportunity >= 90
     ? "🏆 Winning Product"
-    : product.opportunity_score >= 70
+    : opportunity >= 70
     ? "⭐ Good Opportunity"
     : "⚠️ Avoid"}
 </span>
@@ -68,7 +71,7 @@ export default function SearchResults({ results }: Props) {
               <div className="bg-purple-50 rounded-xl p-3 text-center">
                 <p className="text-xs">Opportunity</p>
                 <h4 className="font-bold text-xl">
-                  {Math.round(product.opportunity_score ?? 0)}
+                  {Math.round(opportunity)}
                 </h4>
               </div>
 
@@ -89,7 +92,8 @@ export default function SearchResults({ results }: Props) {
               View Product
             </a>
           </div>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

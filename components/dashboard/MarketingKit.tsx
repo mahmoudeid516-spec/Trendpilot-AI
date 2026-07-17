@@ -6,11 +6,19 @@ type Props = {
   productName: string;
 };
 
+type MarketingResponse = {
+  facebook_ad?: string;
+  instagram_caption?: string;
+  tiktok_hook?: string;
+  seo_title?: string;
+  hashtags?: string;
+};
+
 export default function MarketingKit({
   productName,
 }: Props) {
   const [loading, setLoading] = useState(false);
-  const [marketing, setMarketing] = useState<any>(null);
+  const [marketing, setMarketing] = useState<MarketingResponse | null>(null);
 
   async function generateMarketing() {
     setLoading(true);
@@ -95,7 +103,7 @@ ${marketing.hashtags}
               <h3 className="font-bold text-xl">📘 Facebook Ad</h3>
 
               <button
-                onClick={() => copy(marketing.facebook_ad)}
+                onClick={() => copy(marketing.facebook_ad ?? "")}
                 className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
               >
                 Copy
@@ -110,7 +118,7 @@ ${marketing.hashtags}
               <h3 className="font-bold text-xl">📷 Instagram Caption</h3>
 
               <button
-                onClick={() => copy(marketing.instagram_caption)}
+                onClick={() => copy(marketing.instagram_caption ?? "")}
                 className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
               >
                 Copy
@@ -125,7 +133,7 @@ ${marketing.hashtags}
               <h3 className="font-bold text-xl">🎬 TikTok Hook</h3>
 
               <button
-                onClick={() => copy(marketing.tiktok_hook)}
+                onClick={() => copy(marketing.tiktok_hook ?? "")}
                 className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
               >
                 Copy
@@ -140,7 +148,7 @@ ${marketing.hashtags}
               <h3 className="font-bold text-xl">🔍 SEO Title</h3>
 
               <button
-                onClick={() => copy(marketing.seo_title)}
+                onClick={() => copy(marketing.seo_title ?? "")}
                 className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
               >
                 Copy
@@ -155,7 +163,7 @@ ${marketing.hashtags}
               <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
 
               <button
-                onClick={() => copy(marketing.hashtags)}
+                onClick={() => copy(marketing.hashtags ?? "")}
                 className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
               >
                 Copy

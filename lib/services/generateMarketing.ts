@@ -1,5 +1,5 @@
-export async function generateMarketing(product: any) {
-    const response = await fetch("/api/generate-marketing", {
+export async function generateMarketing(product: unknown) {
+  const response = await fetch("/api/generate_marketing", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

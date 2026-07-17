@@ -1,6 +1,13 @@
 "use client";
 
+import { supabase } from "../lib/supabase";
+
 export default function Pricing() {
+    const hasSupabaseClient = Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
     const plans = [
       {
         name: "Starter",
@@ -72,10 +79,25 @@ export default function Pricing() {
                 <button
   onClick={async () => {
     try {
+      if (!hasSupabaseClient) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        window.location.href = "/login";
+        return;
+      }
+
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           plan: plan.name,
@@ -93,7 +115,7 @@ export default function Pricing() {
       
       window.location.href = data.url;
     } 
-    catch (error: any) {
+    catch (error: unknown) {
       console.error(error);
     
       if (error instanceof Error) {

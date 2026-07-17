@@ -8,7 +8,7 @@ export default function ContactPage() {
           </h1>
   
           <p className="mt-8 text-gray-700">
-            We'd love to hear from you.
+            We&apos;d love to hear from you.
           </p>
   
           <div className="mt-10 space-y-5">

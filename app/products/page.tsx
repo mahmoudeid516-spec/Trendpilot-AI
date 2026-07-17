@@ -1,14 +1,24 @@
-import { supabase } from "../../lib/supabase";
+import { hasSupabaseConfig, supabase } from "../../lib/supabase";
 import ProductsClient from "../../components/products/ProductsClient";
 import DashboardHero from "../../components/dashboard/DashboardHero";
 
 export default async function ProductsPage() {
-  const { data: products } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", {
-      ascending: false,
-    });
+  let products: Array<{ opportunity_score?: number }> = [];
+
+  if (hasSupabaseConfig()) {
+    try {
+    const { data } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", {
+        ascending: false,
+      });
+
+    products = (data ?? []) as Array<{ opportunity_score?: number }>;
+    } catch (error) {
+      console.warn("Products page fallback:", error);
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-8">

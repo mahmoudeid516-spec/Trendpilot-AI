@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40" role="img" aria-labelledby="title desc">
+  <title id="title">AliExpress Logo Placeholder</title>
+  <desc id="desc">Text logo for AliExpress</desc>
+  <rect width="120" height="40" rx="8" fill="#d61921" />
+  <text x="60" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">ALIEXPRESS</text>
+</svg>

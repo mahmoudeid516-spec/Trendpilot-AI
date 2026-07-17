@@ -2,27 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import Link from "next/link";
-
-type Product = {
-  id: number;
-  image: string;
-  name: string;
-  platform: string;
-  ai_score: number;
-  trend_score: number;
-  profit: number;
-  buy_price: number;
-  selling_price: number;
-  supplier: string;
-  supplier_url: string;
-  product_url: string;
-  competition: string;
-  country: string;
-  category: string;
-  description?: string;
-  ai_reason?: string;
-};
+import type { Product } from "../../types/Product";
 
 type Props = {
   products?: Product[];
@@ -43,19 +23,19 @@ export default function ProductsTable({
   const [savedProducts, setSavedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    loadProducts();
-  }, [refreshKey]);
+    async function loadProducts() {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*");
+  
+      console.log("Products:", data);
+      console.log("Error:", error);
+  
+      setSavedProducts(data || []);
+    }
 
-  async function loadProducts() {
-    const { data, error } = await supabase
-  .from("products")
-  .select("*");
-  
-    console.log("Products:", data);
-    console.log("Error:", error);
-  
-    setSavedProducts(data || []);
-  }
+    void loadProducts();
+  }, [refreshKey]);
 
   const displayProducts =
   searchResults.length > 0
@@ -171,6 +151,7 @@ className="border-b hover:bg-purple-50 transition duration-300"
 
 <img
   src={product.image || "https://picsum.photos/200"}
+  alt={product.name}
   className="w-20 h-20 rounded-2xl object-cover shadow"
 />
 

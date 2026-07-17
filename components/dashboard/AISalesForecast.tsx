@@ -1,7 +1,9 @@
 "use client";
 
+import type { Product } from "../../types/Product";
+
 type Props = {
-  product: any;
+  product: Partial<Product>;
 };
 
 export default function AISalesForecast({ product }: Props) {

@@ -14,6 +14,12 @@ type Stats = {
   avgProfit: number;
 };
 
+type ProductStatsRow = {
+  platform?: string;
+  ai_score?: number;
+  profit?: number;
+};
+
 export default function StatsCards({
   refreshKey,
 }: Props) {
@@ -25,51 +31,53 @@ export default function StatsCards({
   });
 
   useEffect(() => {
-    loadStats();
+    async function loadStats() {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*");
+
+      if (error || !data) return;
+
+      const rows = data as ProductStatsRow[];
+
+      const totalProducts = rows.length;
+
+      const shopifyProducts = rows.filter(
+        (p) => p.platform === "Shopify"
+      ).length;
+
+      const avgScore =
+        totalProducts === 0
+          ? 0
+          : Math.round(
+              rows.reduce(
+                (sum: number, p) =>
+                  sum + Number(p.ai_score || 0),
+                0
+              ) / totalProducts
+            );
+
+      const avgProfit =
+        totalProducts === 0
+          ? 0
+          : Math.round(
+              rows.reduce(
+                (sum: number, p) =>
+                  sum + Number(p.profit || 0),
+                0
+              ) / totalProducts
+            );
+
+      setStats({
+        totalProducts,
+        shopifyProducts,
+        avgScore,
+        avgProfit,
+      });
+    }
+
+    void loadStats();
   }, [refreshKey]);
-
-  async function loadStats() {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*");
-
-    if (error || !data) return;
-
-    const totalProducts = data.length;
-
-    const shopifyProducts = data.filter(
-      (p: any) => p.platform === "Shopify"
-    ).length;
-
-    const avgScore =
-      totalProducts === 0
-        ? 0
-        : Math.round(
-            data.reduce(
-              (sum: number, p: any) =>
-                sum + Number(p.ai_score || 0),
-              0
-            ) / totalProducts
-          );
-
-    const avgProfit =
-      totalProducts === 0
-        ? 0
-        : Math.round(
-            data.reduce(
-              (sum: number, p: any) =>
-                sum + Number(p.profit || 0),
-              0
-            ) / totalProducts
-          );
-
-    setStats({
-      totalProducts,
-      shopifyProducts,
-      avgScore,
-      avgProfit,
-    });
-  }
 
   const cards = [
     {

@@ -32,22 +32,22 @@ export default function ProductPage({ id }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProduct();
-  }, [id]);
+    async function loadProduct() {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", Number(id))
+        .single();
 
-  async function loadProduct() {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", Number(id))
-      .single();
+      if (!error) {
+        setProduct(data);
+      }
 
-    if (!error) {
-      setProduct(data);
+      setLoading(false);
     }
 
-    setLoading(false);
-  }
+    void loadProduct();
+  }, [id]);
 
   if (loading) {
     return (

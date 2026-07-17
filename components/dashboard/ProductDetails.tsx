@@ -44,42 +44,46 @@ export default function ProductDetails({
   product,
   allProducts = [],
 }: Props) {
+  const [marketing, setMarketing] = useState("");
+  const [loading, setLoading] = useState(false);
+
   if (!product) return null;
 
-  const [marketing, setMarketing] = useState("");
-const [loading, setLoading] = useState(false);
+  async function handleGenerateMarketing() {
+    try {
+      setLoading(true);
 
-async function handleGenerateMarketing() {
-  try {
-    setLoading(true);
+      const result = await generateMarketing(product);
 
-    const result = await generateMarketing(product);
+      setMarketing(result);
 
-    setMarketing(result);
-
-  } catch (error: any) {
-    alert(error.message);
-  } finally {
-    setLoading(false);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Failed to generate marketing output.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
-const decision = analyzeProduct(product);
-const market = analyzeMarket(product);
-const aiScore = decision.confidence;
-const plan = generateBusinessPlan(product);
-const roi = calculateROI(
-  Number(product.buy_price),
-  Number(product.selling_price),
-  200,
-  50
-);
-const winning = decision.winningProbability;
+  const decision = analyzeProduct(product);
+  const market = analyzeMarket(product);
+  const aiScore = decision.confidence;
+  const plan = generateBusinessPlan(product);
+  const roi = calculateROI(
+    Number(product.buy_price),
+    Number(product.selling_price),
+    200,
+    50
+  );
+  const winning = decision.winningProbability;
 
-const profit = Math.min(
-  100,
-  Number(product.profit || 0)
-);
+  const profit = Math.min(
+    100,
+    Number(product.profit || 0)
+  );
 
   return (
     <section className="mt-10 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">

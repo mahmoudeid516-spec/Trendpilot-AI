@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { openai } from "../../../lib/openai";
+import { getOpenAI } from "../../../lib/openai";
 
 export async function POST(req: Request) {
   try {
+    const openai = getOpenAI();
+
     const { prompt } = await req.json();
 
     const systemPrompt = `
@@ -206,13 +208,16 @@ if (lowerPrompt.includes("aliexpress")) {
 
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+
+    const message =
+      error instanceof Error ? error.message : "AI search failed.";
 
     console.error(error);
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,

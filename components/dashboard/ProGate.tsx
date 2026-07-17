@@ -10,12 +10,21 @@ type Props = {
 
 export default function ProGate({ children }: Props) {
   const router = useRouter();
+  const hasSupabaseClient = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState("Free");
 
   useEffect(() => {
     async function loadPlan() {
+      if (!hasSupabaseClient) {
+        setLoading(false);
+        return;
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -39,12 +48,33 @@ export default function ProGate({ children }: Props) {
     }
 
     loadPlan();
-  }, []);
+  }, [hasSupabaseClient]);
 
   async function handleUpgrade() {
     try {
+      if (!hasSupabaseClient) {
+        router.push("/login");
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          plan: "Pro",
+        }),
       });
 
       const data = await response.json();
@@ -95,7 +125,7 @@ export default function ProGate({ children }: Props) {
           onClick={handleUpgrade}
           className="mt-8 bg-white text-purple-700 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition"
         >
-          Upgrade to Pro - $29/month
+          Upgrade to Pro - $49/month
         </button>
 
       </div>

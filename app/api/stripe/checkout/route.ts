@@ -1,69 +1,84 @@
-import { NextResponse } from "next/server";
-import { stripe } from "../../../../lib/stripe";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import {
+  createCheckoutSession,
+  normalizePlan,
+} from "../../../../lib/billing";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { plan } = await req.json();
+    const authHeader = req.headers.get("authorization") ?? "";
 
-    let amount = 2900;
-
-    switch (plan) {
-      case "Starter":
-        amount = 2900;
-        break;
-
-      case "Pro":
-        amount = 4900;
-        break;
-
-      case "Enterprise":
-        amount = 9900;
-        break;
-
-      default:
-        amount = 2900;
+    if (!authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
+      );
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+    const body = (await req.json().catch(() => ({}))) as {
+      plan?: unknown;
+    };
 
-      payment_method_types: ["card"],
+    const plan = normalizePlan(body.plan);
 
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-
-            product_data: {
-              name: `TrendPilot AI ${plan}`,
-            },
-
-            recurring: {
-              interval: "month",
-            },
-
-            unit_amount: amount,
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
           },
-
-          quantity: 1,
         },
-      ],
+      }
+    );
 
-      success_url: "http://localhost:3000/success",
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-      cancel_url: "http://localhost:3000/cancel",
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    const origin =
+      req.headers.get("origin") ??
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      "http://localhost:3000";
+
+    const session = await createCheckoutSession({
+      plan,
+      userId: user.id,
+      email: user.email ?? "",
+      origin,
     });
 
     return NextResponse.json({
       url: session.url,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe Error:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Checkout failed.";
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,
