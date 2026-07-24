@@ -3,6 +3,13 @@ import { getOpenAI } from "../../../lib/openai";
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY is not configured." },
+        { status: 503 }
+      );
+    }
+
     const openai = getOpenAI();
 
     const { product } = await req.json();

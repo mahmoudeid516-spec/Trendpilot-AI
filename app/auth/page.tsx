@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { hasSupabaseConfig, supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
   const router = useRouter();
+  const isSupabaseConfigured = hasSupabaseConfig();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +14,11 @@ export default function AuthPage() {
   const [loginMode, setLoginMode] = useState(true);
 
   async function handleSubmit() {
+    if (!isSupabaseConfigured) {
+      alert("Authentication is not configured. Please set Supabase environment variables.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -41,6 +47,9 @@ export default function AuthPage() {
 
         alert("Account created successfully!");
       }
+    } catch (error) {
+      console.error("Auth failed:", error);
+      alert("Unable to authenticate right now.");
     } finally {
       setLoading(false);
     }

@@ -23,6 +23,11 @@ export default function SearchResults({ results }: Props) {
        
 {sortedResults.map((product: Product, index: number) => {
   const opportunity = product.opportunity_score ?? 0;
+  const rating = Number(product.store_rating ?? product.supplier_rating ?? 0);
+  const orders = Number(product.orders ?? product.sales ?? 0);
+  const estimatedProfit = Number(
+    product.profit ?? product.selling_price - product.buy_price
+  );
 
   return (
           <div
@@ -60,11 +65,15 @@ export default function SearchResults({ results }: Props) {
             </h3>
 
             <p className="text-gray-500 mt-2">
-              ⭐ {product.ai_score / 20} • {product.sales.toLocaleString()} Sold
+              ⭐ {rating.toFixed(1)} • {orders.toLocaleString()} Orders
             </p>
 
             <p className="text-2xl font-bold text-green-600 mt-3">
               ${product.buy_price.toFixed(2)}
+            </p>
+
+            <p className="text-sm text-gray-600 mt-1">
+              Est. Profit ${estimatedProfit.toFixed(2)}
             </p>
 
             <div className="grid grid-cols-2 gap-3 mt-5">

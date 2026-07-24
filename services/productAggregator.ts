@@ -1,19 +1,9 @@
-import { searchAliExpress } from "./providers/aliexpress";
-import { searchAmazon } from "./providers/amazon";
-import { searchShopify } from "./providers/shopify";
+import { productSearch } from "./productSearch";
 
 export async function searchAllPlatforms(filters: any) {
-  const [ali, amazon, shopify] = await Promise.allSettled([
-    searchAliExpress(filters),
-    searchAmazon(filters),
-    searchShopify(filters),
-  ]);
-
-  const products = [
-    ...(ali.status === "fulfilled" ? ali.value : []),
-    ...(amazon.status === "fulfilled" ? amazon.value : []),
-    ...(shopify.status === "fulfilled" ? shopify.value : []),
-  ];
+  const products = (await productSearch(filters)) as Array<{
+    name?: string;
+  }>;
 
   // Remove duplicate products
   const uniqueProducts = products.filter(

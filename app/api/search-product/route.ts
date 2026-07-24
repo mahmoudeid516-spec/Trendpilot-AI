@@ -1,8 +1,40 @@
 import { NextResponse } from "next/server";
 
+function parseBoughtCount(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const match = value.match(/\d[\d,]*/);
+    if (match?.[0]) {
+      const parsed = Number(match[0].replace(/,/g, ""));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+  }
+
+  return 0;
+}
+
 export async function POST(req: Request) {
   try {
-    const { product } = await req.json();
+    const { product, provider } = (await req.json()) as {
+      product?: string;
+      provider?: string;
+    };
+
+    const query = String(product ?? "").trim();
+
+    if (!query) {
+      return NextResponse.json(
+        {
+          error: "Product query is required",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
     const apiKey = process.env.SERPAPI_API_KEY;
 
@@ -17,15 +49,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const url =
-      `https://serpapi.com/search.json?engine=google_shopping` +
-      `&q=${encodeURIComponent(product)}` +
-      `&gl=us` +
-      `&hl=en` +
-      `&num=10` +
-      `&api_key=${apiKey}`;
+    const providerName =
+      provider === "amazon" ? "amazon" : "google_shopping";
 
-    console.log("Searching:", product);
+    const url =
+      providerName === "amazon"
+        ? `https://serpapi.com/search.json?engine=amazon` +
+          `&k=${encodeURIComponent(query)}` +
+          `&amazon_domain=amazon.com` +
+          `&device=desktop` +
+          `&api_key=${apiKey}`
+        : `https://serpapi.com/search.json?engine=google_shopping` +
+          `&q=${encodeURIComponent(query)}` +
+          `&gl=us` +
+          `&hl=en` +
+          `&num=10` +
+          `&api_key=${apiKey}`;
+
+    console.log("Searching:", query, "Provider:", providerName);
 
     const response = await fetch(url);
 
@@ -47,7 +88,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const items = data.shopping_results ?? [];
+    const items =
+      providerName === "amazon"
+        ? data.organic_results ?? []
+        : data.shopping_results ?? [];
 
     if (items.length === 0) {
       return NextResponse.json(
@@ -63,20 +107,46 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       name: items[0].title,
-      image: items[0].thumbnail,
-      price: items[0].price,
-      source: items[0].source,
+      image:
+        providerName === "amazon"
+          ? items[0].thumbnail
+          : items[0].thumbnail,
+      price:
+        providerName === "amazon"
+          ? `$${items[0].price ?? 0}`
+          : items[0].price,
+      source:
+        providerName === "amazon"
+          ? "Amazon"
+          : items[0].source,
       link: items[0].link,
 
-      products: items.map((item: any) => ({
-        name: item.title,
-        image: item.thumbnail,
-        price: item.price,
-        source: item.source,
-        rating: item.rating ?? 0,
-        reviews: item.reviews ?? 0,
-        link: item.link,
-      })),
+      products: items.map((item: any) => {
+        const extractedPrice =
+          providerName === "amazon"
+            ? Number(item.price ?? 0)
+            : Number(item.extracted_price ?? 0);
+
+        return {
+          name: item.title,
+          image: item.thumbnail,
+          price:
+            providerName === "amazon"
+              ? `$${extractedPrice}`
+              : item.price,
+          source:
+            providerName === "amazon"
+              ? "Amazon"
+              : item.source,
+          rating: Number(item.rating ?? 0),
+          reviews: Number(item.reviews ?? 0),
+          orders:
+            providerName === "amazon"
+              ? parseBoughtCount(item.bought)
+              : 0,
+          link: item.link,
+        };
+      }),
     });
 
   } catch (error: any) {

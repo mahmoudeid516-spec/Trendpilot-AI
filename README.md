@@ -20,6 +20,30 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## AI Search Provider (DataForSEO)
+
+AI product search uses DataForSEO as the only provider.
+
+### Required environment variables
+
+- `DATAFORSEO_LOGIN`:
+	- required
+	- DataForSEO API login
+- `DATAFORSEO_PASSWORD`:
+	- required
+	- DataForSEO API password
+- `DATAFORSEO_LOCATION_CODE`:
+	- optional (default `2840`)
+	- geographic location code for search
+- `DATAFORSEO_LANGUAGE_CODE`:
+	- optional (default `en`)
+	- language code for search
+
+### Provider behavior
+
+- If credentials are missing, the API returns `503`.
+- No fake/mock fallback products are returned.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

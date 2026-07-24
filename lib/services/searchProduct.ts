@@ -1,10 +1,10 @@
 export async function searchProduct(product: string) {
-  const response = await fetch("/api/search-product", {
+  const response = await fetch("/api/product-search", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ product }),
+    body: JSON.stringify({ keyword: product }),
   });
 
   const data = await response.json();

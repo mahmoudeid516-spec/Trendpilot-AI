@@ -16,12 +16,14 @@ import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
 import { importProducts } from "../../lib/importers/importProducts";
-import { searchAliExpress } from "../../services/providers/aliexpress";
-import { mapApifyProduct } from "../../services/productMapper";
-import { dummyProducts } from "../../lib/importers/dummyProducts";
+import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
+import { productSearch } from "../../services/productSearch";
 import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
+
+  console.log("SUPABASE URL =", process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log("ANON KEY =", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 20));
   const router = useRouter();
   const hasSupabaseClient = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -34,6 +36,21 @@ export default function DashboardPage() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (!searchResults.length) {
+      return;
+    }
+
+    console.log("[TRACE][Dashboard][state searchResults]", {
+      count: searchResults.length,
+      ids: searchResults.map((product) => product.id),
+      invalidIds: searchResults.filter(
+        (product) => typeof product.id !== "string" || !product.id.trim() || product.id === "NaN"
+      ).map((product) => ({ name: product.name, id: product.id })),
+    });
+  }, [searchResults]);
 
   useEffect(() => {
     async function checkUser() {
@@ -58,6 +75,10 @@ export default function DashboardPage() {
     searchText: string,
     selectedPlatform: string
   ) {
+    if (isSearching) {
+      return;
+    }
+
     console.log("Search:", searchText);
     console.log("Platform:", selectedPlatform);
 
@@ -65,40 +86,40 @@ export default function DashboardPage() {
       alert("Please enter a product name.");
       return;
     }
-    const products = await searchAliExpress({
-      keyword: searchText,
-    });
-    console.log("RAW PRODUCTS");
-console.log(products);
-console.log("COUNT:", products.length);
-    
-    const mappedProducts = products.map(mapApifyProduct);
 
-    console.log("MAPPED PRODUCTS");
-console.log(mappedProducts);
-console.log("COUNT:", mappedProducts.length);
+    setIsSearching(true);
 
-// اعرض النتائج فورًا
-setSearchResults(mappedProducts);
+    try {
+      const products = await productSearch({
+        keyword: searchText,
+        platform: selectedPlatform,
+      });
+      console.log("RAW PRODUCTS");
+      console.log(products);
+      console.log("COUNT:", products.length);
 
-// احفظها في الخلفية
-await importProducts(mappedProducts);
+      const mappedProducts: Product[] = ensureUniqueProductIds(
+        products as Product[]
+      );
 
-setSearch(searchText);
-setPlatform(selectedPlatform);
-setRefreshKey((prev) => prev + 1);
+      console.log("MAPPED PRODUCTS");
+      console.log(mappedProducts);
+      console.log("COUNT:", mappedProducts.length);
+      console.log("[TRACE][Dashboard][post-map ids]", mappedProducts.map((product) => product.id));
 
-  }
+      setSearchResults(mappedProducts);
 
-  async function loadDummyProducts() {
-    const success = await importProducts(dummyProducts);
+      await importProducts(mappedProducts);
 
-    if (success) {
+      setSearch(searchText);
+      setPlatform(selectedPlatform);
       setRefreshKey((prev) => prev + 1);
-      alert("Products Imported Successfully!");
-    } else {
-      alert("Import Failed");
+    } catch (error) {
+      console.error("Product search failed:", error);
+    } finally {
+      setIsSearching(false);
     }
+
   }
 
   return (
@@ -128,15 +149,6 @@ setRefreshKey((prev) => prev + 1);
             onSearch={handleSearch}
           />
 
-          <div className="mb-6">
-            <button
-              onClick={loadDummyProducts}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl"
-            >
-              Import Demo Products
-            </button>
-          </div>
-
           {/* TEMP DISABLED
 
 <ProGate>
@@ -162,6 +174,12 @@ setRefreshKey((prev) => prev + 1);
     setShowProductModal(true);
   }}
 />
+
+{searchResults.length > 0 &&
+  console.log("[TRACE][Dashboard][ProductsTable props]", {
+    count: searchResults.length,
+    ids: searchResults.map((product) => product.id),
+  })}
 
 */}
 

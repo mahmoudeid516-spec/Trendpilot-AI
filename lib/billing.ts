@@ -1,19 +1,27 @@
 import { getStripe } from "./stripe";
 
-export type BillingPlan = "Starter" | "Pro" | "Enterprise";
+export type BillingPlan = "Free" | "Pro" | "Premium";
 
 const planAmounts: Record<BillingPlan, number> = {
-  Starter: 2900,
+  Free: 0,
   Pro: 4900,
-  Enterprise: 9900,
+  Premium: 9900,
 };
 
 export function normalizePlan(plan: unknown): BillingPlan {
-  if (plan === "Pro" || plan === "Enterprise" || plan === "Starter") {
-    return plan;
+  if (plan === "Pro") {
+    return "Pro";
   }
 
-  return "Starter";
+  if (plan === "Premium" || plan === "Enterprise") {
+    return "Premium";
+  }
+
+  if (plan === "Free" || plan === "Starter") {
+    return "Free";
+  }
+
+  return "Free";
 }
 
 export async function createCheckoutSession(params: {
@@ -23,6 +31,10 @@ export async function createCheckoutSession(params: {
   origin: string;
 }) {
   const { plan, userId, email, origin } = params;
+
+  if (plan === "Free") {
+    throw new Error("Free plan does not require Stripe checkout.");
+  }
 
   const stripe = getStripe();
 
@@ -48,6 +60,13 @@ export async function createCheckoutSession(params: {
       userId,
       email,
       plan,
+    },
+    subscription_data: {
+      metadata: {
+        userId,
+        email,
+        plan,
+      },
     },
     success_url: `${origin}/success`,
     cancel_url: `${origin}/cancel`,

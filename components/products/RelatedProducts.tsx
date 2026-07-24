@@ -14,9 +14,13 @@ export default function RelatedProducts({ products }: Props) {
       </h2>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
+        {products.map((product, index) => (
           <div
-            key={product.id}
+            key={
+              product.product_url ||
+              product.supplier_url ||
+              `${product.name}-${index}`
+            }
             className="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden"
           >
             <img

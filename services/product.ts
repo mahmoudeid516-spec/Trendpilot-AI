@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase";
+import { normalizeProductId } from "../lib/services/productIdentity";
 
-export async function getProduct(id: number) {
+export async function getProduct(id: string) {
 
   console.log("Searching Product:", id);
 
@@ -13,5 +14,5 @@ export async function getProduct(id: number) {
   console.log("Product:", data);
   console.log("Error:", error);
 
-  return data;
+  return data ? normalizeProductId(data) : null;
 }

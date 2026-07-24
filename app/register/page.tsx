@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { hasSupabaseConfig, supabase } from "../../lib/supabase";
+import { upsertWithCompatibility } from "../../lib/services/supabaseCompatibility";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const isSupabaseConfigured = hasSupabaseConfig();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,45 +20,57 @@ export default function RegisterPage() {
       return;
     }
 
-    setLoading(true);
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-
-    if (error) {
-      setLoading(false);
-      alert(error.message);
+    if (!isSupabaseConfigured) {
+      alert("Authentication is not configured. Please set Supabase environment variables.");
       return;
     }
 
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: data.user.id,
-          email: data.user.email,
-          full_name: fullName,
-          plan: "Free",
-          subscription_status: "inactive",
-        });
+    setLoading(true);
 
-      if (profileError) {
-        console.log(profileError);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
       }
+
+      if (data.user) {
+        const { error: profileError } = await upsertWithCompatibility(
+          supabase,
+          "profiles",
+          {
+            id: data.user.id,
+            email: data.user.email,
+            full_name: fullName,
+            plan: "Free",
+            subscription_status: "inactive",
+          },
+          "id"
+        );
+
+        if (profileError) {
+          console.log(profileError);
+        }
+      }
+
+      alert("Account created successfully! Please check your email.");
+
+      router.push("/login");
+    } catch (error) {
+      console.error("Registration failed:", error);
+      alert("Unable to register right now.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-
-    alert("Account created successfully! Please check your email.");
-
-    router.push("/login");
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { supabase } from "../../lib/supabase";
 import type { Product } from "../../types/Product";
 
@@ -27,24 +28,34 @@ export default function ProductsTable({
       const { data, error } = await supabase
         .from("products")
         .select("*");
+
+      if (error) {
+        console.error("Failed loading products:", error.message);
+      }
   
-      console.log("Products:", data);
-      console.log("Error:", error);
-  
-      setSavedProducts(data || []);
+      setSavedProducts(ensureUniqueProductIds(data || []));
     }
 
     void loadProducts();
   }, [refreshKey]);
 
+  console.log("RAW PRODUCTS", displayedProducts);
   const displayProducts =
-  searchResults.length > 0
-    ? searchResults
-    : savedProducts;
+    searchResults.length > 0
+      ? searchResults
+      : savedProducts;
+      console.log(
+  "IDS",
+  ensureUniqueProductIds(displayedProducts).map((p) => p.id)
+);
 
-  console.log("Products Count:", displayProducts.length);
+  const isSearchResultsMode = searchResults.length > 0;
 
   const filtered = displayProducts.filter((p) => {
+    if (isSearchResultsMode) {
+      return true;
+    }
+
     const productName = (p.name ?? "").toLowerCase();
     const searchText = (search ?? "").toLowerCase();
   
@@ -58,12 +69,10 @@ export default function ProductsTable({
   
     return matchSearch && matchPlatform;
   });
-  const sorted = [...filtered].sort((a, b) => {
+  const displayedProducts = [...filtered].sort((a, b) => {
     return (b.ai_score ?? 0) - (a.ai_score ?? 0);
   });
-
-console.log("Filtered Count:", filtered.length);
-console.log(filtered);
+  const stableDisplayedProducts = ensureUniqueProductIds(displayedProducts);
   
    
   function competitionColor(level:string){
@@ -138,10 +147,24 @@ Profit
 
 <tbody>
 
-{sorted.map(product => (
+{stableDisplayedProducts.length === 0 && (
+  <tr>
+    <td colSpan={7} className="py-12 text-center">
+      <p className="text-xl font-bold text-gray-700">
+        No products found yet
+      </p>
+
+      <p className="mt-2 text-gray-500">
+        Try searching for a product keyword or import demo products to get started.
+      </p>
+    </td>
+  </tr>
+)}
+
+{stableDisplayedProducts.map((product) => (
 
 <tr
-key={product.id}
+key={String(product.id)}
 className="border-b hover:bg-purple-50 transition duration-300"
 >
 
@@ -252,6 +275,7 @@ ${product.profit}
 <a
 href={product.product_url}
 target="_blank"
+rel="noopener noreferrer"
 className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700"
 >
 
@@ -262,6 +286,7 @@ View
 <a
 href={product.supplier_url}
 target="_blank"
+rel="noopener noreferrer"
 className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700"
 >
 

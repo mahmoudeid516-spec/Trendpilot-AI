@@ -33,9 +33,7 @@ export default function SearchBar({
           className="border rounded-xl px-4 py-3"
         >
           <option value="All">All Platforms</option>
-          <option value="Shopify">Shopify</option>
           <option value="Amazon">Amazon</option>
-          <option value="TikTok Shop">TikTok Shop</option>
           <option value="AliExpress">AliExpress</option>
         </select>
 

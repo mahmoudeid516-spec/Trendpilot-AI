@@ -1,6 +1,6 @@
 export interface Product {
   // Identity
-  id: number;
+  id: string;
   source: "AliExpress" | "Amazon" | "Shopify";
   platform: string;
 
@@ -45,7 +45,6 @@ export interface Product {
 
   // New AI Scores
   demand_score?: number;
-  confidence_score?: number;
   risk_score?: number;
   winning_probability?: number;
 

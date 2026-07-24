@@ -13,7 +13,7 @@ export default async function ProductPage({
 }) {
   const { id } = await params;
 
-  const product = await getProduct(Number(id));
+  const product = await getProduct(id);
 
   if (!product) {
     return (

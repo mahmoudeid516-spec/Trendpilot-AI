@@ -1,4 +1,5 @@
-import { mapApifyProduct } from "./productMapper";
+import { ensureUniqueProductIds, normalizeProductId } from "../lib/services/productIdentity";
+import type { Product } from "../types/Product";
 
 function competitionScore(level: string) {
   switch (level) {
@@ -62,25 +63,41 @@ function calculateOpportunityScore(product: {
   return Math.min(100, Number(score.toFixed(1)));
 }
 
-export function scoreProducts(products: any[]) {
+export function scoreProducts(products: Product[]) {
   const scored = products.map((product) => {
+    const mapped = normalizeProductId(product);
 
-    const mapped = mapApifyProduct(product);
+    const aiScore = Number(mapped.ai_score ?? 0);
+    const trendScore = Number(mapped.trend_score ?? 0);
+    const viralScore = Number(mapped.viral_score ?? 0);
+    const profit = Number(mapped.profit ?? 0);
+    const roi = Number(mapped.roi ?? 0);
+    const buyPrice = Number(mapped.buy_price ?? 0);
+    const sales = Number(mapped.sales ?? 0);
+    const reviews = Number(mapped.reviews ?? 0);
 
     const opportunity = calculateOpportunityScore({
-      ai_score: mapped.ai_score,
-      trend_score: mapped.trend_score,
-      viral_score: mapped.viral_score,
-      profit: mapped.profit,
-      roi: mapped.roi ?? 0,
+      ai_score: aiScore,
+      trend_score: trendScore,
+      viral_score: viralScore,
+      profit,
+      roi,
       competition: mapped.competition,
-      buy_price: mapped.buy_price,
-      sales: mapped.sales,
-      reviews: mapped.reviews,
+      buy_price: buyPrice,
+      sales,
+      reviews,
     });
 
     return {
       ...mapped,
+      ai_score: aiScore,
+      trend_score: trendScore,
+      viral_score: viralScore,
+      profit,
+      roi,
+      buy_price: buyPrice,
+      sales,
+      reviews,
       opportunity_score: opportunity,
 
       decision:
@@ -97,10 +114,10 @@ export function scoreProducts(products: any[]) {
   );
 }
 
-export function getBestProduct(products: any[]) {
+export function getBestProduct(products: Product[]) {
   if (!products.length) return null;
 
-  return [...products].sort(
+  return ensureUniqueProductIds([...products]).sort(
     (a, b) => (b.opportunity_score ?? 0) - (a.opportunity_score ?? 0)
   )[0];
 }

@@ -10,12 +10,12 @@ export default function Pricing() {
 
     const plans = [
       {
-        name: "Starter",
-        price: "$29",
+        name: "Free",
+        price: "$0",
         features: [
-          "50 Products / Day",
+          "Limited Product Search",
           "Basic AI Analysis",
-          "Email Support",
+          "Community Support",
         ],
       },
       {
@@ -28,7 +28,7 @@ export default function Pricing() {
         ],
       },
       {
-        name: "Enterprise",
+        name: "Premium",
         price: "$99",
         features: [
           "Unlimited Everything",
@@ -93,6 +93,11 @@ export default function Pricing() {
         return;
       }
 
+      if (plan.name === "Free") {
+        window.location.href = "/dashboard";
+        return;
+      }
+
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
@@ -127,7 +132,7 @@ export default function Pricing() {
   }}
   className="mt-8 w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition"
 >
-  Get Started
+  {plan.name === "Free" ? "Continue Free" : "Get Started"}
 </button>
               </div>
             ))}

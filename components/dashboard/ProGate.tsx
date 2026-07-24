@@ -90,6 +90,43 @@ export default function ProGate({ children }: Props) {
     }
   }
 
+  async function handleManageSubscription() {
+    try {
+      if (!hasSupabaseClient) {
+        router.push("/login");
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch("/api/stripe/manage-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        router.push(data.url);
+      } else {
+        alert(data.error ?? "Unable to open billing settings.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Unable to open billing settings.");
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
@@ -100,7 +137,7 @@ export default function ProGate({ children }: Props) {
     );
   }
 
-  if (plan !== "Pro") {
+  if (plan !== "Pro" && plan !== "Premium") {
     return (
       <div className="bg-gradient-to-r from-purple-700 to-indigo-700 rounded-3xl text-white p-10 mt-8">
 
@@ -129,6 +166,29 @@ export default function ProGate({ children }: Props) {
         </button>
 
       </div>
+    );
+  }
+
+  if (plan === "Pro" || plan === "Premium") {
+    return (
+      <>
+        <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              You are on the <strong>{plan}</strong> plan.
+            </p>
+
+            <button
+              onClick={handleManageSubscription}
+              className="rounded-xl bg-white px-4 py-2 font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+            >
+              Manage Subscription
+            </button>
+          </div>
+        </div>
+
+        {children}
+      </>
     );
   }
 

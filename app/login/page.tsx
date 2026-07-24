@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { hasSupabaseConfig, supabase } from "../../lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
+  const isSupabaseConfigured = hasSupabaseConfig();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,21 +19,31 @@ export default function LoginPage() {
       return;
     }
 
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      alert(error.message);
+    if (!isSupabaseConfigured) {
+      alert("Authentication is not configured. Please set Supabase environment variables.");
       return;
     }
 
-    router.push("/dashboard");
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Unable to login right now.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

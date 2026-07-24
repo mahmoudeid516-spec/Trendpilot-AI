@@ -1,11 +1,33 @@
 import { NextResponse } from "next/server";
 import { getOpenAI } from "../../../lib/openai";
 
+function fallbackMarketingMarkdown(product: unknown): string {
+  const input = product as {
+    name?: unknown;
+    category?: unknown;
+    platform?: unknown;
+    country?: unknown;
+  };
+
+  const name = String(input?.name ?? "Product");
+  const category = String(input?.category ?? "General");
+  const platform = String(input?.platform ?? "Ecommerce");
+  const country = String(input?.country ?? "Worldwide");
+
+  return `## TikTok Ad Script\nHook: Stop scrolling, ${name} is blowing up right now.\nBody: Quick demo + key benefit + social proof.\nCTA: Tap now to shop before it sells out.\n\n## Facebook Ad Copy\n${name} is a ${category} product now trending on ${platform}. Limited stock and high demand.\n\n## Shopify Product Description\n${name} is built for shoppers who want reliability, value, and fast results.\n\n## SEO Keywords\n${name}, ${category}, trending ${category}, best ${category} in ${country}\n\n## Instagram Caption\n${name} just dropped. Join early buyers and get yours today.\n\n## Email Marketing\nSubject: ${name} is now live\nBody: Our newest ${category} pick is available now. Early access ends soon.\n\n## Viral Hashtags\n#TrendingNow #Ecommerce #ViralProducts #ShopNow #BestFinds`;
+}
+
 export async function POST(req: Request) {
   try {
-    const openai = getOpenAI();
-
     const { product } = await req.json();
+
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({
+        marketing: fallbackMarketingMarkdown(product),
+      });
+    }
+
+    const openai = getOpenAI();
 
     const prompt = `
 You are an expert ecommerce marketing strategist.

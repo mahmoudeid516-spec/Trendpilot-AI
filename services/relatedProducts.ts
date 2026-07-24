@@ -1,8 +1,9 @@
 import { supabase } from "../lib/supabase";
+import { ensureUniqueProductIds } from "../lib/services/productIdentity";
 
 export async function getRelatedProducts(
   category: string,
-  currentId: number
+  currentId: string
 ) {
   const { data, error } = await supabase
     .from("products")
@@ -16,5 +17,5 @@ export async function getRelatedProducts(
     return [];
   }
 
-  return data;
+  return ensureUniqueProductIds(data ?? []);
 }

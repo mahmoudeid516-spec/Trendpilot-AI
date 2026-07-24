@@ -11,7 +11,9 @@ type MarketingResponse = {
   instagram_caption?: string;
   tiktok_hook?: string;
   seo_title?: string;
-  hashtags?: string;
+  seo_description?: string;
+  email_marketing?: string;
+  hashtags?: string[];
 };
 
 export default function MarketingKit({
@@ -51,6 +53,8 @@ export default function MarketingKit({
   function copyAll() {
     if (!marketing) return;
 
+    const hashtagsText = (marketing.hashtags ?? []).join(" ");
+
     navigator.clipboard.writeText(`
 Facebook Ad:
 ${marketing.facebook_ad}
@@ -64,8 +68,14 @@ ${marketing.tiktok_hook}
 SEO:
 ${marketing.seo_title}
 
+SEO Description:
+${marketing.seo_description}
+
+Email Marketing:
+${marketing.email_marketing}
+
 Hashtags:
-${marketing.hashtags}
+${hashtagsText}
     `);
   }
 
@@ -160,17 +170,47 @@ ${marketing.hashtags}
 
           <div className="bg-gray-50 rounded-2xl p-5">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
+              <h3 className="font-bold text-xl">🧩 SEO Description</h3>
 
               <button
-                onClick={() => copy(marketing.hashtags ?? "")}
+                onClick={() => copy(marketing.seo_description ?? "")}
                 className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
               >
                 Copy
               </button>
             </div>
 
-            <p>{marketing.hashtags}</p>
+            <p>{marketing.seo_description}</p>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">📧 Email Marketing</h3>
+
+              <button
+                onClick={() => copy(marketing.email_marketing ?? "")}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
+
+            <p>{marketing.email_marketing}</p>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
+
+              <button
+                onClick={() => copy((marketing.hashtags ?? []).join(" "))}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+              >
+                Copy
+              </button>
+            </div>
+
+            <p>{(marketing.hashtags ?? []).join(" ")}</p>
           </div>
 
         </div>

@@ -1,24 +1,42 @@
 import { supabase } from "../supabase";
+import { buildProductInsertPayload } from "../services/productPayload";
+import { insertWithCompatibility } from "../services/supabaseCompatibility";
+import type { Product } from "../../types/Product";
 
-export async function importProducts(products: any[]) {
+export async function importProducts(products: Array<Product | Record<string, unknown>>) {
   for (const product of products) {
-    const { data: existing } = await supabase
-      .from("products")
-      .select("id")
-      .eq("name", product.name)
-      .eq("platform", product.platform)
-      .limit(1);
+    const payload = buildProductInsertPayload(product);
 
-    if (existing && existing.length > 0) {
-      continue;
-    }
+    try {
+      const { data: existing } = await supabase
+        .from("products")
+        .select("id")
+        .eq("name", payload.name)
+        .eq("platform", payload.platform)
+        .limit(1);
 
-    const { error } = await supabase
-      .from("products")
-      .insert(product);
+      if (existing && existing.length > 0) {
+        continue;
+      }
 
-    if (error) {
-      console.error(error);
+      const { error } = await insertWithCompatibility(
+        supabase,
+        "products",
+        payload
+      );
+
+      if (error) {
+        console.error("RAW ERROR", error);
+        console.dir(error, { depth: null });
+        console.log("USED ROW", JSON.stringify(payload, null, 2));
+
+        return false;
+      }
+    } catch (error) {
+      console.error("RAW ERROR", error);
+      console.dir(error, { depth: null });
+      console.log("USED ROW", JSON.stringify(payload, null, 2));
+
       return false;
     }
   }

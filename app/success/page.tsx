@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { hasSupabaseConfig, supabase } from "../../lib/supabase";
 
 export default function SuccessPage() {
   const router = useRouter();
+  const isSupabaseConfigured = hasSupabaseConfig();
 
   const [status, setStatus] = useState(
     "Payment received. Finalizing subscription activation..."
@@ -14,6 +15,18 @@ export default function SuccessPage() {
   useEffect(() => {
     async function checkSessionAndContinue() {
       try {
+        if (!isSupabaseConfigured) {
+          setStatus(
+            "Subscription was created, but profile verification is unavailable in this environment."
+          );
+
+          setTimeout(() => {
+            router.replace("/dashboard");
+          }, 2000);
+
+          return;
+        }
+
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -23,8 +36,30 @@ export default function SuccessPage() {
           return;
         }
 
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("plan, subscription_status")
+            .eq("id", session.user.id)
+            .single();
+
+          if (!error && data?.subscription_status === "active") {
+            setStatus(`Subscription activated: ${data.plan}. Redirecting to dashboard...`);
+            setTimeout(() => {
+              router.replace("/dashboard");
+            }, 1200);
+            return;
+          }
+
+          setStatus("Subscription activation is still processing. This usually takes a few seconds...");
+
+          await new Promise((resolve) => {
+            setTimeout(resolve, 1000);
+          });
+        }
+
         setStatus(
-          "Subscription activation is in progress. You can continue to your dashboard."
+          "Payment succeeded. Activation may still be processing; you can continue to your dashboard now."
         );
 
         setTimeout(() => {
@@ -38,7 +73,7 @@ export default function SuccessPage() {
     }
 
     checkSessionAndContinue();
-  }, [router]);
+  }, [isSupabaseConfigured, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">

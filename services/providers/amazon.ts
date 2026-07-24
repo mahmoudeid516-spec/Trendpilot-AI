@@ -1,5 +1,5 @@
+import { productSearch } from "../productSearch";
+
 export async function searchAmazon(filters: any) {
-    console.log("Amazon Provider Coming Soon");
-  
-    return [];
-  }
+  return await productSearch(filters);
+}
