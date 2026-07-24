@@ -1,6 +1,7 @@
 export interface Product {
+  review_count: number;
   // Identity
-  id: number;
+  id: string;
 
   source: "AliExpress" | "Amazon" | "Shopify";
 
@@ -76,7 +77,11 @@ export interface Product {
   winning_probability?: number;
 
   // Decision
-  decision: "Strong Buy" | "Test First" | "Avoid";
+  decision:
+  | "Pending AI Analysis"
+  | "Strong Buy"
+  | "Test First"
+  | "Avoid";
 
   ai_reason?: string;
 

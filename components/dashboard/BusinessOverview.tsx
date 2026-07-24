@@ -1,91 +1,147 @@
+"use client";
+
+import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { 
+  TrendingUp, 
+  DollarSign, 
+  Trophy, 
+  BrainCircuit, 
+  ArrowUpRight,
+  ArrowDownRight
+} from "lucide-react";
+
 type CardProps = {
   title: string;
   value: string;
   subtitle: string;
-  icon: string;
+  icon: React.ReactNode;
   color: string;
+  trend?: string;
+  progress?: number;
 };
 
-function OverviewCard({
-  title,
-  value,
-  subtitle,
-  icon,
-  color,
-}: CardProps) {
+type Props = {
+  products: any[];
+};
+
+/**
+ * Reusable Premium Metric Card
+ */
+function OverviewCard({ title, value, subtitle, icon, color, trend, progress }: CardProps) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white p-7 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-
-      <div
-        className={`absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-gradient-to-br ${color} opacity-10`}
-      />
-
-      <div className="relative z-10 flex items-start justify-between">
+    <motion.div
+      whileHover={{ y: -4 }}
+      className="group relative overflow-hidden rounded-3xl bg-white/60 p-6 backdrop-blur-xl border border-white/50 shadow-sm transition-all hover:shadow-xl"
+    >
+      {/* Animated Gradient Border Effect */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-[0.03]`} />
+      
+      <div className="relative z-10 flex flex-col h-full justify-between">
+        <div className="flex justify-between items-start mb-4">
+          <div className={`p-2.5 rounded-2xl bg-gradient-to-br ${color} bg-opacity-10 text-slate-800`}>
+            {icon}
+          </div>
+          {trend && (
+            <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+              <ArrowUpRight size={12} />
+              {trend}
+            </div>
+          )}
+        </div>
 
         <div>
-
-          <p className="text-sm font-medium uppercase tracking-wide text-gray-500">
+          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-1">
             {title}
           </p>
-
-          <h2 className="mt-3 text-4xl font-extrabold text-gray-900">
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
             {value}
           </h2>
-
-          <p className="mt-3 text-sm font-semibold text-gray-500">
-            {subtitle}
-          </p>
-
+          <p className="text-sm text-slate-400 mt-1 font-medium">{subtitle}</p>
         </div>
 
-        <div
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r ${color} text-3xl shadow-lg`}
-        >
-          {icon}
-        </div>
-
+        {/* Progress Bar for AI Score specifically */}
+        {progress !== undefined && (
+          <div className="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              className={`h-full bg-gradient-to-r ${color}`} 
+            />
+          </div>
+        )}
       </div>
-
-    </div>
+    </motion.div>
   );
 }
 
-export default function BusinessOverview() {
+export default function BusinessOverview({ products }: Props) {
+  const stats = useMemo(() => {
+    const totalRevenue = products.reduce(
+      (sum: number, p: any) => sum + Number(p.selling_price || 0),
+      0
+    );
+
+    const totalProfit = products.reduce(
+      (sum: number, p: any) => sum + Number(p.profit || 0),
+      0
+    );
+
+    const winningProducts = products.filter(
+      (p: any) => Number(p.ai_score || 0) >= 90
+    ).length;
+
+    const avgAI =
+      products.length > 0
+        ? Math.round(
+            products.reduce(
+              (sum: number, p: any) => sum + Number(p.ai_score || 0),
+              0
+            ) / products.length
+          )
+        : 0;
+        
+    return { totalRevenue, totalProfit, winningProducts, avgAI };
+  }, [products]);
+
   return (
-    <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 mb-10">
+    <section className="mb-10">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <OverviewCard
+          title="Sales Potential"
+          value={`$${stats.totalRevenue.toLocaleString()}`}
+          subtitle="Estimated Total Revenue"
+          icon={<TrendingUp size={20} />}
+          color="from-emerald-500 to-teal-500"
+          trend="+12.5%"
+        />
 
-      <OverviewCard
-        title="Revenue Potential"
-        value="$24,850"
-        subtitle="+18.2% this month"
-        icon="💰"
-        color="from-green-500 to-emerald-500"
-      />
+        <OverviewCard
+          title="Profit Potential"
+          value={`$${stats.totalProfit.toLocaleString()}`}
+          subtitle="Estimated Net Margin"
+          icon={<DollarSign size={20} />}
+          color="from-indigo-500 to-purple-500"
+          trend="+8.2%"
+        />
 
-      <OverviewCard
-        title="Winning Products"
-        value="14"
-        subtitle="3 products added today"
-        icon="🚀"
-        color="from-purple-500 to-indigo-500"
-      />
+        <OverviewCard
+          title="Winning Products"
+          value={stats.winningProducts.toString()}
+          subtitle="Products with 90+ Score"
+          icon={<Trophy size={20} />}
+          color="from-amber-500 to-orange-500"
+        />
 
-      <OverviewCard
-        title="AI Confidence"
-        value="96%"
-        subtitle="Excellent market prediction"
-        icon="🤖"
-        color="from-blue-500 to-cyan-500"
-      />
-
-      <OverviewCard
-        title="Success Probability"
-        value="91%"
-        subtitle="Average launch score"
-        icon="📈"
-        color="from-orange-500 to-red-500"
-      />
-
+        <OverviewCard
+          title="Average AI Score"
+          value={`${stats.avgAI}%`}
+          subtitle="Market Confidence Index"
+          icon={<BrainCircuit size={20} />}
+          color="from-blue-500 to-cyan-500"
+          progress={stats.avgAI}
+        />
+      </div>
     </section>
   );
 }

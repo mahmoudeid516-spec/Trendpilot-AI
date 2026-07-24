@@ -1,30 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import type { Product } from "../../types/Product";
 
-type Product = {
-  id: number;
-  image: string;
-  name: string;
-  platform: string;
-  ai_score: number;
-  trend_score: number;
-  viral_score?: number;
-  profit: number;
-  buy_price: number;
-  selling_price: number;
-  supplier: string;
-  supplier_url: string;
-  product_url: string;
-  competition: string;
-  country: string;
-  category: string;
-  orders?: number;
-  reviews?: number;
-  description?: string;
+interface TableProduct extends Product {
+  title?: string;
+  score?: {
+    winningProbability: number;
+    launchStatus: "Launch Now" | "Watch" | "Skip";
+  };
   ai_reason?: string;
-};
+}
 
 type Props = {
   products?: Product[];
@@ -32,7 +20,7 @@ type Props = {
   platform: string;
   refreshKey: number;
   onSelectProduct: (product: Product) => void;
-  subscription?: string; // أضفنا هذا الـ Prop لاستقبال نوع الاشتراك ('free' | 'pro' | 'premium')
+  subscription?: "free" | "pro" | "premium";
 };
 
 export default function ProductsTable({
@@ -41,269 +29,356 @@ export default function ProductsTable({
   platform,
   refreshKey,
   onSelectProduct,
-  subscription = "free", // القيمة الافتراضية مجاني للأمان
+  subscription = "free",
 }: Props) {
-
-  const [savedProducts, setSavedProducts] = useState<Product[]>([]);
+  const [savedProducts, setSavedProducts] = useState<TableProduct[]>([]);
   const [loading, setLoading] = useState(false);
 
   const isFree = subscription === "free";
+  const isPro = subscription === "pro";
+  const isSearchActive = search.trim().length > 0 
 
-  useEffect(() => {
-    loadProducts();
-  }, [refreshKey]);
+  // Only load from Supabase if NO active search is performed
+  const loadProducts = useCallback(async () => {
+    if (isSearchActive) return;
 
-  async function loadProducts() {
     setLoading(true);
 
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select(`
+        id,
+        name,
+        image,
+        platform,
+        category,
+        buy_price,
+        selling_price,
+        profit,
+        trend_score,
+        ai_score,
+        competition,
+        country,
+        supplier_url,
+        product_url,
+        ai_reason
+      `)
       .order("ai_score", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Error fetching products:", error);
+    } else {
+      setSavedProducts((data as TableProduct[]) ?? []);
     }
 
-    setSavedProducts(data || []);
     setLoading(false);
-  }
+  }, [isSearchActive]);
 
-  const displayProducts =
-    searchResults.length > 0
-      ? searchResults
-      : savedProducts;
+  useEffect(() => {
+    if (!isSearchActive) {
+      loadProducts();
+    }
+  }, [refreshKey, isSearchActive, loadProducts]);
 
+  // 1. Isolated display source logic: STRICT split between Active Search vs Default Supabase
+  const displayProducts = useMemo(() => {
+    const rawProducts = (isSearchActive ? searchResults : savedProducts) as TableProduct[];
+    
+    // De-duplicate STRICTLY by explicit unique product ID per search stream
+    const seenIds = new Set<string>();
+
+    return rawProducts.filter((product) => {
+      const id = String(product.id ?? "");
+      if (!id || id === "NaN" || seenIds.has(id)) return false;
+
+      seenIds.add(id);
+      return true;
+    });
+  }, [isSearchActive, searchResults, savedProducts]);
+
+  // 2. Filter & Sort directly on the active dataset
   const filtered = useMemo(() => {
-    return displayProducts
-      .filter((p) => {
-        const matchSearch =
-          search.trim() === "" ||
-          p.name.toLowerCase().includes(search.toLowerCase());
+    const searchTerm = search.trim().toLowerCase();
 
-        const matchPlatform =
-          platform === "All" ||
-          p.platform === platform;
+    return displayProducts
+      .filter((product: TableProduct) => {
+        const productName = (product.name ?? product.title ?? "").toLowerCase();
+        const matchSearch = searchTerm === "" || productName.includes(searchTerm);
+        const matchPlatform = platform === "All" || product.platform === platform;
 
         return matchSearch && matchPlatform;
       })
-      .sort((a, b) => b.ai_score - a.ai_score);
+      .sort((a: TableProduct, b: TableProduct) => {
+        const scoreA = a.score?.winningProbability ?? a.ai_score ?? 0;
+        const scoreB = b.score?.winningProbability ?? b.ai_score ?? 0;
+
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA;
+        }
+
+        const trendA = a.trend_score ?? 0;
+        const trendB = b.trend_score ?? 0;
+        return trendB - trendA;
+      });
   }, [displayProducts, search, platform]);
 
-  // تحديد المنتجات المعروضة حسب خطة الاشتراك (الخطة المجانية تعرض 3 منتجات فقط)
-  const displayedProducts = isFree ? filtered.slice(0, 3) : filtered;
+  const displayedProducts = useMemo(() => {
+    if (isFree) return filtered.slice(0, 10);
+    if (isPro) return filtered.slice(0, 200);
+    return filtered.slice(0, 1000);
+  }, [filtered, isFree, isPro]);
 
-  function badgeColor(level: string) {
+  // Debug Logging Requirements
+  useEffect(() => {
+    if (isSearchActive) {
+      console.log("Search:", search);
+      console.log("Displaying:", displayedProducts.length);
+    }
+  }, [search, isSearchActive, displayedProducts.length]);
+
+  const getBadgeColor = (level: string) => {
     switch (level) {
       case "Low":
-        return "bg-green-100 text-green-700";
-
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200/60";
       case "Medium":
-        return "bg-yellow-100 text-yellow-700";
-
+        return "bg-amber-50 text-amber-700 border border-amber-200/60";
       case "High":
-        return "bg-red-100 text-red-700";
-
+        return "bg-rose-50 text-rose-700 border border-rose-200/60";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-slate-100 text-slate-700 border border-slate-200/60";
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="rounded-3xl bg-white p-12 shadow-xl text-center font-semibold text-gray-600 animate-pulse">
-        Loading Winning Products...
+      <div className="rounded-2xl bg-white p-12 text-center font-medium text-slate-500 animate-pulse border border-slate-200/80 shadow-sm">
+        Checking and loading top winning products...
       </div>
     );
   }
 
   return (
-    <section className="mt-10">
-
-      <div className="mb-8 flex items-center justify-between">
+    <section className="mt-8">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-extrabold">
-            🔥 Today's Winning Products
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <span>🔥</span> Today's Winning Products
           </h2>
-          <p className="mt-2 text-gray-500">
-            AI selected today's best opportunities.
+          <p className="mt-1 text-xs text-slate-500">
+            Ranked directly by highest winning probability and market velocity.
           </p>
         </div>
 
-        <div className="rounded-2xl bg-indigo-600 px-6 py-4 text-white">
-          <p className="text-sm opacity-80">
-            Products
-          </p>
-          <h2 className="text-3xl font-bold">
-            {displayedProducts.length}
-          </h2>
+        <div className="rounded-xl bg-indigo-600 px-5 py-2.5 text-white shadow-sm shadow-indigo-200">
+          <p className="text-[10px] uppercase font-semibold tracking-wider opacity-80">Available Items</p>
+          <h2 className="text-xl font-bold leading-tight">{displayedProducts.length}</h2>
         </div>
       </div>
 
       {displayedProducts.length === 0 && (
-        <div className="rounded-3xl bg-white p-16 text-center shadow-xl">
-          No Winning Products Found
+        <div className="rounded-2xl bg-white p-12 text-center border border-slate-200/80 shadow-sm text-slate-500 font-medium">
+          No products found
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-2 xl:grid-cols-3">
-        {displayedProducts.map((product) => (
-          <div
-            key={product.id}
-            className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between"
-          >
-            <div>
-              <div className="relative">
-                <img
-                  src={product.image || "https://picsum.photos/600"}
-                  alt={product.name}
-                  className="h-72 w-full object-cover"
-                />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {displayedProducts.map((product) => {
+          const winningProbability = product.score?.winningProbability ?? product.ai_score ?? 0;
+          const launchStatus = product.score?.launchStatus ?? "Unknown";
 
-                <div className="absolute left-4 top-4 rounded-full bg-green-500 px-4 py-2 font-bold text-white shadow-lg">
-                  🏆 AI Pick
+          return (
+            <div
+              key={String(product.id)}
+              className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 flex flex-col justify-between"
+            >
+              <div>
+                <div className="relative">
+                  <img
+                    loading="lazy"
+                    decoding="async"
+                    src={
+                      product.image?.trim()
+                        ? product.image
+                        : "https://picsum.photos/600"
+                    }
+                    alt={product.name || product.title}
+                    className="h-60 w-full object-cover"
+                  />
+
+                  <div className="absolute left-3 top-3 rounded-full bg-slate-900/80 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                    🏆 AI Pick
+                  </div>
+
+                  <div className="absolute right-3 top-3 rounded-full bg-emerald-500 text-white font-bold text-xs px-3 py-1 shadow-sm">
+                    {winningProbability}%
+                  </div>
                 </div>
 
-                <div className="absolute right-4 top-4 rounded-full bg-black/70 px-4 py-2 font-bold text-white">
-                  {product.ai_score}%
+                <div className="p-5">
+                  <h3 className="line-clamp-2 text-base font-bold text-slate-900 leading-snug">
+                    {product.name || product.title}
+                  </h3>
+
+                  <p className="mt-1 text-xs font-medium text-slate-400">{product.category}</p>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                      <p className="text-slate-400 font-medium">Buy Price</p>
+                      <h3 className="mt-0.5 text-lg font-bold text-slate-800">
+                        ${product.buy_price}
+                      </h3>
+                    </div>
+
+                    <div className="rounded-xl bg-emerald-50/50 p-3 border border-emerald-100">
+                      <p className="text-slate-400 font-medium">Sell Price</p>
+                      <h3 className="mt-0.5 text-lg font-bold text-emerald-600">
+                        ${product.selling_price}
+                      </h3>
+                    </div>
+
+                    <div className="rounded-xl bg-purple-50/50 p-3 border border-purple-100">
+                      <p className="text-slate-400 font-medium">Profit</p>
+                      <h3 className="mt-0.5 text-lg font-bold text-purple-600">
+                        ${product.profit}
+                      </h3>
+                    </div>
+
+                    <div className="rounded-xl bg-indigo-50/50 p-3 border border-indigo-100">
+                      <p className="text-slate-400 font-medium">Trend Score</p>
+                      <h3 className="mt-0.5 text-lg font-bold text-indigo-600">
+                        {product.trend_score}%
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    <div className="mb-2 flex justify-between text-xs font-semibold text-slate-700">
+                      <span>Winning Probability</span>
+                      <span>{winningProbability}%</span>
+                    </div>
+
+                    <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500 transition-all duration-500"
+                        style={{ width: `${winningProbability}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-2.5">
+                      <span
+                        className={`inline-block rounded-md px-2.5 py-0.5 text-xs font-bold ${
+                          launchStatus === "Launch Now"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : launchStatus === "Watch"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-rose-100 text-rose-800"
+                        }`}
+                      >
+                        {launchStatus}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-1.5">
+                    <span
+                      className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${getBadgeColor(
+                        product.competition
+                      )}`}
+                    >
+                      Comp: {product.competition}
+                    </span>
+
+                    <span className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 border border-indigo-100">
+                      {product.platform}
+                    </span>
+
+                    <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                      🌍 {product.country}
+                    </span>
+                  </div>
+
+                  {product.ai_reason && (
+                    <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 text-xs">
+                      <h4 className="mb-1 font-bold text-indigo-900 flex items-center gap-1">
+                        🤖 AI Insight
+                      </h4>
+                      <p className="leading-relaxed text-slate-600">
+                        {product.ai_reason}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="p-6">
-                <h3 className="line-clamp-2 text-2xl font-bold">
-                  {product.name}
-                </h3>
+              <div className="p-5 pt-0 mt-auto">
+                <div className="grid grid-cols-3 gap-2">
+                  <Link
+                    href={`/products/${product.id}`}
+                    className="rounded-xl bg-slate-900 py-2.5 text-center font-semibold text-white hover:bg-slate-800 text-xs flex items-center justify-center transition"
+                  >
+                    View Details
+                  </Link>
+                  {isFree ? (
+                    <button
+                      onClick={() =>
+                        alert(
+                          "🔒 Upgrade your subscription to unlock verified supplier contacts!"
+                        )
+                      }
+                      className="rounded-xl bg-slate-100 py-2.5 text-center font-semibold text-slate-400 text-xs flex items-center justify-center gap-1 cursor-pointer hover:bg-slate-200 transition"
+                    >
+                      🏭 Supplier
+                    </button>
+                  ) : (
+                    <a
+                      href={product.supplier_url || product.product_url || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-xl bg-emerald-600 py-2.5 text-center font-semibold text-white hover:bg-emerald-700 text-xs flex items-center justify-center transition"
+                    >
+                      Supplier
+                    </a>
+                  )}
 
-                <p className="mt-2 text-gray-500">
-                  {product.category}
-                </p>
-
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-sm text-gray-500">Buy Price</p>
-                    <h3 className="mt-1 text-2xl font-bold">${product.buy_price}</h3>
-                  </div>
-
-                  <div className="rounded-2xl bg-green-50 p-4">
-                    <p className="text-sm text-gray-500">Sell Price</p>
-                    <h3 className="mt-1 text-2xl font-bold text-green-700">${product.selling_price}</h3>
-                  </div>
-
-                  <div className="rounded-2xl bg-purple-50 p-4">
-                    <p className="text-sm text-gray-500">Profit</p>
-                    <h3 className="mt-1 text-2xl font-bold text-purple-700">${product.profit}</h3>
-                  </div>
-
-                  <div className="rounded-2xl bg-blue-50 p-4">
-                    <p className="text-sm text-gray-500">Trend Score</p>
-                    <h3 className="mt-1 text-2xl font-bold text-blue-700">{product.trend_score}%</h3>
-                  </div>
+                  {isFree ? (
+                    <button
+                      onClick={() =>
+                        alert(
+                          "🔒 Unlock AI Reports and deep insights by upgrading to Pro/Premium!"
+                        )
+                      }
+                      className="rounded-xl bg-slate-100 py-2.5 text-center font-semibold text-slate-400 text-xs flex items-center justify-center gap-1 cursor-pointer hover:bg-slate-200 transition"
+                    >
+                      🔒 Report
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onSelectProduct(product)}
+                      className="rounded-xl bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 text-xs flex items-center justify-center transition"
+                    >
+                      🤖 AI Report
+                    </button>
+                  )}
                 </div>
-
-                <div className="mt-6">
-                  <div className="mb-2 flex justify-between">
-                    <span>AI Confidence</span>
-                    <strong>{product.ai_score}%</strong>
-                  </div>
-
-                  <div className="h-3 w-full rounded-full bg-gray-200">
-                    <div
-                      className="h-3 rounded-full bg-gradient-to-r from-green-500 via-lime-400 to-emerald-500"
-                      style={{ width: `${product.ai_score}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-wrap gap-2">
-                  <span className={`rounded-full px-3 py-2 text-sm font-bold ${badgeColor(product.competition)}`}>
-                    {product.competition}
-                  </span>
-
-                  <span className="rounded-full bg-indigo-100 px-3 py-2 text-sm font-bold text-indigo-700">
-                    {product.platform}
-                  </span>
-
-                  <span className="rounded-full bg-gray-100 px-3 py-2 text-sm font-bold text-gray-700">
-                    🌍 {product.country}
-                  </span>
-                </div>
-
-                {product.ai_reason && (
-                  <div className="mt-6 rounded-2xl border border-purple-200 bg-purple-50 p-4">
-                    <h4 className="mb-2 font-bold text-purple-700">🤖 AI Insight</h4>
-                    <p className="text-sm leading-6 text-gray-700">{product.ai_reason}</p>
-                  </div>
-                )}
               </div>
             </div>
+          );
+        })}
 
-            {/* الأزرار بالأسفل - حماية الروابط والتقارير للحسابات المجانية */}
-            <div className="p-6 pt-0 mt-auto">
-              <div className="grid grid-cols-3 gap-3">
-                <a
-                  href={product.product_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl bg-blue-600 py-3 text-center font-bold text-white hover:bg-blue-700 text-sm flex items-center justify-center transition"
-                >
-                  View
-                </a>
-
-                {/* زر المورد: مشروط بالاشتراك */}
-                {isFree ? (
-                  <button
-                    onClick={() => alert("🔒 Upgrade your subscription to unlock verified supplier contacts!")}
-                    className="rounded-xl bg-gray-200 py-3 text-center font-bold text-gray-500 text-sm flex items-center justify-center gap-1 cursor-pointer hover:bg-gray-300 transition"
-                  >
-                    🔒 Supplier
-                  </button>
-                ) : (
-                  <a
-                    href={product.supplier_url || product.product_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl bg-green-600 py-3 text-center font-bold text-white hover:bg-green-700 text-sm flex items-center justify-center transition"
-                  >
-                    Supplier
-                  </a>
-                )}
-
-                {/* زر تقرير الذكاء الاصطناعي: مشروط بالاشتراك */}
-                {isFree ? (
-                  <button
-                    onClick={() => alert("🔒 Unlock AI Reports and deep insights by upgrading to Pro/Premium!")}
-                    className="rounded-xl bg-gray-200 py-3 text-center font-bold text-gray-500 text-sm flex items-center justify-center gap-1 cursor-pointer hover:bg-gray-300 transition"
-                  >
-                    🔒 Report
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => onSelectProduct(product)}
-                    className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-3 font-bold text-white hover:opacity-90 text-sm flex items-center justify-center transition"
-                  >
-                    AI Report
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* كارت التشويق (Teaser Card) لحث المستخدمين المجانيين على الترقية */}
         {isFree && filtered.length > 3 && (
-          <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-indigo-300 bg-indigo-50/40 p-8 text-center shadow-lg min-h-[400px]">
-            <span className="text-5xl mb-4 animate-bounce">🔒</span>
-            <h3 className="text-2xl font-bold text-indigo-950">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/20 p-6 text-center min-h-[380px]">
+            <span className="text-4xl mb-3">🔒</span>
+            <h3 className="text-lg font-bold text-slate-900">
               Unlock {filtered.length - 3}+ More Hot Products
             </h3>
-            <p className="mt-3 text-sm text-indigo-700 max-w-xs leading-relaxed">
-              We have found more trending winning products for today! Upgrade to Pro or Premium to view them all and start scaling your dropshipping store.
+            <p className="mt-2 text-xs text-slate-500 max-w-xs leading-relaxed">
+              Upgrade to Pro or Premium to view all curated winning products.
             </p>
             <a
               href="/pricing"
-              className="mt-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-3.5 font-bold text-white hover:opacity-95 shadow-lg shadow-indigo-500/20 transition-all text-center"
+              className="mt-5 rounded-xl bg-indigo-600 px-6 py-2.5 font-semibold text-xs text-white hover:bg-indigo-700 transition"
             >
-              🚀 Upgrade Now
+              🚀 Upgrade Plan
             </a>
           </div>
         )}

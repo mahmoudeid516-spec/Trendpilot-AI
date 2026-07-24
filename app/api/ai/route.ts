@@ -10,45 +10,106 @@ export async function POST(req: Request) {
     const { product } = await req.json();
 
     const prompt = `
-You are a professional ecommerce marketing expert.
+You are a senior ecommerce consultant and AI dropshipping expert.
 
-Product Name: ${product.name}
+Analyze the following product and generate a professional business report.
+
+PRODUCT INFORMATION
+
+Name: ${product.name}
 Category: ${product.category}
 Platform: ${product.platform}
-Profit: ${product.profit}
-AI Score: ${product.ai_score}
 
-Generate:
+Buying Price: $${product.buy_price}
+Selling Price: $${product.selling_price}
+Estimated Profit: $${product.profit}
 
-1. Product Description
-2. Facebook Ad
-3. TikTok Hook
-4. Instagram Caption
-5. Call To Action
+Trend Score: ${product.trend_score}
+Winning Probability: ${
+      product.score?.winningProbability ?? product.ai_score
+    }
 
+Recommendation:
+${product.score?.launchStatus ?? "Unknown"}
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "executive_summary":"",
+  "strengths":[
+    "",
+    "",
+    ""
+  ],
+  "weaknesses":[
+    "",
+    ""
+  ],
+  "target_audience":"",
+  "best_countries":[
+    "",
+    "",
+    ""
+  ],
+  "marketing_strategy":"",
+  "facebook_ad":"",
+  "tiktok_hook":"",
+  "instagram_caption":"",
+  "shopify_description":"",
+  "call_to_action":"",
+  "recommended_budget":"",
+  "risk_level":"",
+  "launch_decision":""
+}
+
+Do not return markdown.
+Do not return explanations.
 Return JSON only.
 `;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
+      temperature: 0.7,
+      response_format: {
+        type: "json_object",
+      },
       messages: [
+        {
+          role: "system",
+          content:
+            "You are one of the world's best ecommerce product research experts.",
+        },
         {
           role: "user",
           content: prompt,
         },
       ],
-      response_format: { type: "json_object" },
     });
 
     const content = response.choices[0].message.content;
 
-    return NextResponse.json(JSON.parse(content ?? "{}"));
+    if (!content) {
+      return NextResponse.json(
+        {
+          error: "Empty AI response.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    return NextResponse.json(JSON.parse(content));
   } catch (error) {
-    console.error(error);
+    console.error("AI REPORT ERROR:", error);
 
     return NextResponse.json(
-      { error: "AI generation failed." },
-      { status: 500 }
+      {
+        error: "AI Report generation failed.",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

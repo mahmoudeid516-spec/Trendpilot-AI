@@ -1,66 +1,64 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
+
+interface DatabaseProduct {
+  platform?: string;
+  ai_score?: number | string;
+  profit?: number | string;
+}
+
+interface Stats {
+  totalProducts: number;
+  shopifyProducts: number;
+  avgScore: number;
+  avgProfit: number;
+}
 
 type Props = {
   refreshKey: number;
 };
 
-type Stats = {
-  totalProducts: number;
-  shopifyProducts: number;
-  avgScore: number;
-  avgProfit: number;
-};
-
-export default function StatsCards({
-  refreshKey,
-}: Props) {
+export default function StatsCards({ refreshKey }: Props) {
   const [stats, setStats] = useState<Stats>({
     totalProducts: 0,
     shopifyProducts: 0,
     avgScore: 0,
     avgProfit: 0,
   });
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     loadStats();
   }, [refreshKey]);
 
   async function loadStats() {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*");
+    setLoading(true);
+    const { data, error } = await supabase.from("products").select("platform, ai_score, profit");
 
-    if (error || !data) return;
+    if (error || !data) {
+      setLoading(false);
+      return;
+    }
 
-    const totalProducts = data.length;
+    const typedData = data as DatabaseProduct[];
+    const totalProducts = typedData.length;
 
-    const shopifyProducts = data.filter(
-      (p: any) => p.platform === "Shopify"
-    ).length;
+    const shopifyProducts = typedData.filter((p) => p.platform === "Shopify").length;
 
     const avgScore =
       totalProducts === 0
         ? 0
         : Math.round(
-            data.reduce(
-              (sum: number, p: any) =>
-                sum + Number(p.ai_score || 0),
-              0
-            ) / totalProducts
+            typedData.reduce((sum, p) => sum + Number(p.ai_score || 0), 0) / totalProducts
           );
 
     const avgProfit =
       totalProducts === 0
         ? 0
         : Math.round(
-            data.reduce(
-              (sum: number, p: any) =>
-                sum + Number(p.profit || 0),
-              0
-            ) / totalProducts
+            typedData.reduce((sum, p) => sum + Number(p.profit || 0), 0) / totalProducts
           );
 
     setStats({
@@ -69,68 +67,86 @@ export default function StatsCards({
       avgScore,
       avgProfit,
     });
+    setLoading(false);
   }
 
-  const cards = [
-    {
-      title: "Products",
-      value: stats.totalProducts,
-      icon: "📦",
-      color: "from-blue-500 to-cyan-500",
-      subtitle: "Database",
-    },
-    {
-      title: "Shopify",
-      value: stats.shopifyProducts,
-      icon: "🛒",
-      color: "from-green-500 to-emerald-500",
-      subtitle: "Winning Products",
-    },
-    {
-      title: "AI Score",
-      value: `${stats.avgScore}%`,
-      icon: "🤖",
-      color: "from-purple-500 to-indigo-500",
-      subtitle: "Average",
-    },
-    {
-      title: "Avg Profit",
-      value: `$${stats.avgProfit}`,
-      icon: "💰",
-      color: "from-orange-500 to-red-500",
-      subtitle: "Per Product",
-    },
-  ];
+  const kpiData = useMemo(
+    () => [
+      {
+        title: "Total Products",
+        value: stats.totalProducts.toString(),
+        icon: "📦",
+        trend: "↗ +12%",
+        trendColor: "text-emerald-500",
+        color: "bg-blue-500",
+      },
+      {
+        title: "Shopify Items",
+        value: stats.shopifyProducts.toString(),
+        icon: "🛒",
+        trend: "↗ +5%",
+        trendColor: "text-emerald-500",
+        color: "bg-emerald-500",
+      },
+      {
+        title: "Avg AI Score",
+        value: `${stats.avgScore}%`,
+        icon: "🤖",
+        trend: "Stable",
+        trendColor: "text-blue-500",
+        color: "bg-indigo-500",
+      },
+      {
+        title: "Avg Profit",
+        value: `$${stats.avgProfit}`,
+        icon: "💰",
+        trend: "↗ +8%",
+        trendColor: "text-emerald-500",
+        color: "bg-orange-500",
+      },
+    ],
+    [stats]
+  );
+
+  if (loading) {
+    return (
+      <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4 my-8">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-40 rounded-3xl bg-gray-100 animate-pulse border border-gray-200" />
+        ))}
+      </section>
+    );
+  }
 
   return (
     <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4 my-8">
-      {cards.map((card) => (
+      {kpiData.map((card) => (
         <div
           key={card.title}
-          className="relative overflow-hidden rounded-3xl bg-white p-7 shadow-lg border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+          className="group relative overflow-hidden rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-100 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-100"
         >
-          <div
-            className={`absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-gradient-to-br ${card.color} opacity-10`}
-          />
-
-          <div className="relative z-10">
+          <div className="flex justify-between items-start mb-4">
             <div
-              className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r ${card.color} text-3xl shadow-lg`}
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl ${card.color} text-white shadow-lg transition-transform duration-300 group-hover:scale-110`}
             >
-              {card.icon}
+              <span className="text-xl">{card.icon}</span>
             </div>
+            <span className={`text-xs font-bold px-2 py-1 rounded-full bg-gray-50 ${card.trendColor}`}>
+              {card.trend}
+            </span>
+          </div>
 
-            <p className="mt-6 text-sm font-medium uppercase tracking-wide text-gray-500">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-gray-400 group-hover:text-gray-600 transition-colors">
               {card.title}
             </p>
-
-            <h2 className="mt-2 text-4xl font-extrabold text-gray-900">
+            <h2 className="mt-1 text-3xl font-extrabold text-gray-900 tracking-tight">
               {card.value}
             </h2>
-
-            <p className="mt-2 text-sm text-gray-500">
-              {card.subtitle}
-            </p>
+          </div>
+          
+          <div className="absolute bottom-0 left-0 h-1 w-full bg-gray-50 overflow-hidden">
+            <div className={`h-full ${card.color} opacity-20`} style={{ width: '100%' }} />
           </div>
         </div>
       ))}

@@ -1,5 +1,4 @@
 import type { Product } from "../../types/Product";
-import MarketMetrics from "./MarketMetrics";
 import { generateProductAdvice } from "../../services/ProductAdvisor";
 
 type Props = {
@@ -9,74 +8,182 @@ type Props = {
 export default function ProductHero({ product }: Props) {
   const advice = generateProductAdvice(product);
 
+  const opportunity =
+    product.ai_score >= 90
+      ? "Excellent Opportunity"
+      : product.ai_score >= 75
+      ? "Good Opportunity"
+      : "Average Opportunity";
+
   return (
     <>
-      {/* Hero Section */}
-      <div className="grid lg:grid-cols-2 gap-12">
+      {/* HERO */}
 
-        {/* Product Image */}
-        <div>
+      <section className="grid lg:grid-cols-2 gap-12 items-center">
+
+        {/* IMAGE */}
+
+        <div className="bg-white rounded-[32px] shadow-2xl p-8">
+
           <img
             src={product.image}
             alt={product.name}
-            className="w-full rounded-3xl shadow-2xl"
+            className="w-full rounded-3xl object-cover"
           />
+
         </div>
 
-        {/* Product Information */}
+        {/* INFO */}
+
         <div>
 
-          <span className="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold">
+          <span className="inline-flex items-center rounded-full bg-purple-100 px-4 py-2 text-sm font-semibold text-purple-700">
             {product.platform}
           </span>
 
-          <h1 className="text-5xl font-bold mt-6">
+          <h1 className="mt-5 text-5xl font-extrabold leading-tight">
             {product.name}
           </h1>
 
-          <p className="text-xl text-gray-500 mt-3">
+          <p className="mt-3 text-lg text-gray-500">
             {product.category}
           </p>
 
-          <div className="grid grid-cols-2 gap-5 mt-10">
+          {/* PRICE CARDS */}
 
-            <div className="bg-gray-100 rounded-2xl p-5">
-              <p className="text-gray-500">Buy Price</p>
-              <h2 className="text-3xl font-bold">
+          <div className="grid grid-cols-2 gap-5 mt-8">
+
+            <div className="rounded-2xl bg-gray-50 p-5 border">
+              <p className="text-gray-500 text-sm">
+                Buy Price
+              </p>
+
+              <h3 className="text-3xl font-bold mt-2">
                 ${product.buy_price}
-              </h2>
+              </h3>
             </div>
 
-            <div className="bg-green-100 rounded-2xl p-5">
-              <p className="text-gray-500">Selling Price</p>
-              <h2 className="text-3xl font-bold">
+            <div className="rounded-2xl bg-green-50 p-5 border border-green-200">
+              <p className="text-gray-500 text-sm">
+                Selling Price
+              </p>
+
+              <h3 className="text-3xl font-bold text-green-600 mt-2">
                 ${product.selling_price}
-              </h2>
+              </h3>
             </div>
 
-            <div className="bg-blue-100 rounded-2xl p-5">
-              <p className="text-gray-500">Profit</p>
-              <h2 className="text-3xl font-bold">
+            <div className="rounded-2xl bg-blue-50 p-5 border border-blue-200">
+              <p className="text-gray-500 text-sm">
+                Profit
+              </p>
+
+              <h3 className="text-3xl font-bold text-blue-600 mt-2">
                 ${product.profit}
-              </h2>
+              </h3>
             </div>
 
-            <div className="bg-purple-100 rounded-2xl p-5">
-              <p className="text-gray-500">AI Score</p>
-              <h2 className="text-3xl font-bold">
+            <div className="rounded-2xl bg-purple-50 p-5 border border-purple-200">
+              <p className="text-gray-500 text-sm">
+                AI Score
+              </p>
+
+              <h3 className="text-3xl font-bold text-purple-600 mt-2">
                 {product.ai_score}%
-              </h2>
+              </h3>
             </div>
 
           </div>
 
-          <div className="flex gap-4 mt-10">
+          {/* BUSINESS STATS */}
+
+          <div className="grid grid-cols-3 gap-4 mt-8">
+
+            <div className="rounded-xl border p-4">
+
+              <p className="text-sm text-gray-500">
+                Trend
+              </p>
+
+              <h4 className="text-2xl font-bold">
+                {product.trend_score}%
+              </h4>
+
+            </div>
+
+            <div className="rounded-xl border p-4">
+
+              <p className="text-sm text-gray-500">
+                Competition
+              </p>
+
+              <h4 className="text-2xl font-bold text-green-600">
+                Low
+              </h4>
+
+            </div>
+
+            <div className="rounded-xl border p-4">
+
+              <p className="text-sm text-gray-500">
+                Revenue
+              </p>
+
+              <h4 className="text-2xl font-bold">
+                $
+                {(
+                  product.selling_price *
+                  150
+                ).toFixed(0)}
+              </h4>
+
+            </div>
+
+          </div>
+
+          {/* OPPORTUNITY */}
+
+          <div className="mt-8 rounded-3xl bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6">
+
+            <div className="flex justify-between items-center">
+
+              <div>
+
+                <p className="text-sm uppercase opacity-80">
+                  AI Recommendation
+                </p>
+
+                <h3 className="text-3xl font-bold mt-1">
+                  {opportunity}
+                </h3>
+
+                <p className="mt-2 opacity-90">
+                  AI confidence:
+                  {" "}
+                  {product.ai_score}%
+                </p>
+
+              </div>
+
+              <div className="h-28 w-28 rounded-full border-8 border-white flex items-center justify-center text-3xl font-bold">
+
+                {product.ai_score}
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* BUTTONS */}
+
+          <div className="flex flex-wrap gap-4 mt-8">
 
             <a
               href={product.product_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-purple-600 hover:bg-purple-700 transition text-white px-6 py-4 rounded-xl font-semibold"
+              className="rounded-xl bg-purple-600 px-8 py-4 font-semibold text-white hover:bg-purple-700 transition"
             >
               View Product
             </a>
@@ -85,49 +192,50 @@ export default function ProductHero({ product }: Props) {
               href={product.supplier_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-900 hover:bg-black transition text-white px-6 py-4 rounded-xl font-semibold"
+              className="rounded-xl bg-black px-8 py-4 font-semibold text-white hover:bg-gray-800 transition"
             >
               Open Supplier
             </a>
+
+            <button className="rounded-xl border px-8 py-4 font-semibold hover:bg-gray-100 transition">
+              Import to Shopify
+            </button>
 
           </div>
 
         </div>
 
-      </div>
+      </section>
 
-      {/* AI Analysis */}
+      {/* AI ANALYSIS */}
 
-      <section className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-8 text-white mt-12">
+      <section className="mt-14 rounded-[32px] bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-600 p-8 text-white">
 
         <h2 className="text-3xl font-bold">
-          🤖 AI Analysis
+          🤖 TrendPilot AI Analysis
         </h2>
 
-        <p className="text-purple-100 mt-2">
-          TrendPilot AI analyzed this product using AI score,
-          trend score, profitability and competition.
+        <p className="mt-2 text-purple-100">
+          AI evaluated profitability, demand, trend,
+          competition and long-term growth.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-4 mt-8">
+        <div className="grid md:grid-cols-2 gap-5 mt-8">
 
           {advice.map((item) => (
+
             <div
               key={item}
-              className="bg-white/10 rounded-xl p-5"
+              className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 p-5"
             >
               {item}
             </div>
+
           ))}
 
         </div>
 
       </section>
-
-      {/* Market Metrics */}
-
-      <MarketMetrics product={product} />
-
     </>
   );
 }

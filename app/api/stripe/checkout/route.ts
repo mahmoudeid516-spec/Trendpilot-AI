@@ -5,23 +5,22 @@ export async function POST(req: Request) {
   try {
     const { plan } = await req.json();
 
-    let amount = 2900;
+    let priceId = "";
 
     switch (plan) {
-      case "Starter":
-        amount = 2900;
-        break;
-
       case "Pro":
-        amount = 4900;
+        priceId = process.env.STRIPE_PRO_PRICE_ID!;
         break;
 
       case "Enterprise":
-        amount = 9900;
+        priceId = process.env.STRIPE_ENTERPRISE_PRICE_ID!;
         break;
 
       default:
-        amount = 2900;
+        return NextResponse.json(
+          { error: "Invalid plan." },
+          { status: 400 }
+        );
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -31,33 +30,23 @@ export async function POST(req: Request) {
 
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-
-            product_data: {
-              name: `TrendPilot AI ${plan}`,
-            },
-
-            recurring: {
-              interval: "month",
-            },
-
-            unit_amount: amount,
-          },
-
+          price: priceId,
           quantity: 1,
         },
       ],
 
-      success_url: "http://localhost:3000/success",
+      subscription_data: {
+        trial_period_days: 14,
+      },
 
-      cancel_url: "http://localhost:3000/cancel",
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
+
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel`,
     });
 
     return NextResponse.json({
       url: session.url,
     });
-
   } catch (error: any) {
     console.error("Stripe Error:", error);
 

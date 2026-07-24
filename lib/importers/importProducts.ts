@@ -1,6 +1,8 @@
 import { supabase } from "../supabase";
 
-export async function importProducts(products: any[]) {
+import type { Product } from "../../types/Product";
+
+export async function importProducts(products: Product[]) {
   if (!products.length) return true;
 
   // 1. تنظيف المنتجات القديمة قبل الإدخال (اختياري: للحفاظ على سرعة قاعدة البيانات)
@@ -15,14 +17,13 @@ export async function importProducts(products: any[]) {
 
   // 2. تجهيز المنتجات للرفع
   const cleanProducts = products.map((product) => ({
-    id: Number(product.id),
+   
     source: product.source,
     platform: product.platform,
     name: product.name,
     description: product.description || "",
     image: product.image || "",
     category: product.category || "General",
-    brand: product.brand || "",
     product_url: product.product_url || "",
     supplier: product.supplier || "AliExpress",
     supplier_url: product.supplier_url || "",
@@ -44,7 +45,6 @@ export async function importProducts(products: any[]) {
     viral_score: Number(product.viral_score || 0),
     opportunity_score: Number(product.opportunity_score || 0),
     demand_score: Number(product.demand_score || 0),
-    confidence_score: Number(product.confidence_score || 0),
     risk_score: Number(product.risk_score || 0),
     winning_probability: Number(product.winning_probability || 0),
     decision: product.decision || "Test First",
@@ -52,17 +52,19 @@ export async function importProducts(products: any[]) {
     competition: product.competition || "Medium",
     trend_direction: product.trend_direction || "Stable",
     seasonality: product.seasonality || "Evergreen",
-    cpm: Number(product.cpm || 0),
-    cpa: Number(product.cpa || 0),
     updated_at: new Date().toISOString(), // هذا الحقل مهم جداً لعملية التنظيف
   }));
 
   // 3. الإدخال مع التحديث الذكي
-  const { error } = await supabase
-    .from("products")
-    .upsert(cleanProducts, {
-      onConflict: "product_url", // يضمن عدم تكرار نفس المنتج
-    });
+  const { data, error } = await supabase
+  .from("products")
+  .upsert(cleanProducts, {
+    onConflict: "product_url",
+  })
+  .select();
+
+console.log(data);
+console.log(error);
 
   if (error) {
     console.error("IMPORT ERROR:", error);

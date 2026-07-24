@@ -9,30 +9,44 @@ import Footer from "../components/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
-
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-indigo-500 selection:text-white">
+      {/* 1. الهيدر وشريط التنقل */}
       <Navbar />
 
-      <Hero />
+      <main className="overflow-hidden">
+        {/* 2. قسم Hero الرئيسي */}
+        <section className="relative bg-white border-b border-slate-100">
+          <Hero />
+        </section>
 
-      <section id="features">
-        <Features />
-      </section>
+        {/* 3. الإحصائيات والأرقام (وضعها هنا يبني الثقة فوراً بعد الـ Hero) */}
+        <section id="stats" className="bg-slate-50/70 border-b border-slate-100/80 py-4">
+          <Stats />
+        </section>
 
-      <Stats />
+        {/* 4. مميزات المنصة */}
+        <section id="features" className="bg-white border-b border-slate-100 py-6">
+          <Features />
+        </section>
 
-      <HowItWorks />
+        {/* 5. طريقة العمل Step-by-Step */}
+        <section id="how-it-works" className="bg-slate-50/70 border-b border-slate-100/80 py-6">
+          <HowItWorks />
+        </section>
 
-      <section id="pricing">
-        <Pricing />
-      </section>
+        {/* 6. آراء العملاء والتوصيات */}
+        <section id="testimonials" className="bg-white border-b border-slate-100 py-6">
+          <Testimonials />
+        </section>
 
-      <section id="testimonials">
-        <Testimonials />
-      </section>
+        {/* 7. خطط الأسعار */}
+        <section id="pricing" className="bg-slate-50/70 py-6">
+          <Pricing />
+        </section>
+      </main>
 
+      {/* 8. الفوتر */}
       <Footer />
-
-    </main>
+    </div>
   );
 }

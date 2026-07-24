@@ -1,4 +1,14 @@
+import { supabase } from "../supabase";
+
 export async function analyzeProduct(product: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error("User not logged in.");
+  }
+
   const response = await fetch("/api/analyze", {
     method: "POST",
     headers: {
@@ -6,6 +16,7 @@ export async function analyzeProduct(product: string) {
     },
     body: JSON.stringify({
       product,
+      userId: session.user.id,
     }),
   });
 
@@ -15,7 +26,7 @@ export async function analyzeProduct(product: string) {
   console.log(data);
 
   if (!response.ok) {
-    throw new Error(JSON.stringify(data, null, 2));
+    throw new Error(data.error);
   }
 
   return data.result;

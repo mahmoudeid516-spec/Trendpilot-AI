@@ -1,9 +1,10 @@
 import { supabase } from "../lib/supabase";
+import type { Product } from "../types/Product";
 
 export async function getRelatedProducts(
   category: string,
-  currentId: number
-) {
+  currentId: string
+): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -16,5 +17,5 @@ export async function getRelatedProducts(
     return [];
   }
 
-  return data;
+  return (data ?? []) as Product[];
 }

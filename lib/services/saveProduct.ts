@@ -59,8 +59,10 @@ export async function saveProduct(product: any) {
   };
 
   const { error } = await supabase
-    .from("products")
-    .insert([dataToSave]);
+  .from("products")
+  .upsert([dataToSave], {
+    onConflict: "product_url",
+  });
 
   if (error) {
     throw error;

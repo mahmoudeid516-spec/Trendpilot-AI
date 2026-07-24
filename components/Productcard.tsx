@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 // تعريف شكل البيانات لضمان استقرار الكود
 interface ProductProps {
   product: {
-    id: number;
+    id: string;
     title: string;
     price: string;
     roi: number;

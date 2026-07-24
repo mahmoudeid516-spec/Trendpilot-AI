@@ -1,9 +1,41 @@
 import { NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
+import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
 export async function POST(req: Request) {
   try {
     const { product } = await req.json();
+const userId = "test-user";
+  /*
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }*/
+
+    const { data: profile } = await supabaseAdmin
+  .from("profiles")
+  .select("*")
+  .eq("id", userId)
+  .single();
+
+console.log("USER ID:", userId);
+console.log("PROFILE:", profile);
+
+    const plan = (profile?.plan || "Free").toLowerCase();
+  
+    console.log("PLAN =", plan);
+    console.log("PROFILE =", profile);    
+   /*
+    if (plan === "free") {
+      return NextResponse.json(
+        {
+          error: "Upgrade to Pro to use AI Product Analyzer.",
+        },
+        { status: 403 }
+      );
+    }. */
 
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
@@ -14,7 +46,7 @@ You are an expert Shopify consultant, Amazon consultant, TikTok Shop expert and 
 
 Analyze this product:
 
-${product}
+${JSON.stringify(product, null, 2)}
 
 Return ONLY valid JSON.
 
@@ -22,23 +54,16 @@ Return ONLY valid JSON.
   "name":"",
   "category":"",
   "description":"",
-
   "buy_price":0,
   "selling_price":0,
   "profit":0,
-
   "market_score":0,
   "trend_score":0,
-
   "competition":"Low",
-
   "country":"Worldwide",
-
   "pros":["","",""],
   "cons":["",""],
-
   "recommendation":"",
-
   "marketing":{
       "tiktok_hook":"",
       "facebook_ad":"",
@@ -47,28 +72,6 @@ Return ONLY valid JSON.
       "hashtags":[]
   }
 }
-
-Rules:
-
-- JSON only.
-- No markdown.
-- No explanation.
-
-- Buy price must always be lower than selling price.
-- Profit = selling_price - buy_price.
-
-- market_score between 85 and 99.
-- trend_score between 85 and 99.
-
-- competition must be one of:
-Low
-Medium
-High
-
-- Exactly 3 pros.
-- Exactly 2 cons.
-
-- Recommendation must be professional.
 `,
     });
 
@@ -83,20 +86,13 @@ High
 
     const result = JSON.parse(text.slice(start, end + 1));
 
-    return NextResponse.json({
-      result,
-    });
-
+    return NextResponse.json({ result });
   } catch (err: any) {
     console.error(err);
 
     return NextResponse.json(
-      {
-        error: err.message,
-      },
-      {
-        status: 500,
-      }
+      { error: err.message },
+      { status: 500 }
     );
   }
 }

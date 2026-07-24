@@ -6,6 +6,8 @@ import TrendChart from "../../../components/products/TrendChart";
 import SupplierCard from "../../../components/products/SupplierCard";
 import AIReport from "../../../components/products/AIReport";
 import RelatedProducts from "../../../components/products/RelatedProducts";
+import AIDecision from "../../../components/products/AIDecision";
+import MarketMetrics from "../../../components/products/MarketMetrics";
 
 export default async function ProductPage({
   params,
@@ -32,20 +34,24 @@ export default async function ProductPage({
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-10">
+    <div className="mx-auto max-w-7xl space-y-10 px-6 py-10">
 
-      <ProductHero product={product} />
+  <ProductHero product={product} />
 
-      {/* <TrendChart /> */}
+  <AIDecision product={product} />
 
-      <SupplierCard product={product} />
+  <TrendChart />
 
-      <AIReport product={product} />
+  <MarketMetrics product={product} />
 
-      <RelatedProducts products={relatedProducts} />
+  <SupplierCard product={product} />
 
-      <AIMarketing product={product} />
+  <AIReport product={product} />
 
-    </div>
+  <RelatedProducts products={relatedProducts} />
+
+  <AIMarketing product={product} />
+
+</div>
   );
 }

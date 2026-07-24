@@ -1,3 +1,4 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -13,22 +14,35 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    // التحقق من أن الطلب قادم فعلاً من Stripe
     event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    return NextResponse.json(
+      { error: `Webhook Error: ${err.message}` },
+      { status: 400 }
+    );
   }
 
-  // معالجة نجاح الدفع
+  // نجاح الدفع
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    
-    // هنا يجب أن تضيف الكود الذي يحدث قاعدة البيانات (مثلاً: تحديث حقل plan في المستخدم)
-    console.log("Payment successful for user:", session.customer_details?.email);
+
+    const userId = session.metadata?.userId;
+
+    if (userId) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          plan: "Pro",
+          subscription_status: "active",
+        })
+        .eq("id", userId);
+
+      console.log("User upgraded:", userId);
+    }
   }
 
   return NextResponse.json({ received: true });
