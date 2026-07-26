@@ -1,35 +1,121 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabase";
+import { getProfile } from "../services/profile";
+
 export default function Pricing() {
-    const plans = [
+  const router = useRouter();
+    const [currentPlan, setCurrentPlan] = useState<"Free" | "Pro" | "Premium" | "">("");
+  const [processingPlan, setProcessingPlan] = useState<"Pro" | "Premium" | "">("");
+  const [error, setError] = useState("");
+
+    useEffect(() => {
+      let cancelled = false;
+
+      async function loadCurrentPlan() {
+        try {
+          const profile = await getProfile();
+          const plan = profile?.plan;
+
+          if (!cancelled && (plan === "Free" || plan === "Pro" || plan === "Premium")) {
+            setCurrentPlan(plan);
+          }
+        } catch {
+          if (!cancelled) {
+            setCurrentPlan("");
+          }
+        }
+      }
+
+      void loadCurrentPlan();
+
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    const plans = useMemo(() => [
       {
-        name: "Starter",
-        price: "$19",
+        name: "Free",
+        price: "$0",
+        ctaHref: "/register",
+        ctaLabel: "Start Free",
         features: [
-          "50 Products / Day",
-          "Basic AI Analysis",
-          "Email Support",
+          "5 AI searches/day",
+          "3 AI reports/day",
+          "Basic Dashboard",
+          "Community Support",
         ],
       },
       {
         name: "Pro",
         price: "$49",
+        ctaHref: "/pricing",
+        ctaLabel: "Choose Pro",
         features: [
-          "Unlimited Products",
-          "Advanced AI Analysis",
+          "Unlimited AI Searches",
+          "Unlimited AI Reports",
+          "Competitor Analysis",
+          "Trend Prediction",
+          "Marketing Generator",
+          "Export Reports",
           "Priority Support",
         ],
       },
       {
-        name: "Enterprise",
+        name: "Premium",
         price: "$99",
+        ctaHref: "/pricing",
+        ctaLabel: "Choose Premium",
         features: [
-          "Unlimited Everything",
-          "Private API",
-          "Dedicated Manager",
+          "Everything in Pro",
+          "Team Workspaces",
+          "API Access",
+          "White Label Reports",
+          "Advanced Forecasting",
+          "Premium Support",
         ],
       },
-    ];
+    ], []);
+
+    async function handlePaidPlanCheckout(plan: "Pro" | "Premium") {
+      try {
+        setError("");
+        setProcessingPlan(plan);
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          router.push("/login?redirectedFrom=/pricing");
+          return;
+        }
+
+        const response = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ plan }),
+        });
+
+        const data = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+
+        if (!response.ok || !data?.url) {
+          throw new Error(data?.error || "Failed to start checkout.");
+        }
+
+        window.location.assign(data.url);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to start checkout.");
+        setProcessingPlan("");
+      }
+    }
   
     return (
       <section className="py-24 bg-gray-50">
@@ -42,6 +128,12 @@ export default function Pricing() {
             <p className="mt-4 text-xl text-gray-500">
               Choose the perfect plan for your business.
             </p>
+
+            {error ? (
+              <p className="mx-auto mt-5 max-w-xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+                {error}
+              </p>
+            ) : null}
           </div>
   
           <div className="grid md:grid-cols-3 gap-8">
@@ -68,28 +160,28 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-  
-                <button
-  onClick={async () => {
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-      });
 
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Unable to start checkout.");
-    }
-  }}
-  className="mt-8 w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition"
->
-  Get Started
-</button>
+                {currentPlan === plan.name ? (
+                  <span className="mt-8 inline-flex w-full items-center justify-center bg-slate-200 text-slate-700 py-3 rounded-xl font-semibold">
+                    Current Plan
+                  </span>
+                ) : plan.name === "Pro" || plan.name === "Premium" ? (
+                  <button
+                    type="button"
+                    onClick={() => void handlePaidPlanCheckout(plan.name)}
+                    disabled={processingPlan === plan.name}
+                    className="mt-8 inline-flex w-full items-center justify-center bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {processingPlan === plan.name ? "Redirecting..." : plan.ctaLabel}
+                  </button>
+                ) : (
+                  <Link
+                    href={plan.ctaHref}
+                    className="mt-8 inline-flex w-full items-center justify-center bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition"
+                  >
+                    {plan.ctaLabel}
+                  </Link>
+                )}
               </div>
             ))}
           </div>

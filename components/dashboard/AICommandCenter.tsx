@@ -15,31 +15,30 @@ import SearchInput from "./SearchInput";
 import SuggestionChips from "./SuggestionChips";
 import AIRecommendation from "./AIRecommendation";
 import SearchResults from "./SearchResults";
+import { Search, Sparkles } from "lucide-react";
 
 export default function AICommandCenter() {
   const [prompt, setPrompt] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleAskAI() {
     if (!prompt.trim()) return;
 
     setLoading(true);
+    setError("");
 
     try {
       const filters = await aiSearch(prompt);
 
-      console.log("FILTERS:", filters);
-
       const products = await productSearch(filters);
-
-      console.log("PRODUCTS:", products);
 
       const scoredProducts = scoreProducts(products);
 
       setResults(scoredProducts);
     } catch (error) {
-      console.error(error);
+      setError(error instanceof Error ? error.message : "Search failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -47,52 +46,49 @@ export default function AICommandCenter() {
 
   const bestProduct = getBestProduct(results);
 
+  const priorityPrompts = [
+    "portable blender under $30 low competition",
+    "high margin pet accessories shopify",
+    "tiktok home gadgets rising trend",
+  ];
+
   return (
-    <section className="mb-10 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl">
-
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 p-8 text-white">
-
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
+    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="p-6 sm:p-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-
-            <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-              AI Copilot
-            </span>
-
-            <h2 className="mt-5 text-4xl font-bold">
-              Ask TrendPilot AI
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Primary Workflow
+            </p>
+            <h2 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+              AI Search
             </h2>
-
-            <p className="mt-3 max-w-2xl text-purple-100">
-              Find winning products, compare niches,
-              discover profitable opportunities and receive
-              AI-powered business recommendations.
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+              Describe your target market and let TrendPilot AI rank the best products to test next.
             </p>
-
           </div>
 
-          <div className="rounded-2xl bg-white/10 p-6 backdrop-blur">
-
-            <p className="text-sm text-purple-200">
-              AI Status
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-green-300">
-              ● Online
-            </h3>
-
-            <p className="mt-3 text-sm text-purple-100">
-              GPT Connected
-            </p>
-
-          </div>
-
+          <span className="inline-flex items-center gap-2 self-start rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-indigo-700">
+            <Sparkles size={13} />
+            GPT connected
+          </span>
         </div>
 
-      </div>
-
-      <div className="p-8">
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Starter prompts</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {priorityPrompts.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setPrompt(item)}
+                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <SearchInput
           prompt={prompt}
@@ -101,56 +97,46 @@ export default function AICommandCenter() {
           onSearch={handleAskAI}
         />
 
-        <div className="mt-6">
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <Search size={13} /> Suggested prompts
+          </p>
           <SuggestionChips
             onSelect={setPrompt}
           />
         </div>
 
         {loading && (
-
-          <div className="mt-8 rounded-2xl border border-purple-100 bg-purple-50 p-6">
-
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
             <div className="animate-pulse space-y-4">
-
-              <div className="h-5 w-48 rounded bg-purple-200" />
-
-              <div className="h-4 w-full rounded bg-purple-100" />
-
-              <div className="h-4 w-4/5 rounded bg-purple-100" />
-
+              <div className="h-5 w-48 rounded bg-slate-200" />
+              <div className="h-4 w-full rounded bg-slate-200" />
+              <div className="h-4 w-4/5 rounded bg-slate-200" />
             </div>
-
           </div>
-
         )}
 
+        {!loading && error ? (
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+
         {!loading && bestProduct && (
-
           <>
-
             <div className="mt-8">
-
               <AIRecommendation
                 product={bestProduct}
               />
-
             </div>
-
             <div className="mt-8">
-
               <SearchResults
                 results={results}
               />
-
             </div>
-
           </>
-
         )}
-
       </div>
-
     </section>
   );
 }

@@ -1,3 +1,5 @@
+import type { ProductLike } from "../types/Product";
+
 export type DecisionResult = {
     verdict: "Strong Buy" | "Good Opportunity" | "Avoid";
     risk: "Low" | "Medium" | "High";
@@ -8,7 +10,7 @@ export type DecisionResult = {
     reasons: string[];
   };
   
-  export function analyzeProduct(product: any): DecisionResult {
+  export function analyzeProduct(product: ProductLike): DecisionResult {
     const ai = Number(product.ai_score ?? 0);
     const trend = Number(product.trend_score ?? 0);
     const profit = Number(product.profit ?? 0);

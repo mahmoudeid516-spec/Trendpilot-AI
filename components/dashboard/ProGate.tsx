@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
 type Props = {
@@ -26,7 +27,7 @@ export default function ProGate({ children }: Props) {
         .from("profiles")
         .select("plan")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (data?.plan) {
         setPlan(data.plan);
@@ -35,7 +36,7 @@ export default function ProGate({ children }: Props) {
       setLoading(false);
     }
 
-    loadPlan();
+    void loadPlan();
   }, []);
 
   if (loading) {
@@ -48,7 +49,7 @@ export default function ProGate({ children }: Props) {
     );
   }
 
-  if (plan !== "Pro") {
+  if (plan !== "Pro" && plan !== "Premium") {
     return (
       <div className="bg-gradient-to-r from-purple-700 to-indigo-700 rounded-3xl text-white p-10 mt-8">
 
@@ -62,12 +63,12 @@ export default function ProGate({ children }: Props) {
           Sales Forecast and all premium tools.
         </p>
 
-        <a
+        <Link
           href="/"
           className="inline-block mt-8 bg-white text-purple-700 px-8 py-4 rounded-xl font-bold"
         >
           Upgrade to Pro
-        </a>
+        </Link>
 
       </div>
     );

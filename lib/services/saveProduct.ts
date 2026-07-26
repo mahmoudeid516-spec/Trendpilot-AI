@@ -1,6 +1,7 @@
 import { supabase } from "../supabase";
+import type { ProductLike } from "../../types/Product";
 
-export async function saveProduct(product: any) {
+export async function saveProduct(product: ProductLike) {
 
   const dataToSave = {
     name: product.name,

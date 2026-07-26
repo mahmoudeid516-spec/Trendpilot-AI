@@ -1,6 +1,22 @@
 import type { Product } from "../types/Product";
 
-export function mapApifyProduct(product: any): Product {
+export type ApifyProductSource = {
+  productId?: string | number;
+  title?: string;
+  imageUrl?: string;
+  categoryName?: string;
+  storeUrl?: string;
+  productUrl?: string;
+  priceCurrentMin?: number;
+  priceCurrent?: string | number;
+  priceOriginalMin?: number;
+  priceOriginal?: string | number;
+  ratingValue?: number;
+  soldCount?: number;
+  reviewsCount?: number;
+};
+
+export function mapApifyProduct(product: ApifyProductSource): Product {
   const price =
     Number(product.priceCurrentMin) ||
     parseFloat(

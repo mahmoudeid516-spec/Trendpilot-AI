@@ -1,6 +1,7 @@
 import { supabase } from "../supabase";
+import type { ProductLike } from "../../types/Product";
 
-export async function importProducts(products: any[]) {
+export async function importProducts(products: ProductLike[]) {
   for (const product of products) {
     const { data: existing } = await supabase
       .from("products")
@@ -18,7 +19,6 @@ export async function importProducts(products: any[]) {
       .insert(product);
 
     if (error) {
-      console.error(error);
       return false;
     }
   }

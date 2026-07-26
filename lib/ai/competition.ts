@@ -1,4 +1,6 @@
-export function analyzeCompetition(product: any) {
+import type { ProductLike } from "../../types/Product";
+
+export function analyzeCompetition(product: ProductLike) {
 
   let score = 80;
 

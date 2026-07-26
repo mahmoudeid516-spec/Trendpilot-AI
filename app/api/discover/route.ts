@@ -33,16 +33,15 @@ export async function GET(req: NextRequest) {
     );
 
     const products = await response.json();
-    console.log(products[0]);
 
     return NextResponse.json(products);
 
-  } catch (e: any) {
-    console.error(e);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Failed to discover products.";
 
     return NextResponse.json(
       {
-        error: e?.message || String(e),
+        error: message,
       },
       {
         status: 500,

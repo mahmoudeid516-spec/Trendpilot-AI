@@ -1,4 +1,6 @@
-export function analyzeMarket(product: any) {
+import type { ProductLike } from "../types/Product";
+
+export function analyzeMarket(product: ProductLike) {
     const ai = Number(product.ai_score ?? 0);
     const trend = Number(product.trend_score ?? 0);
     const profit = Number(product.profit ?? 0);

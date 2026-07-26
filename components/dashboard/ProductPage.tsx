@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 type Product = {
@@ -31,23 +31,24 @@ export default function ProductPage({ id }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadProduct();
-  }, [id]);
-
-  async function loadProduct() {
+  const loadProduct = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("id", Number(id))
-      .single();
+      .maybeSingle();
 
     if (!error) {
       setProduct(data);
     }
 
     setLoading(false);
-  }
+  }, [id]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadProduct();
+  }, [loadProduct]);
 
   if (loading) {
     return (

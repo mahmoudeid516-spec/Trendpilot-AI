@@ -1,384 +1,108 @@
 "use client";
+
 import { useState } from "react";
-import { analyzeProduct } from "../../services/decisionEngine";
+import Image from "next/image";
+import { Megaphone, PackageCheck } from "lucide-react";
+import type { Product } from "./ProductsTable";
 import { generateMarketing } from "../../lib/services/generateMarketing";
-import { analyzeMarket } from "../../services/marketAnalyzer";
+import AIReportExperience from "../reports/AIReportExperience";
 
 type Props = {
-  product: any;
+  product: Product | null;
+  onReportGenerated?: () => void;
 };
 
-function ScoreBar({
-  title,
-  value,
-  color,
-}: {
-  title: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div className="mb-5">
-      <div className="flex justify-between mb-2">
-        <span className="font-medium">{title}</span>
-        <span className="font-bold">{value}%</span>
-      </div>
+export default function ProductDetails({ product, onReportGenerated }: Props) {
+  const [marketing, setMarketing] = useState("");
+  const [loading, setLoading] = useState(false);
 
-      <div className="w-full bg-gray-200 rounded-full h-3">
-        <div
-          className={`${color} h-3 rounded-full transition-all duration-700`}
-          style={{ width: `${value}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-export default function ProductDetails({ product }: Props) {
   if (!product) return null;
 
-  const [marketing, setMarketing] = useState("");
-const [loading, setLoading] = useState(false);
+  async function handleGenerateMarketing() {
+    if (!product) return;
 
-async function handleGenerateMarketing() {
-  try {
-    setLoading(true);
-
-    const result = await generateMarketing(product);
-
-    setMarketing(result);
-
-  } catch (error: any) {
-    alert(error.message);
-  } finally {
-    setLoading(false);
+    try {
+      setLoading(true);
+      const result = await generateMarketing(product);
+      setMarketing(result);
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to generate marketing.");
+    } finally {
+      setLoading(false);
+    }
   }
-}
-
-const decision = analyzeProduct(product);
-const market = analyzeMarket(product);
-const aiScore = decision.confidence;
-const winning = decision.winningProbability;
-
-const profit = Math.min(
-  100,
-  Number(product.profit || 0)
-);
 
   return (
-    <section className="mt-10 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-
-      <div className="bg-gradient-to-r from-purple-700 to-indigo-700 p-8 text-white">
-
-        <div className="flex justify-between items-center">
-
-          <div>
-
-            <h2 className="text-4xl font-bold">
-              {product.name}
-            </h2>
-
-            <div className="mt-4 inline-flex rounded-full bg-green-500 px-4 py-2 text-sm font-bold">
-  🏆 {decision.verdict}
-</div>
-
-            <p className="mt-3 text-purple-100">
-              {product.category}
-            </p>
-
-          </div>
-
-          <div className="text-center">
-
-            <div className="text-6xl font-bold">
-              {aiScore}
-            </div>
-
-            <p>AI SCORE</p>
-
-          </div>
-
+    <section className="mt-8 space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+      <header className="grid gap-5 lg:grid-cols-[260px,1fr]">
+        <div>
+          <Image
+            src={product.image}
+            alt={product.name}
+            width={640}
+            height={640}
+            unoptimized
+            className="h-[260px] w-full rounded-2xl border border-slate-200 object-cover"
+          />
         </div>
-
-      </div>
-
-      <div className="mb-8 rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-700 to-indigo-700 p-8 text-white">
-
-<div className="flex items-center justify-between">
-
-  <div>
-
-    <p className="text-purple-200 text-sm">
-      FINAL AI DECISION
-    </p>
-
-    <h2 className="text-4xl font-bold mt-2">
-      {decision.verdict}
-    </h2>
-
-    <p className="mt-3 text-purple-100">
-      Winning Probability {decision.winningProbability}%
-    </p>
-
-  </div>
-
-  <div className="text-right">
-
-    <div className="text-6xl font-bold">
-      {decision.confidence}
-    </div>
-
-    <p>AI Confidence</p>
-
-  </div>
-
-</div>
-
-<div className="grid md:grid-cols-4 gap-5 mt-8">
-
-  <div className="bg-white/10 rounded-xl p-4">
-    <p>Risk</p>
-    <h3 className="text-2xl font-bold">
-      {decision.risk}
-    </h3>
-  </div>
-
-  <div className="bg-white/10 rounded-xl p-4">
-    <p>Difficulty</p>
-    <h3 className="text-2xl font-bold">
-      {decision.difficulty}
-    </h3>
-  </div>
-
-  <div className="bg-white/10 rounded-xl p-4">
-    <p>Demand</p>
-    <h3 className="text-2xl font-bold">
-      {decision.demand}
-    </h3>
-  </div>
-
-  <div className="bg-white/10 rounded-xl p-4">
-    <p>Budget</p>
-    <h3 className="text-2xl font-bold">
-      ${market.recommendedBudget}
-    </h3>
-  </div>
-
-</div>
-
-</div>
-     
-      <div className="grid lg:grid-cols-3 gap-10 p-8">
-
-      <div className="mb-8">
-  <img
-    src={product.image}
-    alt={product.name}
-    className="w-full rounded-2xl shadow-lg object-cover"
-  />
-
-  <div className="grid grid-cols-2 gap-3 mt-5">
-
-    <div className="bg-gray-100 rounded-xl p-4">
-      <p className="text-gray-500 text-sm">Buy Price</p>
-      <p className="font-bold text-xl">
-        ${product.buy_price}
-      </p>
-    </div>
-
-    <div className="bg-gray-100 rounded-xl p-4">
-      <p className="text-gray-500 text-sm">Selling Price</p>
-      <p className="font-bold text-xl">
-        ${product.selling_price}
-      </p>
-    </div>
-
-    <div className="bg-green-100 rounded-xl p-4">
-      <p className="text-gray-500 text-sm">Profit</p>
-      <p className="font-bold text-green-700 text-xl">
-        ${product.profit}
-      </p>
-    </div>
-
-    <div className="bg-purple-100 rounded-xl p-4">
-      <p className="text-gray-500 text-sm">Platform</p>
-      <p className="font-bold">
-        {product.platform}
-      </p>
-    </div>
-
-  </div>
-</div>
 
         <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Product Intelligence</p>
+          <h2 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">{product.name}</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            {product.category} • {product.platform} • {product.country}
+          </p>
 
-        <ScoreBar
-  title={`Demand (${decision.demand})`}
-  value={Math.min(100, aiScore)}
-  color="bg-pink-500"
-/>
-
-          <ScoreBar
-            title="Profit Score"
-            value={profit}
-            color="bg-green-500"
-          />
-
-<ScoreBar
-  title={`Risk (${decision.risk})`}
-  value={
-    decision.risk === "Low"
-      ? 20
-      : decision.risk === "Medium"
-      ? 55
-      : 90
-  }
-  color="bg-red-500"
-/>
-
-          <ScoreBar
-            title="Winning Probability"
-            value={winning}
-            color="bg-purple-600"
-          />
-
-        </div>
-
-        <div className="space-y-6">
-
-          <div className="rounded-2xl bg-purple-50 p-6">
-
-            <h3 className="font-bold text-xl">
-              🤖 AI Recommendation
-            </h3>
-
-            <p className="mt-3 text-gray-600 leading-7">
-  {product.ai_reason ||
-    `AI Analysis
-
-• High demand detected in ${product.country}.
-
-• Estimated profit is $${product.profit} per sale.
-
-• Competition level: ${product.competition}.
-
-• Recommended platform: ${product.platform}.
-
-• This product has excellent viral potential and is suitable for TikTok Ads, Instagram Reels and Shopify stores.
-
-• Recommended action: Launch immediately with video creatives.`}
-</p>
-
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs text-slate-500">Buy Price</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">${product.buy_price}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs text-slate-500">Selling Price</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">${product.selling_price}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs text-slate-500">Profit / Unit</p>
+              <p className="mt-1 text-lg font-bold text-emerald-700">${product.profit}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs text-slate-500">AI Score Seed</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{product.ai_score}%</p>
+            </div>
           </div>
 
-          <div className="rounded-2xl bg-blue-50 p-6">
-
-  <h3 className="font-bold text-xl mb-4">
-    📊 AI Market Analysis
-  </h3>
-
-  <div className="space-y-3">
-
-  <div>
-  <div className="flex justify-between mb-1">
-    <span>🔥 Viral Potential</span>
-    <span>{market.viralPotential}%</span>
-  </div>
-
-  <div className="w-full h-3 bg-gray-200 rounded-full">
-    <div
-      className="h-3 bg-pink-500 rounded-full"
-      style={{
-        width: `${market.viralPotential}%`,
-      }}
-    />
-  </div>
-</div>
-
-    
-      🌱 Evergreen Score:
-      <div>
-  <div className="flex justify-between mb-1">
-    <span>🔥 Viral Potential</span>
-    <span>{market.viralPotential}%</span>
-  </div>
-
-  <div className="w-full h-3 bg-gray-200 rounded-full">
-    <div
-      className="h-3 bg-pink-500 rounded-full"
-      style={{
-        width: `${market.viralPotential}%`,
-      }}
-    />
-  </div>
-</div>
-
-    <p>
-      📉 Market Saturation:
-      <div>
-  <div className="flex justify-between mb-1">
-    <span>🔥 Viral Potential</span>
-    <span>{market.viralPotential}%</span>
-  </div>
-
-  <div className="w-full h-3 bg-gray-200 rounded-full">
-    <div
-      className="h-3 bg-pink-500 rounded-full"
-      style={{
-        width: `${market.viralPotential}%`,
-      }}
-    />
-  </div>
-</div>
-      💰 Recommended Budget:
-      <strong> ${market.recommendedBudget}</strong>
-    </p>
-
-    <p>
-      📢 Estimated CPM:
-      <strong> ${market.cpm}</strong>
-    </p>
-
-    <p>
-      🎯 Estimated CPA:
-      <strong> ${market.cpa}</strong>
-    </p>
-
-  </div>
-
-</div>
-          <div className="flex gap-4">
-
-          <button
-  onClick={handleGenerateMarketing}
-  disabled={loading}
-  className="flex-1 rounded-xl bg-purple-600 text-white py-4 font-bold hover:bg-purple-700 disabled:opacity-50 transition"
->
-  {loading ? "Generating..." : "🚀 Generate Marketing"}
-</button>
-
-            <button className="flex-1 rounded-xl bg-green-600 text-white py-4 font-bold hover:bg-green-700 transition">
-              🛒 Import to Shopify
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={handleGenerateMarketing}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50"
+            >
+              <Megaphone size={14} />
+              {loading ? "Generating marketing..." : "Generate Marketing Pack"}
             </button>
 
+            <a
+              href={product.product_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+            >
+              <PackageCheck size={14} />
+              Open Listing
+            </a>
           </div>
 
-          {marketing && (
-  <div className="mt-8 rounded-2xl border bg-gray-50 p-6">
-    <h3 className="text-2xl font-bold mb-4">
-      🤖 AI Marketing Strategy
-    </h3>
-
-    <pre className="whitespace-pre-wrap text-sm leading-7">
-      {marketing}
-    </pre>
-  </div>
-)}
-
+          {marketing ? (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-500">AI Marketing Strategy</h4>
+              <pre className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">{marketing}</pre>
+            </div>
+          ) : null}
         </div>
+      </header>
 
-      </div>
-
+      <AIReportExperience product={product} onPersisted={onReportGenerated} />
     </section>
   );
 }

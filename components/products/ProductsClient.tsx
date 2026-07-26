@@ -5,9 +5,10 @@ import { useMemo, useState } from "react";
 import ProductGrid from "./ProductGrid";
 import SearchBar from "./SearchBar";
 import Filters from "./Filters";
+import type { Product } from "../../types/Product";
 
 type Props = {
-  products: any[];
+  products: Product[];
 };
 
 export default function ProductsClient({

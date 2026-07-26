@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/dashboard/Sidebar";
@@ -11,13 +11,13 @@ import AIInsights from "../../components/dashboard/AIInsights";
 import AICommandCenter from "../../components/dashboard/AICommandCenter";
 import SearchBar from "../../components/dashboard/SearchBar";
 import Filters from "../../components/dashboard/Filters";
-import AIAnalyzer from "../../components/dashboard/AIAnalyzer";
 import ProductsTable from "../../components/dashboard/ProductsTable";
 import ProductDetails from "../../components/dashboard/ProductDetails";
+import ReportHistoryPanel from "../../components/dashboard/ReportHistoryPanel";
 import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
-import ProGate from "../../components/dashboard/ProGate";
+import type { Product } from "../../components/dashboard/ProductsTable";
 import { importProducts } from "../../lib/importers/importProducts";
 import { dummyProducts } from "../../lib/importers/dummyProducts";
 
@@ -26,157 +26,160 @@ export default function DashboardPage() {
 
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState("All");
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [reportRefreshSignal, setReportRefreshSignal] = useState(0);
 
   useEffect(() => {
-    async function checkUser() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    let active = true;
 
-      if (!session) {
-        router.replace("/login");
+    async function checkUser() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (active && !session) {
+          router.replace("/login");
+        }
+      } catch {
+        if (active) {
+          router.replace("/login");
+        }
       }
     }
 
-    checkUser();
+    void checkUser();
+
+    return () => {
+      active = false;
+    };
   }, [router]);
 
-  async function handleSearch(
+  const handleSearch = useCallback(async (
     searchText: string,
     selectedPlatform: string
-  ) {
-    console.log("Search:", searchText);
-    console.log("Platform:", selectedPlatform);
-
-    if (!searchText.trim()) {
-      alert("Please enter a product name.");
-      return;
-    }
-
+  ) => {
     setSearch(searchText);
-setPlatform(selectedPlatform);
-setRefreshKey((prev) => prev + 1);
-
-  }
+    setPlatform(selectedPlatform);
+  }, []);
 
   async function loadDummyProducts() {
     const success = await importProducts(dummyProducts);
 
     if (success) {
       setRefreshKey((prev) => prev + 1);
-      alert("Products Imported Successfully!");
-    } else {
-      alert("Import Failed");
+      alert("Products imported successfully.");
+      return;
     }
+
+    alert("Import failed.");
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-100 text-slate-900">
+      <div className="relative z-10 flex min-h-screen">
+        <Sidebar />
 
-<Sidebar />
+        <main className="flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1480px]">
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12">
+                <DashboardHero />
+              </div>
 
-      <main className="flex-1 p-10">
+              <div className="col-span-12">
+                <StatsCards refreshKey={refreshKey} />
+              </div>
 
-        <div className="max-w-7xl mx-auto">
+              <div className="col-span-12">
+                <AIInsights />
+              </div>
 
-          <DashboardHero />
+              <div className="col-span-12">
+                <BusinessOverview />
+              </div>
 
-          <StatsCards refreshKey={refreshKey} />
+              <div className="col-span-12">
+                <AICommandCenter />
+              </div>
 
-          <BusinessOverview />
+              <section className="col-span-12 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Product Discovery
+                    </p>
+                    <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                      Winning Products Table
+                    </h2>
+                  </div>
 
-          <AIInsights />
+                  <button
+                    type="button"
+                    onClick={loadDummyProducts}
+                    className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  >
+                    Import Demo Products
+                  </button>
+                </div>
 
-          <AICommandCenter />
+                <SearchBar
+                  search={search}
+                  setSearch={setSearch}
+                  platform={platform}
+                  setPlatform={setPlatform}
+                  onSearch={handleSearch}
+                />
 
-          <SearchBar 
-            search={search}
-            setSearch={setSearch}
-            platform={platform}
-            setPlatform={setPlatform}
-            onSearch={handleSearch}
-          />
+                <Filters
+                  platform={platform}
+                  setPlatform={setPlatform}
+                />
 
-          <div className="mb-6">
-            <button
-              onClick={loadDummyProducts}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl"
-            >
-              Import Demo Products
-            </button>
+                <ProductsTable
+                  refreshKey={refreshKey}
+                  search={search}
+                  platform={platform}
+                  onSelectProduct={(product) => {
+                    setSelectedProduct(product);
+                    setShowProductModal(true);
+                  }}
+                />
+              </section>
+
+              <div className="col-span-12">
+                <TrendChart />
+              </div>
+
+              <div className="col-span-12">
+                <ReportHistoryPanel refreshSignal={reportRefreshSignal} />
+              </div>
+            </div>
+
+            {showProductModal && selectedProduct && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
+                <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-3xl border border-slate-200 bg-slate-50 shadow-[0_40px_100px_-30px_rgba(0,0,0,0.85)]">
+                  <button
+                    onClick={() => setShowProductModal(false)}
+                    className="absolute right-6 top-5 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-2xl font-bold text-slate-500 transition hover:text-slate-900"
+                  >
+                    ×
+                  </button>
+
+                  <ProductDetails
+                    product={selectedProduct}
+                    onReportGenerated={() => setReportRefreshSignal((prev) => prev + 1)}
+                  />
+                  <AISalesForecast product={selectedProduct} />
+                  <MarketingKit productName={selectedProduct.name} />
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* TEMP DISABLED
-
-<ProGate>
-  <AIAnalyzer
-    onProductSaved={() => {
-      setRefreshKey((prev) => prev + 1);
-    }}
-  />
-</ProGate>
-
-<Filters
-  platform={platform}
-  setPlatform={setPlatform}
-/>
-
-<ProductsTable
-  refreshKey={refreshKey}
-  search={search}
-  platform={platform}
-  onSelectProduct={setSelectedProduct}
-/>
-
-*/}
-
-<ProductsTable
-  refreshKey={refreshKey}
-  search={search}
-  platform={platform}
-  onSelectProduct={(product) => {
-    setSelectedProduct(product);
-    setShowProductModal(true);
-  }}
-/>
-
-{showProductModal && selectedProduct && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
-
-    <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white">
-
-      <button
-        onClick={() => setShowProductModal(false)}
-        className="absolute right-6 top-6 text-4xl font-bold text-gray-500 hover:text-black"
-      >
-        ×
-      </button>
-
-      <ProductDetails product={selectedProduct} />
-
-      <AISalesForecast
-        product={selectedProduct}
-      />
-
-      <MarketingKit
-        productName={selectedProduct.name}
-      />
-
-    </div>
-
-  </div>
-)}
-
-<TrendChart />
-          {/* TEMP DISABLED */}
-
-        </div>
-
-      </main>
-
+        </main>
+      </div>
     </div>
   );
 }

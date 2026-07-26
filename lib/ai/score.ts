@@ -1,4 +1,6 @@
-export function calculateAIScore(product: any) {
+import type { ProductLike } from "../../types/Product";
+
+export function calculateAIScore(product: ProductLike) {
 
   let score = 50;
 

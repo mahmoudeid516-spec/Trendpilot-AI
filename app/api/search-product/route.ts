@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
 
+type ShoppingResult = {
+  title?: string;
+  thumbnail?: string;
+  price?: string;
+  source?: string;
+  rating?: number;
+  reviews?: number;
+  link?: string;
+};
+
 export async function POST(req: Request) {
   try {
     const { product } = await req.json();
@@ -25,14 +35,9 @@ export async function POST(req: Request) {
       `&num=10` +
       `&api_key=${apiKey}`;
 
-    console.log("Searching:", product);
-
     const response = await fetch(url);
 
     const data = await response.json();
-
-    console.log("SERP STATUS:", response.status);
-    console.log("SERP RESPONSE:", JSON.stringify(data, null, 2));
 
     if (!response.ok) {
       return NextResponse.json(
@@ -47,7 +52,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const items = data.shopping_results ?? [];
+    const items = (data.shopping_results ?? []) as ShoppingResult[];
 
     if (items.length === 0) {
       return NextResponse.json(
@@ -68,7 +73,7 @@ export async function POST(req: Request) {
       source: items[0].source,
       link: items[0].link,
 
-      products: items.map((item: any) => ({
+      products: items.map((item) => ({
         name: item.title,
         image: item.thumbnail,
         price: item.price,
@@ -79,13 +84,14 @@ export async function POST(req: Request) {
       })),
     });
 
-  } catch (error: any) {
-    console.error("FULL ERROR:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Product search failed.";
+    const stack = error instanceof Error ? error.stack : undefined;
 
     return NextResponse.json(
       {
-        error: error.message,
-        stack: error.stack,
+        error: message,
+        stack,
       },
       {
         status: 500,

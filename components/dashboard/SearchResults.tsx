@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Product } from "../../types/Product";
 
 type Props = {
@@ -6,46 +7,51 @@ type Props = {
 
 export default function SearchResults({ results }: Props) {
   return (
-    <div className="mt-10">
-      <h2 className="text-3xl font-bold mb-6">
+    <div className="mt-8">
+      <h2 className="mb-6 text-3xl font-semibold tracking-tight text-slate-900">
         Found {results.length} Products
       </h2>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {results.map((product, index) => (
           <div
             key={index}
-            className="bg-white rounded-2xl shadow hover:shadow-xl transition p-5"
+            className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200"
           >
-            <img
-              src={product.image}
+            <Image
+              src={product.image || "https://picsum.photos/800/600"}
               alt={product.name}
-              className="w-full h-52 object-cover rounded-xl"
+              width={800}
+              height={600}
+              loading="lazy"
+              sizes="(max-width: 1024px) 100vw, 33vw"
+              unoptimized
+              className="h-52 w-full rounded-xl border border-slate-200 object-cover"
             />
 
-            <h3 className="font-bold mt-4 line-clamp-2">
+            <h3 className="mt-4 line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-slate-900">
               {product.name}
             </h3>
 
-            <p className="text-gray-500 mt-2">
+            <p className="mt-2 text-sm font-medium text-slate-500">
               ⭐ {product.ai_score / 20} • {product.sales.toLocaleString()} Sold
             </p>
 
-            <p className="text-2xl font-bold text-green-600 mt-3">
+            <p className="mt-3 text-2xl font-semibold text-emerald-700">
               ${product.buy_price.toFixed(2)}
             </p>
 
-            <div className="grid grid-cols-2 gap-3 mt-5">
-              <div className="bg-purple-50 rounded-xl p-3 text-center">
-                <p className="text-xs">Opportunity</p>
-                <h4 className="font-bold text-xl">
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">Opportunity</p>
+                <h4 className="text-xl font-semibold text-slate-900">
                   {Math.round(product.opportunity_score ?? 0)}
                 </h4>
               </div>
 
-              <div className="bg-blue-50 rounded-xl p-3 text-center">
-                <p className="text-xs">AI Score</p>
-                <h4 className="font-bold text-xl">
+              <div className="rounded-xl border border-sky-100 bg-sky-50 p-3 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-700">AI Score</p>
+                <h4 className="text-xl font-semibold text-slate-900">
                   {product.ai_score}%
                 </h4>
               </div>
@@ -55,7 +61,7 @@ export default function SearchResults({ results }: Props) {
               href={product.product_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-5 block text-center bg-purple-600 text-white rounded-xl py-3 hover:bg-purple-700"
+              className="mt-5 block rounded-xl bg-indigo-600 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-500"
             >
               View Product
             </a>

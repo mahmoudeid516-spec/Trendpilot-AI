@@ -1,12 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import {
+  requirePlanOrThrow,
+  requireUserIdOrThrow,
+  toSubscriptionGuardResponse,
+} from "../../../lib/billing/subscriptionMiddleware";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const userId = await requireUserIdOrThrow(req);
+    await requirePlanOrThrow(userId, "Pro");
+
     const { product } = await req.json();
 
     const response = await openai.responses.create({
@@ -43,12 +51,16 @@ Return ONLY valid JSON.
     const json = text.slice(start, end + 1);
 
     return NextResponse.json(JSON.parse(json));
-  } catch (err) {
-    console.error(err);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "SubscriptionGuardError") {
+      return toSubscriptionGuardResponse(err);
+    }
+
+    const message = err instanceof Error ? err.message : "Marketing generation failed.";
 
     return NextResponse.json(
       {
-        error: "Marketing generation failed.",
+        error: message,
       },
       {
         status: 500,

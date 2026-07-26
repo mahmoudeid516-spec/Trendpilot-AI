@@ -1,8 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
+import {
+  requirePlanOrThrow,
+  requireUserIdOrThrow,
+  toSubscriptionGuardResponse,
+} from "../../../lib/billing/subscriptionMiddleware";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const userId = await requireUserIdOrThrow(req);
+    await requirePlanOrThrow(userId, "Pro");
+
     const { product } = await req.json();
 
     const response = await openai.responses.create({
@@ -87,12 +95,16 @@ High
       result,
     });
 
-  } catch (err: any) {
-    console.error(err);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "SubscriptionGuardError") {
+      return toSubscriptionGuardResponse(err);
+    }
+
+    const message = err instanceof Error ? err.message : "AI analysis failed.";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,

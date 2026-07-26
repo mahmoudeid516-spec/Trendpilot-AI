@@ -2,7 +2,6 @@ import { getProduct } from "../../../services/product";
 import { getRelatedProducts } from "../../../services/relatedProducts";
 import AIMarketing from "../../../components/products/AIMarketing";
 import ProductHero from "../../../components/products/ProductHero";
-import TrendChart from "../../../components/products/TrendChart";
 import SupplierCard from "../../../components/products/SupplierCard";
 import AIReport from "../../../components/products/AIReport";
 import RelatedProducts from "../../../components/products/RelatedProducts";

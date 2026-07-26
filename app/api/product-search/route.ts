@@ -21,10 +21,11 @@ export async function POST(req: Request) {
     const products = await response.json();
 
     return NextResponse.json(products);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch products.";
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,

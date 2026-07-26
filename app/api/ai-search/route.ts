@@ -1,9 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
+import { consumeUsageOrThrow, requireUserIdOrThrow, toSubscriptionGuardResponse } from "../../../lib/billing/subscriptionMiddleware";
+import { recordBillingEvent } from "../../../lib/services/billing";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const userId = await requireUserIdOrThrow(req);
     const { prompt } = await req.json();
+
+    await consumeUsageOrThrow(userId, "ai_search", {
+      promptLength: typeof prompt === "string" ? prompt.length : 0,
+    });
 
     const systemPrompt = `
     You are TrendPilot AI.
@@ -204,15 +211,27 @@ if (lowerPrompt.includes("aliexpress")) {
   result.platform = "AliExpress";
 }
 
+    await recordBillingEvent({
+      userId,
+      eventType: "ai_search",
+      payload: {
+        keyword: result.keyword,
+        platform: result.platform,
+      },
+    });
+
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "SubscriptionGuardError") {
+      return toSubscriptionGuardResponse(error);
+    }
 
-    console.error(error);
+    const message = error instanceof Error ? error.message : "Failed to parse AI search filters.";
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,

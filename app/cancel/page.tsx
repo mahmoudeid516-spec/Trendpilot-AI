@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CancelPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50">
@@ -10,12 +12,12 @@ export default function CancelPage() {
             No worries. You can upgrade anytime.
           </p>
   
-          <a
+          <Link
             href="/"
             className="mt-8 inline-block bg-black text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition"
           >
             Back Home
-          </a>
+          </Link>
         </div>
       </div>
     );

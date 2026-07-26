@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product } from "../../types/Product";
+import { supabase } from "../../lib/supabase";
 
 type Props = {
   product: Product;
@@ -17,10 +18,15 @@ export default function AIMarketing({ product }: Props) {
     setLoading(true);
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       const res = await fetch("/api/generate_marketing", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
           id: product.id,
@@ -29,12 +35,13 @@ export default function AIMarketing({ product }: Props) {
 
       const data = await res.json();
 
-      console.log(data);
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to generate marketing.");
+      }
 
       router.refresh();
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+      alert(err instanceof Error ? err.message : "Something went wrong");
     }
 
     setLoading(false);

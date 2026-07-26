@@ -1,17 +1,15 @@
 import { supabase } from "../lib/supabase";
 
 export async function getProduct(id: number) {
-
-  console.log("Searching Product:", id);
-
   const { data, error } = await supabase
     .from("products")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
-  console.log("Product:", data);
-  console.log("Error:", error);
+  if (error) {
+    return null;
+  }
 
   return data;
 }

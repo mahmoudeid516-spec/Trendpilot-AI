@@ -1,11 +1,15 @@
-export async function productSearch(filters: any) {
+type ProductSearchFilters = {
+  keyword?: string;
+  query?: string;
+  search?: string;
+};
+
+export async function productSearch(filters: ProductSearchFilters) {
   const search =
   filters?.keyword ||
   filters?.query ||
   filters?.search ||
   "wireless earbuds";
-
-console.log("SEARCH KEYWORD:", search);
 
   const response = await fetch(
     `/api/discover?search=${encodeURIComponent(search)}`

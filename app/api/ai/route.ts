@@ -44,10 +44,10 @@ Return JSON only.
 
     return NextResponse.json(JSON.parse(content ?? "{}"));
   } catch (error) {
-    console.error(error);
+    const message = error instanceof Error ? error.message : "AI generation failed.";
 
     return NextResponse.json(
-      { error: "AI generation failed." },
+      { error: message },
       { status: 500 }
     );
   }

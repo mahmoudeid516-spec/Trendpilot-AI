@@ -1,6 +1,7 @@
 import { openai } from "./OpenAI";
+import type { ProductLike } from "../types/Product";
 
-export async function generateMarketing(product: any) {
+export async function generateMarketing(product: ProductLike) {
   const prompt = `
 You are an expert Shopify marketing strategist.
 

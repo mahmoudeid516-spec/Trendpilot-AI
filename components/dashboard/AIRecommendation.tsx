@@ -1,5 +1,6 @@
 import type { Product } from "../../types/Product";
 import { generateAdvice } from "../../services/advisor";
+import { Lightbulb } from "lucide-react";
 
 type Props = {
   product: Product;
@@ -12,77 +13,82 @@ export default function AIRecommendation({
   const advice = generateAdvice(product);
 
   return (
-    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl text-white p-8 mt-10">
+    <div className="relative mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_90%_0%,rgba(99,102,241,0.08),transparent_30%)]" />
 
-      <h2 className="text-3xl font-bold">
-        🤖 TrendPilot Recommendation
-      </h2>
+      <div className="relative z-10">
 
-      <p className="mt-2 text-purple-100">
-        Based on your search, our AI recommends:
-      </p>
+        <h2 className="inline-flex items-center gap-2 text-3xl font-semibold tracking-tight text-slate-900">
+          <Lightbulb className="h-6 w-6 text-indigo-500" />
+          TrendPilot Recommendation
+        </h2>
 
-      <h3 className="text-4xl font-bold mt-6">
-        {product.name}
-      </h3>
+        <p className="mt-2 text-sm font-medium text-slate-600">
+          Based on your search, our AI recommends:
+        </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mt-8">
-
-        <div className="bg-white/10 rounded-xl p-4 text-center">
-          <p className="text-sm">Opportunity</p>
-          <h4 className="text-3xl font-bold">
-            {product.opportunity_score?.toFixed(1)}
-          </h4>
-        </div>
-
-        <div className="bg-white/10 rounded-xl p-4 text-center">
-          <p className="text-sm">AI Score</p>
-          <h4 className="text-3xl font-bold">
-            {product.ai_score}%
-          </h4>
-        </div>
-
-        <div className="bg-white/10 rounded-xl p-4 text-center">
-          <p className="text-sm">Profit</p>
-          <h4 className="text-3xl font-bold">
-            ${product.profit}
-          </h4>
-        </div>
-
-        <div className="bg-white/10 rounded-xl p-4 text-center">
-          <p className="text-sm">Competition</p>
-          <h4 className="text-2xl font-bold">
-            {product.competition}
-          </h4>
-        </div>
-
-        <div className="bg-white/10 rounded-xl p-4 text-center">
-          <p className="text-sm">Trend</p>
-          <h4 className="text-3xl font-bold">
-            {product.trend_score}
-          </h4>
-        </div>
-
-      </div>
-
-      <div className="bg-white/10 rounded-2xl p-6 mt-8">
-
-        <h3 className="text-xl font-bold mb-4">
-          Why TrendPilot recommends this product
+        <h3 className="mt-6 text-4xl font-semibold leading-tight text-slate-900">
+          {product.name}
         </h3>
 
-        <ul className="space-y-2">
+        <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-5">
 
-        {advice.map((item) => (
-            <li key={item}>
-              {item}
-            </li>
-          ))}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Opportunity</p>
+            <h4 className="mt-1 text-3xl font-semibold text-slate-900">
+              {product.opportunity_score?.toFixed(1)}
+            </h4>
+          </div>
 
-        </ul>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">AI Score</p>
+            <h4 className="mt-1 text-3xl font-semibold text-slate-900">
+              {product.ai_score}%
+            </h4>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Profit</p>
+            <h4 className="mt-1 text-3xl font-semibold text-slate-900">
+              ${product.profit}
+            </h4>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Competition</p>
+            <h4 className="mt-1 text-2xl font-semibold text-slate-900">
+              {product.competition}
+            </h4>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Trend</p>
+            <h4 className="mt-1 text-3xl font-semibold text-slate-900">
+              {product.trend_score}
+            </h4>
+          </div>
+
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+
+          <h3 className="mb-4 text-xl font-semibold tracking-tight text-slate-900">
+            Why TrendPilot recommends this product
+          </h3>
+
+          <ul className="space-y-2 text-sm leading-relaxed text-slate-700">
+
+          {advice.map((item) => (
+              <li key={item}>
+                {item}
+              </li>
+            ))}
+
+          </ul>
+
+        </div>
 
       </div>
-
     </div>
   );
 }

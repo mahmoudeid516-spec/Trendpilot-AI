@@ -27,9 +27,7 @@ export default function DeleteButton({
       location.reload();
 
     } catch (err) {
-      console.error(err);
-
-      alert("Delete failed.");
+      alert(err instanceof Error ? err.message : "Delete failed.");
     } finally {
       setLoading(false);
     }

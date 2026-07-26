@@ -9,8 +9,6 @@ export async function searchProduct(product: string) {
 
   const data = await response.json();
 
-  console.log("SEARCH RESPONSE:", data);
-
   if (!response.ok) {
     throw new Error(
       JSON.stringify(data, null, 2)

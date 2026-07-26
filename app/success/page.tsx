@@ -8,7 +8,7 @@ export default function SuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    async function activatePlan() {
+    async function continueToDashboard() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -18,26 +18,12 @@ export default function SuccessPage() {
         return;
       }
 
-      const { data, error } = await supabase
-  .from("profiles")
-  .update({
-    plan: "Pro",
-    subscription_status: "active",
-  })
-  .eq("id", session.user.id)
-  .select();
-
-  console.log("Session User ID:", session.user.id);
-  console.log("Session Email:", session.user.email);
-  console.log("Updated:", data);
-  console.error("Update Error:", error);
-
       setTimeout(() => {
         router.push("/dashboard");
       }, 2500);
     }
 
-    activatePlan();
+    void continueToDashboard();
   }, [router]);
 
   return (
@@ -49,7 +35,7 @@ export default function SuccessPage() {
         </h1>
 
         <p className="mt-6 text-lg text-gray-700">
-          Activating your Pro subscription...
+          Activating your subscription and syncing your billing status...
         </p>
 
       </div>

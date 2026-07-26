@@ -12,6 +12,7 @@ import { analyzeProduct } from "../../lib/services/analyzeProduct";
 import { saveProduct } from "../../lib/services/saveProduct";
 
 import { supabase } from "../../lib/supabase";
+import type { ProductLike, SearchProductResult } from "../../types/Product";
 
 type Props = {
   onProductSaved: () => void;
@@ -33,10 +34,10 @@ export default function AIAnalyzer({
   
     try {
       // Search Product
-      const searchData = await searchProduct(product);
+      const searchData = (await searchProduct(product)) as SearchProductResult;
   
       // Analyze Product
-      const productData = await analyzeProduct(searchData.name);
+      const productData = (await analyzeProduct(searchData.name)) as ProductLike | null;
   
       if (!productData) {
         throw new Error("No product data returned.");
@@ -115,14 +116,15 @@ export default function AIAnalyzer({
         onProductSaved();
       }, 500);
   
-    } catch (err: any) {
-      console.error("FULL CLIENT ERROR:", err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Product analysis failed.";
+      const stack = err instanceof Error ? err.stack : undefined;
   
       setResult(
         JSON.stringify(
           {
-            message: err.message,
-            stack: err.stack,
+            message,
+            stack,
           },
           null,
           2

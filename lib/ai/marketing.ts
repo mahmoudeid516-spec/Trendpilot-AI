@@ -1,4 +1,6 @@
-export function generateMarketing(product: any) {
+import type { ProductLike } from "../../types/Product";
+
+export function generateMarketing(product: ProductLike) {
 
   return {
 

@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { Flag, Funnel, Layers, Store } from "lucide-react";
+
 type FiltersProps = {
   platform: string;
   setPlatform: (value: string) => void;
@@ -9,45 +12,102 @@ export default function Filters({
   platform,
   setPlatform,
 }: FiltersProps) {
+  const [category, setCategory] = useState("All");
+  const [competition, setCompetition] = useState("All");
+  const [country, setCountry] = useState("All");
+
+  const platforms = ["All", "Shopify", "Amazon", "TikTok Shop", "AliExpress"];
+  const categories = ["All", "Beauty", "Fitness", "Pets", "Home"];
+  const competitions = ["All", "Low", "Medium", "High"];
+  const countries = ["All", "United States", "United Kingdom", "Germany", "France"];
+
+  function pillStyle(active: boolean) {
+    if (active) {
+      return "border-indigo-200 bg-indigo-50 text-indigo-700";
+    }
+
+    return "border-slate-300 bg-white text-slate-600 hover:border-indigo-200 hover:text-indigo-700";
+  }
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">
+        <Funnel size={13} />
+        Refine Results
+      </div>
 
-        <select
-          value={platform}
-          onChange={(e) => setPlatform(e.target.value)}
-          className="border rounded-xl px-4 py-3"
-        >
-          <option value="All">All Platforms</option>
-          <option value="Shopify">Shopify</option>
-          <option value="Amazon">Amazon</option>
-          <option value="TikTok Shop">TikTok Shop</option>
-          <option value="AliExpress">AliExpress</option>
-        </select>
+      <div className="space-y-4">
+        <div>
+          <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <Store size={13} /> Platform
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {platforms.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setPlatform(item)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${pillStyle(platform === item)} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <select className="border rounded-xl px-4 py-3">
-          <option>Category</option>
-          <option>Beauty</option>
-          <option>Fitness</option>
-          <option>Pets</option>
-          <option>Home</option>
-        </select>
+        <div>
+          <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <Layers size={13} /> Category
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setCategory(item)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${pillStyle(category === item)} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <select className="border rounded-xl px-4 py-3">
-          <option>Competition</option>
-          <option>Low</option>
-          <option>Medium</option>
-          <option>High</option>
-        </select>
+        <div>
+          <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <Funnel size={13} /> Competition
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {competitions.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setCompetition(item)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${pillStyle(competition === item)} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <select className="border rounded-xl px-4 py-3">
-          <option>Country</option>
-          <option>United States</option>
-          <option>United Kingdom</option>
-          <option>Germany</option>
-          <option>France</option>
-        </select>
-
+        <div>
+          <p className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <Flag size={13} /> Country
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {countries.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setCountry(item)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${pillStyle(country === item)} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

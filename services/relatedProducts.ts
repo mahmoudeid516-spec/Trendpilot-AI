@@ -12,7 +12,6 @@ export async function getRelatedProducts(
     .limit(4);
 
   if (error) {
-    console.error(error);
     return [];
   }
 

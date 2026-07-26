@@ -1,4 +1,6 @@
-export function predictSuccess(product: any) {
+import type { ProductLike } from "../../types/Product";
+
+export function predictSuccess(product: ProductLike) {
 
   const aiScore = Number(product.ai_score ?? 80);
 

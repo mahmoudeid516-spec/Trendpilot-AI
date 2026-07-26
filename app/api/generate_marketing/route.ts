@@ -1,8 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
+import {
+  requirePlanOrThrow,
+  requireUserIdOrThrow,
+  toSubscriptionGuardResponse,
+} from "../../../lib/billing/subscriptionMiddleware";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const userId = await requireUserIdOrThrow(req);
+    await requirePlanOrThrow(userId, "Pro");
+
     const { product } = await req.json();
 
     const prompt = `
@@ -47,10 +55,15 @@ Return beautiful markdown.
       marketing: response.output_text,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "SubscriptionGuardError") {
+      return toSubscriptionGuardResponse(error);
+    }
+
+    const message = error instanceof Error ? error.message : "Failed to generate marketing package.";
     return NextResponse.json(
       {
-        error: error.message,
+        error: message,
       },
       {
         status: 500,

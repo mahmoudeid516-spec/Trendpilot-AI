@@ -1,4 +1,6 @@
 import { mapApifyProduct } from "./productMapper";
+import type { ApifyProductSource } from "./productMapper";
+import type { Product } from "../types/Product";
 
 function competitionScore(level: string) {
   switch (level) {
@@ -34,9 +36,19 @@ function calculateOpportunityScore(product: {
   );
 }
 
-export function scoreProducts(products: any[]) {
+type ScoreableProduct = ApifyProductSource | Product;
+
+function toMappedProduct(product: ScoreableProduct): Product {
+  if ("ai_score" in product && "trend_score" in product && "profit" in product) {
+    return product;
+  }
+
+  return mapApifyProduct(product);
+}
+
+export function scoreProducts(products: ScoreableProduct[]) {
   const scored = products.map((product) => {
-    const mapped = mapApifyProduct(product);
+    const mapped = toMappedProduct(product);
 
     return {
       ...mapped,
@@ -54,7 +66,7 @@ export function scoreProducts(products: any[]) {
   );
 }
 
-export function getBestProduct(products: any[]) {
+export function getBestProduct(products: ScoreableProduct[]) {
   if (!products.length) return null;
 
   return scoreProducts(products)[0];

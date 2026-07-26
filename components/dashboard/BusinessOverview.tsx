@@ -1,8 +1,10 @@
+import { CircleDollarSign, Rocket, ShieldCheck, TrendingUp } from "lucide-react";
+
 type CardProps = {
   title: string;
   value: string;
   subtitle: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
 };
 
@@ -13,8 +15,12 @@ function OverviewCard({
   icon,
   color,
 }: CardProps) {
+  const Icon = icon;
+
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white p-7 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200">
+
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.07),transparent_42%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       <div
         className={`absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-gradient-to-br ${color} opacity-10`}
@@ -24,24 +30,24 @@ function OverviewCard({
 
         <div>
 
-          <p className="text-sm font-medium uppercase tracking-wide text-gray-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
             {title}
           </p>
 
-          <h2 className="mt-3 text-4xl font-extrabold text-gray-900">
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
             {value}
           </h2>
 
-          <p className="mt-3 text-sm font-semibold text-gray-500">
+          <p className="mt-3 text-sm font-medium text-slate-600">
             {subtitle}
           </p>
 
         </div>
 
         <div
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r ${color} text-3xl shadow-lg`}
+          className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r ${color} text-white`}
         >
-          {icon}
+          <Icon className="h-6 w-6" />
         </div>
 
       </div>
@@ -52,38 +58,38 @@ function OverviewCard({
 
 export default function BusinessOverview() {
   return (
-    <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 mb-10">
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
       <OverviewCard
         title="Revenue Potential"
         value="$24,850"
         subtitle="+18.2% this month"
-        icon="💰"
-        color="from-green-500 to-emerald-500"
+        icon={CircleDollarSign}
+        color="from-emerald-500 to-sky-500"
       />
 
       <OverviewCard
         title="Winning Products"
         value="14"
         subtitle="3 products added today"
-        icon="🚀"
-        color="from-purple-500 to-indigo-500"
+        icon={Rocket}
+        color="from-indigo-500 to-violet-500"
       />
 
       <OverviewCard
         title="AI Confidence"
         value="96%"
         subtitle="Excellent market prediction"
-        icon="🤖"
-        color="from-blue-500 to-cyan-500"
+        icon={ShieldCheck}
+        color="from-sky-500 to-indigo-500"
       />
 
       <OverviewCard
         title="Success Probability"
         value="91%"
         subtitle="Average launch score"
-        icon="📈"
-        color="from-orange-500 to-red-500"
+        icon={TrendingUp}
+        color="from-amber-500 to-rose-500"
       />
 
     </section>

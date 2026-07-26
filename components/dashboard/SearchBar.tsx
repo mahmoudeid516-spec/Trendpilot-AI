@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
+
 type SearchBarProps = {
   search: string;
   setSearch: (value: string) => void;
@@ -8,6 +11,8 @@ type SearchBarProps = {
   onSearch: (search: string, platform: string) => void;
 };
 
+const RECENT_SEARCHES_KEY = "trendpilot:recent-searches";
+
 export default function SearchBar({
   search,
   setSearch,
@@ -15,22 +20,105 @@ export default function SearchBar({
   setPlatform,
   onSearch,
 }: SearchBarProps) {
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-      <div className="flex flex-col md:flex-row gap-4">
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border rounded-xl px-5 py-3 outline-none focus:ring-2 focus:ring-purple-500"
-        />
+  const popularSearches = useMemo(
+    () => [
+      "wireless pet camera",
+      "portable blender",
+      "home workout bands",
+      "kitchen organization set",
+    ],
+    []
+  );
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      onSearch(search, platform);
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [search, platform, onSearch]);
+
+  useEffect(() => {
+    let timeoutId: number | undefined;
+    const deferRecentSearchesUpdate = (next: string[]) => {
+      timeoutId = window.setTimeout(() => {
+        setRecentSearches(next);
+      }, 0);
+    };
+
+    const raw = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+    if (!raw) {
+      return () => {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+      };
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        const next = parsed
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .slice(0, 6);
+        deferRecentSearchesUpdate(next);
+      } else {
+        deferRecentSearchesUpdate([]);
+      }
+    } catch {
+      deferRecentSearchesUpdate([]);
+    }
+
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
+
+  function pushRecent(value: string) {
+    const term = value.trim();
+    if (!term) return;
+
+    setRecentSearches((prev) => {
+      const next = [term, ...prev.filter((item) => item.toLowerCase() !== term.toLowerCase())].slice(0, 6);
+      try {
+        window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore quota/security errors to keep the dashboard interactive.
+      }
+      return next;
+    });
+  }
+
+  function runSearch(value: string, selectedPlatform: string) {
+    pushRecent(value);
+    onSearch(value, selectedPlatform);
+  }
+
+  return (
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+      <div className="flex flex-col gap-3 md:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+          <input
+            type="text"
+            placeholder="Search products, categories, or intent..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          />
+        </div>
 
         <select
           value={platform}
           onChange={(e) => setPlatform(e.target.value)}
-          className="border rounded-xl px-4 py-3"
+          className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
         >
           <option value="All">All Platforms</option>
           <option value="Shopify">Shopify</option>
@@ -40,12 +128,55 @@ export default function SearchBar({
         </select>
 
         <button
-  onClick={() => onSearch(search, platform)}
-  className="bg-purple-600 text-white px-8 py-3 rounded-xl hover:bg-purple-700 transition"
->
-  🔥 Find Winning Products
-</button>
+          onClick={() => runSearch(search, platform)}
+          className="rounded-2xl bg-indigo-600 px-7 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        >
+          Update Table
+        </button>
+      </div>
 
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Popular Searches</p>
+          <div className="flex flex-wrap gap-2">
+            {popularSearches.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => {
+                  setSearch(item);
+                  runSearch(item, platform);
+                }}
+                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Recent Searches</p>
+          {recentSearches.length === 0 ? (
+            <p className="text-xs text-slate-500">Your recent queries will appear here.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {recentSearches.map((item, index) => (
+                <button
+                  key={`${item}-${index}`}
+                  type="button"
+                  onClick={() => {
+                    setSearch(item);
+                    runSearch(item, platform);
+                  }}
+                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
