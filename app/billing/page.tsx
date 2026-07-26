@@ -12,6 +12,8 @@ type BillingEvent = {
 type BillingSummary = {
   plan: "Free" | "Pro" | "Premium";
   subscriptionStatus: string;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
   renewalDate: string | null;
   cancelAtPeriodEnd: boolean;
   hasBillingAccount: boolean;
@@ -39,7 +41,7 @@ function formatDate(value: string | null): string {
 export default function BillingPage() {
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [managing, setManaging] = useState(false);
+  const [activeAction, setActiveAction] = useState<"" | "portal" | "Pro" | "Premium">("");
   const [error, setError] = useState("");
 
   const loadSummary = useCallback(async () => {
@@ -90,7 +92,7 @@ export default function BillingPage() {
   }, [loadSummary]);
 
   async function openPortal() {
-    setManaging(true);
+    setActiveAction("portal");
     setError("");
 
     try {
@@ -108,7 +110,7 @@ export default function BillingPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ returnUrl: `${window.location.origin}/billing` }),
+        body: JSON.stringify({ returnUrl: `${window.location.origin}/dashboard/billing` }),
       });
 
       const data = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
@@ -120,7 +122,42 @@ export default function BillingPage() {
       window.location.href = data.url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to open billing portal.");
-      setManaging(false);
+      setActiveAction("");
+    }
+  }
+
+  async function startCheckout(plan: "Pro" | "Premium") {
+    setActiveAction(plan);
+    setError("");
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("Authentication required.");
+      }
+
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ plan }),
+      });
+
+      const data = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+
+      if (!response.ok || !data?.url) {
+        throw new Error(data?.error || `Failed to start ${plan} checkout.`);
+      }
+
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to start checkout.");
+      setActiveAction("");
     }
   }
 
@@ -131,6 +168,8 @@ export default function BillingPage() {
 
     return summary.subscriptionStatus.replaceAll("_", " ");
   }, [summary]);
+
+  const renewalDate = summary?.currentPeriodEnd ?? summary?.renewalDate ?? null;
 
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10 text-slate-900">
@@ -158,7 +197,7 @@ export default function BillingPage() {
 
           <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Renewal Date</p>
-            <p className="mt-2 text-xl font-semibold text-slate-900">{loading ? "..." : formatDate(summary?.renewalDate ?? null)}</p>
+            <p className="mt-2 text-xl font-semibold text-slate-900">{loading ? "..." : formatDate(renewalDate)}</p>
           </article>
 
           <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -168,19 +207,103 @@ export default function BillingPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          {summary?.plan === "Free" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void startCheckout("Pro")}
+                disabled={loading || activeAction !== ""}
+                className="inline-flex items-center rounded-xl border border-indigo-300 bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {activeAction === "Pro" ? "Opening..." : "Upgrade to Pro"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void startCheckout("Premium")}
+                disabled={loading || activeAction !== ""}
+                className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {activeAction === "Premium" ? "Opening..." : "Upgrade to Premium"}
+              </button>
+            </>
+          ) : null}
+
+          {summary?.plan === "Pro" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void startCheckout("Premium")}
+                disabled={loading || activeAction !== ""}
+                className="inline-flex items-center rounded-xl border border-indigo-300 bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {activeAction === "Premium" ? "Opening..." : "Upgrade to Premium"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void openPortal()}
+                disabled={loading || activeAction !== ""}
+                className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Downgrade
+              </button>
+            </>
+          ) : null}
+
+          {summary?.plan === "Premium" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void startCheckout("Pro")}
+                disabled={loading || activeAction !== ""}
+                className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {activeAction === "Pro" ? "Opening..." : "Downgrade to Pro"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void openPortal()}
+                disabled={loading || activeAction !== ""}
+                className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Downgrade
+              </button>
+            </>
+          ) : null}
+
           <button
             type="button"
             onClick={() => void openPortal()}
-            disabled={managing || loading}
+            disabled={loading || activeAction !== ""}
             className="inline-flex items-center rounded-xl border border-indigo-300 bg-indigo-50 px-5 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {managing ? "Opening Billing Portal..." : "Manage Subscription"}
+            {activeAction === "portal" ? "Opening Billing Portal..." : "Manage Billing"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void openPortal()}
+            disabled={loading || activeAction !== ""}
+            className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Open Stripe Billing Portal
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void openPortal()}
+            disabled={loading || activeAction !== ""}
+            className="inline-flex items-center rounded-xl border border-rose-300 bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Cancel Subscription
           </button>
 
           <button
             type="button"
             onClick={() => void loadSummary()}
-            disabled={loading}
+            disabled={loading || activeAction !== ""}
             className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Refresh

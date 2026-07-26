@@ -168,8 +168,8 @@ export default function Pricing() {
                 ) : plan.name === "Pro" || plan.name === "Premium" ? (
                   <button
                     type="button"
-                    onClick={() => void handlePaidPlanCheckout(plan.name)}
-                    disabled={processingPlan === plan.name}
+                    onClick={() => void handlePaidPlanCheckout(plan.name as "Pro" | "Premium")}
+                    disabled={processingPlan === (plan.name as "Pro" | "Premium")}
                     className="mt-8 inline-flex w-full items-center justify-center bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {processingPlan === plan.name ? "Redirecting..." : plan.ctaLabel}

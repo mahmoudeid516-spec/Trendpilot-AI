@@ -6,6 +6,8 @@ import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 type BillingSummary = {
   plan: "Free" | "Pro" | "Premium";
   subscriptionStatus: string;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
   renewalDate: string | null;
   cancelAtPeriodEnd: boolean;
   hasBillingAccount: boolean;
@@ -23,11 +25,13 @@ export async function GET(req: NextRequest) {
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("stripe_customer_id, subscription_status, renewal_date, cancel_at_period_end")
+      .select("stripe_customer_id, subscription_status, current_period_start, current_period_end, renewal_date, cancel_at_period_end")
       .eq("id", userId)
       .maybeSingle<{
         stripe_customer_id: string | null;
         subscription_status: string | null;
+        current_period_start: string | null;
+        current_period_end: string | null;
         renewal_date: string | null;
         cancel_at_period_end: boolean | null;
       }>();
@@ -50,7 +54,9 @@ export async function GET(req: NextRequest) {
     const response: BillingSummary = {
       plan,
       subscriptionStatus: profile?.subscription_status ?? "inactive",
-      renewalDate: profile?.renewal_date ?? null,
+      currentPeriodStart: profile?.current_period_start ?? null,
+      currentPeriodEnd: profile?.current_period_end ?? profile?.renewal_date ?? null,
+      renewalDate: profile?.current_period_end ?? profile?.renewal_date ?? null,
       cancelAtPeriodEnd: Boolean(profile?.cancel_at_period_end),
       hasBillingAccount: Boolean(profile?.stripe_customer_id),
       events: (events ?? []).map((event) => ({

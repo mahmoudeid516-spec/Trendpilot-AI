@@ -117,8 +117,11 @@ async function syncSubscription(subscription: Stripe.Subscription): Promise<stri
     .in("status", ["trialing", "active", "past_due"])
     .neq("stripe_subscription_id", subscription.id);
 
-  const currentPeriodStartIso = new Date(subscription.current_period_start * 1000).toISOString();
-  const currentPeriodEndIso = new Date(subscription.current_period_end * 1000).toISOString();
+  const firstItem = subscription.items.data[0];
+  const periodStartUnix = firstItem?.current_period_start ?? subscription.start_date;
+  const periodEndUnix = firstItem?.current_period_end ?? subscription.start_date;
+  const currentPeriodStartIso = new Date(periodStartUnix * 1000).toISOString();
+  const currentPeriodEndIso = new Date(periodEndUnix * 1000).toISOString();
 
   const { data: savedSubscription, error: upsertError } = await supabaseAdmin
     .from("subscriptions")
@@ -146,11 +149,15 @@ async function syncSubscription(subscription: Stripe.Subscription): Promise<stri
     .from("profiles")
     .update({
       stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
       subscription_id: subscription.id,
       plan: effectivePlan,
       subscription_status: dbStatus,
+      current_period_start: currentPeriodStartIso,
+      current_period_end: currentPeriodEndIso,
       renewal_date: currentPeriodEndIso,
       cancel_at_period_end: subscription.cancel_at_period_end,
+      updated_at: new Date().toISOString(),
     })
     .eq("id", userId);
 
@@ -210,8 +217,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
 }
 
 async function handleInvoiceEvent(invoice: Stripe.Invoice, eventType: string): Promise<void> {
+  const invoiceWithSubscription = invoice as Stripe.Invoice & {
+    subscription?: string | null;
+    parent?: {
+      subscription_details?: {
+        subscription?: string | null;
+      };
+    };
+  };
   const customerId = typeof invoice.customer === "string" ? invoice.customer : null;
-  const subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : null;
+  const subscriptionId = typeof invoiceWithSubscription.subscription === "string"
+    ? invoiceWithSubscription.subscription
+    : typeof invoiceWithSubscription.parent?.subscription_details?.subscription === "string"
+      ? invoiceWithSubscription.parent.subscription_details.subscription
+      : null;
 
   if (subscriptionId) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);

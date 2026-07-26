@@ -132,7 +132,7 @@ export default function Sidebar() {
     },
     {
       title: "Billing",
-      href: "/billing",
+      href: "/dashboard/billing",
       icon: Crown,
     },
   ];

@@ -1,12 +1,21 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import {
+  requirePlanOrThrow,
+  requireUserIdOrThrow,
+  toSubscriptionGuardResponse,
+} from "../../../lib/billing/subscriptionMiddleware";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const userId = await requireUserIdOrThrow(req);
+    await requirePlanOrThrow(userId, "Pro");
+
     const { product } = await req.json();
 
     const prompt = `
@@ -43,7 +52,11 @@ Return JSON only.
     const content = response.choices[0].message.content;
 
     return NextResponse.json(JSON.parse(content ?? "{}"));
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "SubscriptionGuardError") {
+      return toSubscriptionGuardResponse(error);
+    }
+
     const message = error instanceof Error ? error.message : "AI generation failed.";
 
     return NextResponse.json(

@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const defaultReturnUrl = `${getAppBaseUrl()}/billing`;
+    const defaultReturnUrl = `${getAppBaseUrl()}/dashboard/billing`;
     const returnUrl = typeof body.returnUrl === "string" && body.returnUrl.startsWith("http")
       ? body.returnUrl
       : defaultReturnUrl;
