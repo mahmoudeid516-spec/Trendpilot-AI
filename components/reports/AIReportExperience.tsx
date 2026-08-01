@@ -72,8 +72,16 @@ export default function AIReportExperience({ product, onPersisted }: Props) {
       onPersisted?.();
       router.push(`/dashboard/report/${result.reportId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate report.");
-    } finally {
+  console.error("AI REPORT ERROR");
+  console.error(err);
+
+  if (err instanceof Error) {
+    console.error(err.message);
+  }
+
+  setError(err instanceof Error ? err.message : "Failed to generate report.");
+}
+    finally {
       setLoading(false);
     }
   }

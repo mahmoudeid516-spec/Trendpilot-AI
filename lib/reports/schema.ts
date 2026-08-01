@@ -7,7 +7,9 @@ import type {
   MarketingAngles,
   PricingStrategy,
   ProfitEstimation,
+  ReportEvidence,
   ReportProductInput,
+  ScoreExplanations,
   SWOTAnalysis,
   TargetAudienceProfile,
 } from "../../types/AIReport";
@@ -95,6 +97,18 @@ const swotAnalysisSchema: z.ZodType<SWOTAnalysis> = z.object({
   threats: stringList,
 });
 
+const scoreExplanationsSchema: z.ZodType<ScoreExplanations> = z.object({
+  opportunity_score_reason: trimmedString,
+  confidence_score_reason: trimmedString,
+});
+
+const reportEvidenceSchema: z.ZodType<ReportEvidence> = z.object({
+  facts_used: z.array(trimmedString),
+  calculated_values: z.array(trimmedString),
+  assumptions: z.array(trimmedString),
+  missing_data: z.array(trimmedString),
+});
+
 export const aiReportSchema: z.ZodType<AIReport> = z.object({
   generated_at: z.string().datetime(),
   product_name: trimmedString,
@@ -120,6 +134,8 @@ export const aiReportSchema: z.ZodType<AIReport> = z.object({
   recommendations: stringList,
   business_verdict: trimmedString,
   confidence_score: score,
+  score_explanations: scoreExplanationsSchema.optional(),
+  evidence: reportEvidenceSchema.optional(),
 });
 
 export const generateReportRequestSchema = z.object({

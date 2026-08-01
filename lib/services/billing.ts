@@ -81,8 +81,12 @@ export async function getUsageRecord(
     .maybeSingle<UsageRecord>();
 
   if (error) {
-    throw new Error("Failed to load usage record.");
-  }
+  console.error("SUPABASE USAGE ERROR:", error);
+
+  throw new Error(
+    `Failed to load usage record: ${error.message}`
+  );
+}
 
   return data;
 }

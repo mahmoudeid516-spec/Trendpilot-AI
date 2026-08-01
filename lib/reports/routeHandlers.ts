@@ -98,6 +98,7 @@ export async function handleGenerateReport(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
+    console.error("[handleGenerateReport] Caught exception:", error);
     return toErrorResponse(error);
   }
 }
@@ -177,6 +178,9 @@ export async function handleExportReport(req: NextRequest, reportId: number) {
       metadata: response.metadata,
     });
   } catch (error) {
-    return toErrorResponse(error);
-  }
+  console.error("REPORT GENERATION ERROR:");
+  console.error(error);
+
+  return toErrorResponse(error);
+}
 }

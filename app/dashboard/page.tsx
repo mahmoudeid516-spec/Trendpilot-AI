@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/dashboard/Sidebar";
@@ -87,6 +88,14 @@ export default function DashboardPage() {
             <div className="grid grid-cols-12 gap-6">
               <div className="col-span-12">
                 <DashboardHero />
+                <div className="mt-4 flex justify-end">
+                  <Link
+                    href="/dashboard/billing"
+                    className="inline-flex items-center rounded-xl border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  >
+                    Manage Billing
+                  </Link>
+                </div>
               </div>
 
               <div className="col-span-12">

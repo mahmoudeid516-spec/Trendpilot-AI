@@ -78,6 +78,18 @@ export interface LaunchStrategy {
   post_launch: string[];
 }
 
+export interface ScoreExplanations {
+  opportunity_score_reason: string;
+  confidence_score_reason: string;
+}
+
+export interface ReportEvidence {
+  facts_used: string[];
+  calculated_values: string[];
+  assumptions: string[];
+  missing_data: string[];
+}
+
 export interface AIReport {
   generated_at: string;
   product_name: string;
@@ -103,6 +115,8 @@ export interface AIReport {
   recommendations: string[];
   business_verdict: string;
   confidence_score: number;
+  score_explanations?: ScoreExplanations;
+  evidence?: ReportEvidence;
 }
 
 export interface StoredReportRecord {

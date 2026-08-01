@@ -66,6 +66,26 @@ function toSafeString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
 
+function sanitizeReportProductPayload(product: ReportProductInput): Partial<ReportProductInput> {
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(product) as [keyof ReportProductInput, ReportProductInput[keyof ReportProductInput]][]) {
+    if (typeof value === "string") {
+      if (value.trim().length > 0) {
+        sanitized[key] = value;
+      }
+
+      continue;
+    }
+
+    if (value !== undefined) {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized as Partial<ReportProductInput>;
+}
+
 function normalizeReportHistoryPayload(payload: unknown): ReportHistoryResponse {
   const raw = (payload ?? {}) as Partial<ReportHistoryResponse> & {
     reports?: unknown;
@@ -101,10 +121,12 @@ export async function generateAIReport(
   product: ReportProductInput,
   options?: { forceRegenerate?: boolean },
 ): Promise<GenerateReportResponse> {
+  const sanitizedProduct = sanitizeReportProductPayload(product);
+
   const response = await authedFetch("/api/report/generate", {
     method: "POST",
     body: JSON.stringify({
-      product,
+      product: sanitizedProduct,
       forceRegenerate: options?.forceRegenerate ?? false,
     }),
   });

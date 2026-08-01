@@ -177,15 +177,6 @@ export async function POST(req: NextRequest) {
 
     const customerId = await getOrCreateStripeCustomer(accessToken, userId);
 
-    if (currentPlan === "Pro" || currentPlan === "Premium") {
-      const portalSession = await stripe.billingPortal.sessions.create({
-        customer: customerId,
-        return_url: `${baseUrl}/dashboard/billing`,
-      });
-
-      return NextResponse.json({ url: portalSession.url, mode: "portal" });
-    }
-
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,

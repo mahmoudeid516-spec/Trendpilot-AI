@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { getPlanByPriceId, stripe } from "../../../../lib/stripe";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { recordBillingEvent } from "../../../../lib/services/billing";
+console.log("✅ WEBHOOK FILE LOADED");
 
 export const runtime = "nodejs";
 
@@ -106,6 +107,15 @@ async function syncSubscription(subscription: Stripe.Subscription): Promise<stri
   const dbStatus = toSubscriptionStatus(subscription.status);
   const effectivePlan = dbStatus === "canceled" || dbStatus === "inactive" ? "Free" : currentPlan;
   const planId = await getPlanIdByCode(toPlanCode(effectivePlan));
+  console.log("=== SYNC SUBSCRIPTION START ===");
+  console.log({
+  userId,
+  customerId,
+  subscriptionId: subscription.id,
+  status: subscription.status,
+  effectivePlan,
+  planId,
+});
 
   await supabaseAdmin
     .from("subscriptions")
@@ -140,10 +150,14 @@ async function syncSubscription(subscription: Stripe.Subscription): Promise<stri
     )
     .select("id")
     .maybeSingle<{ id: string }>();
+    console.log("UPSERT SUCCESS");
+    console.log(savedSubscription);
 
   if (upsertError) {
-    throw new Error("Failed to persist subscription state.");
-  }
+  console.error("UPSERT ERROR:");
+  console.error(upsertError);
+  throw upsertError;
+}
 
   const { error: profileError } = await supabaseAdmin
     .from("profiles")
@@ -310,11 +324,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       received: true,
     });
-  } catch {
+  } catch (error) {
+  console.error("========== WEBHOOK ERROR ==========");
+  console.error(error);
 
-    return NextResponse.json(
-      { error: "Webhook Error" },
-      { status: 400 }
-    );
+  if (error instanceof Error) {
+    console.error("MESSAGE:", error.message);
+    console.error("STACK:", error.stack);
   }
+
+  return NextResponse.json(
+    {
+      error: error instanceof Error ? error.message : "Webhook Error",
+    },
+    { status: 400 }
+  );
+}
 }

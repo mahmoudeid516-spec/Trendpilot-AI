@@ -242,11 +242,10 @@ export default function BillingPage() {
 
               <button
                 type="button"
-                onClick={() => void openPortal()}
-                disabled={loading || activeAction !== ""}
+                disabled
                 className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Downgrade
+                Downgrade (Use Manage Billing)
               </button>
             </>
           ) : null}
@@ -262,14 +261,6 @@ export default function BillingPage() {
                 {activeAction === "Pro" ? "Opening..." : "Downgrade to Pro"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => void openPortal()}
-                disabled={loading || activeAction !== ""}
-                className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Downgrade
-              </button>
             </>
           ) : null}
 
@@ -284,20 +275,10 @@ export default function BillingPage() {
 
           <button
             type="button"
-            onClick={() => void openPortal()}
-            disabled={loading || activeAction !== ""}
-            className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Open Stripe Billing Portal
-          </button>
-
-          <button
-            type="button"
-            onClick={() => void openPortal()}
-            disabled={loading || activeAction !== ""}
+            disabled
             className="inline-flex items-center rounded-xl border border-rose-300 bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Cancel Subscription
+            Cancel Subscription (Use Manage Billing)
           </button>
 
           <button

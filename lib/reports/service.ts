@@ -64,7 +64,9 @@ function normalizeMarketplace(product: ReportProductInput): string {
 }
 
 function sanitizeSearchTerm(query: string): string {
-  return query.replace(/[,%]/g, " ").trim();
+  return query
+    .replace(/[,%'"()]/g, " ")
+    .trim();
 }
 
 function asStoredReportRecord(row: ReportRow): StoredReportRecord {
@@ -126,8 +128,17 @@ function mapOpenAIError(error: unknown): ReportServiceError {
   }
 
   if (error instanceof ZodError) {
-    return new ReportServiceError("OpenAI returned an invalid report structure.", 502, "invalid_json", true);
-  }
+  console.error("========== ZOD VALIDATION ERROR ==========");
+  console.error(JSON.stringify(error.issues, null, 2));
+  console.error("==========================================");
+
+  return new ReportServiceError(
+    JSON.stringify(error.issues, null, 2),
+    502,
+    "invalid_json",
+    false
+  );
+}
 
   const message = error instanceof Error ? error.message : "AI report generation failed.";
   const lowered = message.toLowerCase();
@@ -166,7 +177,16 @@ async function requestAIReport(product: ReportProductInput) {
         REPORT_REQUEST_TIMEOUT_MS,
       );
 
-      const content = completion.choices[0]?.message?.content;
+      const content = completion.choices?.[0]?.message?.content;
+
+if (!content?.trim()) {
+    throw new ReportServiceError(
+        "OpenAI returned an empty response.",
+        502,
+        "empty_response",
+        true
+    );
+}
 
       if (!content) {
         throw new ReportServiceError("OpenAI returned an empty report payload.", 502, "empty_response", true);
@@ -202,17 +222,18 @@ async function findExistingReport(userId: string, product: ReportProductInput): 
     query = query.eq("product_id", product.id);
   }
 
-  const { data, error } = await query.maybeSingle<ReportRow>();
+  const { data, error } = await query;
 
-  if (error) {
-    throw new ReportServiceError("Failed to check existing reports.", 500, "supabase_lookup", false);
-  }
+if (error) {
+  console.error("SUPABASE ERROR:", error);
+  throw error;
+}
 
-  if (!data) {
+  if (!data || data.length === 0) {
     return null;
   }
 
-  return asStoredReportRecord(data);
+  return asStoredReportRecord(data[0]);
 }
 
 async function insertReport(
@@ -223,20 +244,35 @@ async function insertReport(
   const { data, error } = await supabaseAdmin
     .from("reports")
     .insert({
-      user_id: userId,
-      product_id: product.id ?? null,
-      product_name: report.product_name,
-      marketplace: report.marketplace,
-      report_json: report,
-      opportunity_score: report.opportunity_score,
-      confidence_score: report.confidence_score,
-    })
-    .select("id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at")
+  user_id: userId,
+  product_id: product.id ?? null,
+  product_name: report.product_name,
+  marketplace: report.marketplace,
+
+  report: report,
+  report_json: report,
+
+  opportunity_score: report.opportunity_score,
+  confidence_score: report.confidence_score,
+})
+    .select(
+      "id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at"
+    )
     .single<ReportRow>();
 
   if (error || !data) {
-    throw new ReportServiceError("Failed to save the generated report.", 500, "supabase_insert", false);
-  }
+    console.error("========== SUPABASE INSERT ERROR ==========");
+    console.error(error);
+    console.error(data);
+    console.error("==========================================");
+
+    throw new ReportServiceError(
+        error?.message ?? "Failed to save the generated report.",
+        500,
+        "supabase_insert",
+        false
+    );
+}
 
   return asStoredReportRecord(data);
 }
@@ -313,7 +349,7 @@ export async function listStoredReports(
   const to = from + parsed.pageSize - 1;
   let query = supabaseAdmin
     .from("reports")
-    .select("id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at", { count: "exact" })
+    .select("id, user_id, product_id, product_name, marketplace, platform, report_json, opportunity_score, confidence_score, created_at, updated_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -349,11 +385,15 @@ export async function getStoredReportById(userId: string, reportId: number): Pro
         .select("id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at")
         .eq("id", reportId)
         .eq("user_id", userId)
-        .single<ReportRow>();
+        .single()
 
-      if (error || !data) {
-        return null;
-      }
+      if (error) {
+    throw error;
+}
+
+if (!data) {
+    return null;
+}
 
       return asStoredReportRecord(data);
     },

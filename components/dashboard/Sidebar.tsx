@@ -116,8 +116,8 @@ export default function Sidebar() {
       icon: BarChart3,
     },
     {
-      title: "Report History",
-      href: "/dashboard/history",
+      title: "Reports",
+      href: "/dashboard/reports",
       icon: FileSearch,
     },
     {

@@ -13,10 +13,10 @@ export default function CancelPage() {
           </p>
   
           <Link
-            href="/"
+            href="/pricing"
             className="mt-8 inline-block bg-black text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition"
           >
-            Back Home
+            Back to Pricing
           </Link>
         </div>
       </div>
