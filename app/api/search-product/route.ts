@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 type ShoppingResult = {
   title?: string;
@@ -10,16 +11,22 @@ type ShoppingResult = {
   link?: string;
 };
 
+const searchSchema = z.object({
+  product: z.string().trim().min(1).max(100),
+});
+
 export async function POST(req: Request) {
   try {
-    const { product } = await req.json();
+    const body = searchSchema.parse(await req.json());
 
     const apiKey = process.env.SERPAPI_API_KEY;
 
     if (!apiKey) {
+      console.error("Missing SERPAPI_API_KEY");
+
       return NextResponse.json(
         {
-          error: "SERPAPI_API_KEY is missing",
+          error: "Server configuration error.",
         },
         {
           status: 500,
@@ -29,22 +36,24 @@ export async function POST(req: Request) {
 
     const url =
       `https://serpapi.com/search.json?engine=google_shopping` +
-      `&q=${encodeURIComponent(product)}` +
+      `&q=${encodeURIComponent(body.product)}` +
       `&gl=us` +
       `&hl=en` +
       `&num=10` +
       `&api_key=${apiKey}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      cache: "no-store",
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
+      console.error("SerpAPI request failed:", response.status);
+
       return NextResponse.json(
         {
-          error: "SerpAPI request failed",
-          status: response.status,
-          serpResponse: data,
+          error: "Failed to search products.",
         },
         {
           status: response.status,
@@ -57,8 +66,7 @@ export async function POST(req: Request) {
     if (items.length === 0) {
       return NextResponse.json(
         {
-          error: "No products found",
-          serpResponse: data,
+          error: "No products found.",
         },
         {
           status: 404,
@@ -83,15 +91,23 @@ export async function POST(req: Request) {
         link: item.link,
       })),
     });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Invalid request data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Product search failed.";
-    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("Search product error:", error);
 
     return NextResponse.json(
       {
-        error: message,
-        stack,
+        error: "Internal server error.",
       },
       {
         status: 500,

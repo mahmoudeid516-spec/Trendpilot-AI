@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { openai } from "../../../lib/openai";
 import {
   requirePlanOrThrow,
@@ -6,12 +7,24 @@ import {
   toSubscriptionGuardResponse,
 } from "../../../lib/billing/subscriptionMiddleware";
 
+const marketingPackageSchema = z.object({
+  product: z.object({
+    name: z.string().trim().min(1).max(200),
+    category: z.string().trim().optional().default("General"),
+    platform: z.string().trim().optional().default("Unknown"),
+    profit: z.union([z.number(), z.string()]).optional(),
+    country: z.string().trim().optional().default("Worldwide"),
+  }),
+});
+
 export async function POST(req: NextRequest) {
   try {
     const userId = await requireUserIdOrThrow(req);
     await requirePlanOrThrow(userId, "Pro");
 
-    const { product } = await req.json();
+    const body = marketingPackageSchema.parse(await req.json());
+
+    const { product } = body;
 
     const prompt = `
 You are an expert ecommerce marketing strategist.
@@ -28,7 +41,7 @@ Platform:
 ${product.platform}
 
 Profit:
-${product.profit}
+${product.profit ?? "Unknown"}
 
 Country:
 ${product.country}
@@ -52,18 +65,29 @@ Return beautiful markdown.
     });
 
     return NextResponse.json({
-      marketing: response.output_text,
+      marketing: response.output_text ?? "",
     });
-
-  } catch (error: unknown) {
+  } catch (error) {
     if (error instanceof Error && error.name === "SubscriptionGuardError") {
       return toSubscriptionGuardResponse(error);
     }
 
-    const message = error instanceof Error ? error.message : "Failed to generate marketing package.";
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Invalid request data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    console.error("Generate Marketing API error:", error);
+
     return NextResponse.json(
       {
-        error: message,
+        error: "Internal server error.",
       },
       {
         status: 500,

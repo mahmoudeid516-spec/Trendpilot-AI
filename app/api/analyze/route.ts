@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { openai } from "../../../lib/openai";
 import {
   requirePlanOrThrow,
@@ -6,12 +7,16 @@ import {
   toSubscriptionGuardResponse,
 } from "../../../lib/billing/subscriptionMiddleware";
 
+const analyzeSchema = z.object({
+  product: z.string().trim().min(3).max(2000),
+});
+
 export async function POST(req: NextRequest) {
   try {
     const userId = await requireUserIdOrThrow(req);
     await requirePlanOrThrow(userId, "Pro");
 
-    const { product } = await req.json();
+    const body = analyzeSchema.parse(await req.json());
 
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
@@ -22,7 +27,7 @@ You are an expert Shopify consultant, Amazon consultant, TikTok Shop expert and 
 
 Analyze this product:
 
-${product}
+${body.product}
 
 Return ONLY valid JSON.
 
@@ -94,17 +99,27 @@ High
     return NextResponse.json({
       result,
     });
-
-  } catch (err: unknown) {
+  } catch (err) {
     if (err instanceof Error && err.name === "SubscriptionGuardError") {
       return toSubscriptionGuardResponse(err);
     }
 
-    const message = err instanceof Error ? err.message : "AI analysis failed.";
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Invalid request data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    console.error("Analyze API error:", err);
 
     return NextResponse.json(
       {
-        error: message,
+        error: "Internal server error.",
       },
       {
         status: 500,

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { z } from "zod";
+import { openai } from "../../../lib/openai";
 import {
   requirePlanOrThrow,
   requireUserIdOrThrow,
   toSubscriptionGuardResponse,
 } from "../../../lib/billing/subscriptionMiddleware";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+const marketingSchema = z.object({
+  product: z.string().trim().min(3).max(2000),
 });
 
 export async function POST(req: NextRequest) {
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     const userId = await requireUserIdOrThrow(req);
     await requirePlanOrThrow(userId, "Pro");
 
-    const { product } = await req.json();
+    const body = marketingSchema.parse(await req.json());
 
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
@@ -24,7 +25,7 @@ You are a professional e-commerce marketing expert.
 
 Create marketing content for this product:
 
-${product}
+${body.product}
 
 Return ONLY valid JSON.
 
@@ -45,22 +46,33 @@ Return ONLY valid JSON.
     const end = text.lastIndexOf("}");
 
     if (start === -1 || end === -1) {
-      throw new Error("Invalid JSON");
+      throw new Error("Invalid JSON returned from OpenAI.");
     }
 
-    const json = text.slice(start, end + 1);
+    const result = JSON.parse(text.slice(start, end + 1));
 
-    return NextResponse.json(JSON.parse(json));
-  } catch (err: unknown) {
+    return NextResponse.json(result);
+  } catch (err) {
     if (err instanceof Error && err.name === "SubscriptionGuardError") {
       return toSubscriptionGuardResponse(err);
     }
 
-    const message = err instanceof Error ? err.message : "Marketing generation failed.";
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Invalid request data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    console.error("Marketing API error:", err);
 
     return NextResponse.json(
       {
-        error: message,
+        error: "Internal server error.",
       },
       {
         status: 500,
