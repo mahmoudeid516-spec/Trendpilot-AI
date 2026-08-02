@@ -23,15 +23,15 @@ export default function Filters({
 
   function pillStyle(active: boolean) {
     if (active) {
-      return "border-indigo-200 bg-indigo-50 text-indigo-700";
+      return "border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm";
     }
 
-    return "border-slate-300 bg-white text-slate-600 hover:border-indigo-200 hover:text-indigo-700";
+    return "border-slate-300 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-700";
   }
 
   return (
-    <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50/85 p-4 shadow-sm sm:p-5">
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm">
         <Funnel size={13} />
         Refine Results
       </div>

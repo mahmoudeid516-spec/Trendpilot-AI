@@ -8,7 +8,7 @@ type Props = {
 export default function SearchResults({ results }: Props) {
   return (
     <div className="mt-8">
-      <h2 className="mb-6 text-3xl font-semibold tracking-tight text-slate-900">
+      <h2 className="mb-6 text-3xl font-black tracking-tight text-slate-900">
         Found {results.length} Products
       </h2>
 
@@ -16,7 +16,7 @@ export default function SearchResults({ results }: Props) {
         {results.map((product, index) => (
           <div
             key={index}
-            className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200"
+            className="group rounded-2xl border border-slate-200 bg-white/88 p-5 shadow-[0_20px_50px_-34px_rgba(15,23,42,0.28)] transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200"
           >
             <Image
               src={product.image || "https://picsum.photos/800/600"}
@@ -61,7 +61,7 @@ export default function SearchResults({ results }: Props) {
               href={product.product_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-5 block rounded-xl bg-indigo-600 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-500"
+              className="mt-5 block rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] py-3 text-center text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition-all duration-200 hover:brightness-110"
             >
               View Product
             </a>

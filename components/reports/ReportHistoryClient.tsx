@@ -98,23 +98,23 @@ export default function ReportHistoryClient() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="min-h-screen bg-transparent text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar />
 
         <main className="flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1480px] space-y-6">
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mx-auto max-w-[1400px] space-y-6">
+            <section className="rounded-[32px] border border-white/70 bg-white/88 p-6 shadow-[0_24px_65px_-45px_rgba(15,23,42,0.35)] backdrop-blur-xl">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">History</p>
-                  <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">AI Report History</h1>
+                  <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">AI Report History</h1>
                   <p className="mt-2 text-sm leading-7 text-slate-600">Search, reopen, and delete previously generated premium reports. Results are shown newest first.</p>
                 </div>
 
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700"
                 >
                   Back to Dashboard
                 </Link>
@@ -123,6 +123,7 @@ export default function ReportHistoryClient() {
               <div className="mt-5 flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
                 <Search size={14} className="text-slate-500" />
                 <input
+                  aria-label="Search report history"
                   value={query}
                   onChange={(event) => {
                     setQuery(event.target.value);
@@ -135,7 +136,7 @@ export default function ReportHistoryClient() {
             </section>
 
             {loading ? (
-              <div className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="space-y-3 rounded-3xl border border-slate-200 bg-white/88 p-6 shadow-[0_20px_48px_-34px_rgba(15,23,42,0.28)]">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div key={index} className="h-24 animate-pulse rounded-2xl bg-slate-100" />
                 ))}
@@ -152,17 +153,17 @@ export default function ReportHistoryClient() {
             ) : null}
 
             {!loading && !error && reports.length === 0 ? (
-              <section className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+              <section className="rounded-3xl border border-dashed border-slate-300 bg-white/88 p-10 text-center shadow-[0_20px_48px_-34px_rgba(15,23,42,0.28)]">
                 <p className="text-lg font-semibold text-slate-900">No reports found</p>
                 <p className="mt-2 text-sm text-slate-600">Generate a premium report from any product and it will appear here automatically.</p>
               </section>
             ) : null}
 
             {!loading && !error && reports.length > 0 ? (
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-3xl border border-slate-200 bg-white/88 p-6 shadow-[0_20px_48px_-34px_rgba(15,23,42,0.28)]">
                 <div className="space-y-3">
                   {reports.map((report) => (
-                    <article key={report.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-300 hover:bg-white">
+                    <article key={report.id} className="rounded-2xl border border-slate-200 bg-slate-50/85 p-4 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-white">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <p className="text-lg font-semibold text-slate-900">{report.product_name}</p>

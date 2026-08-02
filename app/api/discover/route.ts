@@ -1,28 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const searchSchema = z.object({
-  search: z.string().trim().min(1).max(100),
+const schema = z.object({
+  search: z.string().min(2).max(100),
 });
 
 export async function GET(req: NextRequest) {
   try {
-    const token = process.env.APIFY_TOKEN;
+    const login = process.env.DATAFORSEO_LOGIN;
+    const password = process.env.DATAFORSEO_PASSWORD;
 
-    if (!token) {
-      console.error("Missing APIFY_TOKEN");
-
+    if (!login || !password) {
       return NextResponse.json(
-        {
-          error: "Server configuration error.",
-        },
-        {
-          status: 500,
-        }
+        { error: "Missing DataForSEO credentials" },
+        { status: 500 }
       );
     }
 
-    const parsed = searchSchema.safeParse({
+    const parsed = schema.safeParse({
       search:
         req.nextUrl.searchParams.get("search") ??
         "wireless earbuds",
@@ -30,62 +25,72 @@ export async function GET(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        {
-          error: "Invalid search query.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Invalid search" },
+        { status: 400 }
       );
     }
 
-    const actorId = "dky0rE40JOyXui6TR";
+    const auth = Buffer.from(
+      `${login}:${password}`
+    ).toString("base64");
 
     const response = await fetch(
-      `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}`,
+      "https://api.dataforseo.com/v3/merchant/amazon/products/live/advanced",
       {
         method: "POST",
-        cache: "no-store",
         headers: {
+          Authorization: `Basic ${auth}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          searchQueries: [parsed.data.search],
-          maxProductsPerQuery: 50,
-          sortBy: "orders",
-        }),
+        body: JSON.stringify([
+          {
+            keyword: parsed.data.search,
+            language_code: "en_US",
+            location_code: 2840,
+          },
+        ]),
       }
     );
 
-    if (!response.ok) {
-      console.error(
-        "Apify request failed:",
-        response.status
-      );
+    const data = await response.json();
 
-      return NextResponse.json(
-        {
-          error: "Failed to discover products.",
-        },
-        {
-          status: response.status,
-        }
-      );
+    if (!response.ok) {
+      return NextResponse.json(data, {
+        status: response.status,
+      });
     }
 
-    const products = await response.json();
+    const items =
+  data.tasks?.[0]?.result?.[0]?.items ?? [];
 
-    return NextResponse.json(products);
-  } catch (error) {
-    console.error("Discover API error:", error);
+const seen = new Set<string>();
+
+const uniqueItems = items.filter((item: any) => {
+  const key =
+    (
+      item.data_asin ||
+      item.title ||
+      ""
+    )
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+
+  if (seen.has(key)) {
+    return false;
+  }
+
+  seen.add(key);
+  return true;
+});
+
+return NextResponse.json(uniqueItems);
+  } catch (e) {
+    console.error(e);
 
     return NextResponse.json(
-      {
-        error: "Internal server error.",
-      },
-      {
-        status: 500,
-      }
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }

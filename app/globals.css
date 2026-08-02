@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050816;
-  --foreground: #ffffff;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-border: rgba(148, 163, 184, 0.28);
+  --shadow-soft: 0 18px 42px -28px rgba(15, 23, 42, 0.28);
+  --shadow-strong: 0 30px 80px -44px rgba(124, 58, 237, 0.4);
+  --ring-brand: rgba(124, 58, 237, 0.35);
+  --grad-violet: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 42%, #06b6d4 100%);
 }
 
 @theme inline {
@@ -13,11 +19,61 @@
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(124, 58, 237, 0.12), transparent 36%),
+    radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.12), transparent 42%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 52%, #f8fafc 100%);
   color: var(--foreground);
   font-family: var(--font-plus-jakarta), "Avenir Next", "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+* {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 180ms;
+  transition-timing-function: ease;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring-brand);
+}
+
+::selection {
+  background: rgba(124, 58, 237, 0.22);
+  color: #111827;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.65), rgba(6, 182, 212, 0.65));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

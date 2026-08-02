@@ -157,12 +157,13 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`sticky top-0 hidden h-screen shrink-0 p-4 lg:block ${collapsed ? "w-[104px]" : "w-[308px]"}`}>
-      <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-indigo-100/35 bg-[linear-gradient(180deg,rgba(15,23,42,0.95)_0%,rgba(15,23,42,0.88)_100%)] shadow-[0_10px_30px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+    <aside className={`sticky top-0 hidden h-screen shrink-0 p-3 lg:block ${collapsed ? "w-[104px]" : "w-[308px]"}`}>
+      <div className="relative flex h-full flex-col overflow-hidden rounded-[30px] border border-indigo-100/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.96)_0%,rgba(15,23,42,0.9)_100%)] shadow-[0_24px_60px_-34px_rgba(15,23,42,0.7)] backdrop-blur-xl">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(99,102,241,0.18),transparent_42%)]" />
 
         <button
           type="button"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           onClick={() => setCollapsed((prev) => !prev)}
           className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-indigo-200/20 bg-slate-900/70 text-slate-300 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
         >
@@ -210,10 +211,10 @@ export default function Sidebar() {
             <Link
               key={item.title}
               href={item.href}
-              className={`group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300
+              className={`group relative flex items-center gap-3 rounded-2xl px-3 py-3.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300
               ${
                 active
-                  ? "border border-indigo-200/20 bg-indigo-400/15 text-slate-100"
+                  ? "border border-indigo-200/20 bg-gradient-to-r from-indigo-500/20 to-violet-500/20 text-slate-100"
                   : "border border-transparent text-slate-300 hover:border-indigo-100/15 hover:bg-slate-800/80 hover:text-white"
               }`}
               title={item.title}
@@ -229,7 +230,7 @@ export default function Sidebar() {
 
       <div className="relative border-t border-indigo-100/15 p-4">
         {!collapsed ? (
-          <div className="mb-4 rounded-2xl border border-indigo-100/15 bg-slate-900/45 p-3">
+          <div className="mb-4 rounded-2xl border border-indigo-100/15 bg-slate-900/45 p-3.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Search progress</p>
             <div className="mt-2 flex items-center gap-2 text-xs text-slate-300">
               <Gauge size={14} />
@@ -241,7 +242,7 @@ export default function Sidebar() {
 
             <Link
               href="/pricing"
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200/20 bg-indigo-500/20 px-3 py-2 text-xs font-semibold text-indigo-100 transition hover:bg-indigo-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200/20 bg-indigo-500/20 px-3 py-2.5 text-xs font-semibold text-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
             >
               <Crown size={14} />
               Upgrade plan

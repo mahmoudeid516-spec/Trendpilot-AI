@@ -9,10 +9,11 @@ type Props = {
 export default function ReportGenerationLoader({ progress, step, etaSeconds }: Props) {
   return (
     <div className="overflow-hidden rounded-[32px] border border-violet-400/20 bg-[linear-gradient(135deg,rgba(8,12,33,0.96),rgba(37,15,61,0.92))] p-6 text-white shadow-[0_40px_120px_-40px_rgba(76,29,149,0.75)] sm:p-7">
+      <div className="pointer-events-none absolute hidden" />
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.26em] text-violet-200/75">Generating Premium Report</p>
-          <h3 className="mt-3 text-3xl font-semibold tracking-tight text-white">{step}</h3>
+          <h3 className="mt-3 text-3xl font-black tracking-tight text-white">{step}</h3>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-200/80">
             TrendPilot AI is building a saved report from live product context. Existing reports open instantly and new reports are persisted automatically.
           </p>

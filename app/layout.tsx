@@ -9,8 +9,52 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "TrendPilot AI",
-  description: "AI Product Research",
+  metadataBase: new URL("https://trendpilot-ai.com"),
+
+  title: {
+    default: "TrendPilot AI",
+    template: "%s | TrendPilot AI",
+  },
+
+  description:
+    "TrendPilot AI helps ecommerce sellers discover winning products, generate AI-powered reports, analyze competition, and create high-converting marketing content.",
+
+  keywords: [
+    "AI",
+    "Ecommerce",
+    "Shopify",
+    "Amazon",
+    "TikTok Shop",
+    "Product Research",
+    "TrendPilot AI",
+  ],
+
+  authors: [
+    {
+      name: "TrendPilot AI",
+    },
+  ],
+
+  openGraph: {
+    title: "TrendPilot AI",
+    description:
+      "Discover winning ecommerce products with AI-powered insights.",
+    type: "website",
+    locale: "en_US",
+    siteName: "TrendPilot AI",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "TrendPilot AI",
+    description:
+      "AI-powered product research for ecommerce sellers.",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

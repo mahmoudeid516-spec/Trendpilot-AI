@@ -182,7 +182,7 @@ export default function StatsCards({
         {Array.from({ length: 4 }).map((_, idx) => (
           <div
             key={`stats-skeleton-${idx}`}
-            className={`animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${
+            className={`animate-pulse rounded-2xl border border-slate-200 bg-white/85 p-5 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.3)] ${
               idx === 0 ? "lg:col-span-4" : idx === 1 ? "lg:col-span-2" : "lg:col-span-3"
             }`}
           >
@@ -204,7 +204,7 @@ export default function StatsCards({
         return (
         <motion.div
           key={card.title}
-          className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-200 ${card.colSpan}`}
+          className={`group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.3)] transition-colors hover:border-indigo-200 ${card.colSpan}`}
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
@@ -215,10 +215,10 @@ export default function StatsCards({
 
           <div className="relative z-10">
             <div className="flex items-start justify-between">
-              <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${card.iconBg} ${card.tint}`}>
+              <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${card.iconBg} ${card.tint} shadow-sm`}>
                 <Icon size={20} />
               </div>
-              <span className={`rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${card.trendTone}`}>
+              <span className={`rounded-full border border-emerald-100 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] shadow-sm ${card.trendTone}`}>
                 {card.delta}
               </span>
             </div>

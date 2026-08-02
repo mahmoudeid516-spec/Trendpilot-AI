@@ -17,8 +17,9 @@ export default function SuggestionChips({ onSelect }: Props) {
       {suggestions.map((item) => (
         <button
           key={item}
+          type="button"
           onClick={() => onSelect(item)}
-          className="rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
         >
           {item}
         </button>

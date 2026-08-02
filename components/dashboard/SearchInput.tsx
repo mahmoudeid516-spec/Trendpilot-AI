@@ -21,6 +21,7 @@ export default function SearchInput({
         <Sparkles className="pointer-events-none absolute left-5 top-6 h-5 w-5 text-indigo-400" />
 
         <input
+          aria-label="Describe product opportunity"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => {
@@ -34,6 +35,7 @@ export default function SearchInput({
 
         <button
           type="button"
+          aria-label="Voice search"
           className="absolute right-32 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-500 transition hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           title="Voice search"
         >
@@ -41,9 +43,10 @@ export default function SearchInput({
         </button>
 
         <button
+          type="button"
           onClick={onSearch}
           disabled={loading}
-          className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
         >
           {loading ? "Thinking..." : "Ask AI"}
         </button>

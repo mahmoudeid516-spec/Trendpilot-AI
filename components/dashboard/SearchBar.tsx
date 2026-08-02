@@ -101,13 +101,14 @@ export default function SearchBar({
   }
 
   return (
-    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-white/85 p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
           <input
             type="text"
+            aria-label="Search products"
             placeholder="Search products, categories, or intent..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -116,6 +117,7 @@ export default function SearchBar({
         </div>
 
         <select
+          aria-label="Filter by platform"
           value={platform}
           onChange={(e) => setPlatform(e.target.value)}
           className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
@@ -128,8 +130,9 @@ export default function SearchBar({
         </select>
 
         <button
+          type="button"
           onClick={() => runSearch(search, platform)}
-          className="rounded-2xl bg-indigo-600 px-7 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
         >
           Update Table
         </button>
@@ -147,7 +150,7 @@ export default function SearchBar({
                   setSearch(item);
                   runSearch(item, platform);
                 }}
-                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700"
               >
                 {item}
               </button>
@@ -169,7 +172,7 @@ export default function SearchBar({
                     setSearch(item);
                     runSearch(item, platform);
                   }}
-                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700"
                 >
                   {item}
                 </button>

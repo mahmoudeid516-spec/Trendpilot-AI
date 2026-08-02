@@ -2,37 +2,88 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getReports, deleteReport } from "@/services/reports";
 import { toast } from "sonner";
+
+import { getReports, deleteReport } from "@/services/reports";
+import type { ReportHistoryItem } from "@/types/AIReport";
+
 import SkeletonCard from "@/components/ui/SkeletonCard";
 import EmptyState from "@/components/ui/EmptyState";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function ReportsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<ReportHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
+
+  const [sortBy, setSortBy] = useState<
+    "newest" | "opportunity" | "confidence"
+  >("newest");
+
+  const [reportToDelete, setReportToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    async function loadReports() {
+      try {
+        const data = await getReports();
+        setReports(data ?? []);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load reports.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadReports();
+  }, []);
+
+  async function handleDelete(id: number) {
+    try {
+      setDeleting(true);
+
+      await deleteReport(id);
+
+      setReports((prev) =>
+        prev.filter((report) => report.id !== id)
+      );
+
+      toast.success("Report deleted successfully.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete report.");
+    } finally {
+      setDeleting(false);
+      setReportToDelete(null);
+    }
+  }
 
   const filteredReports = useMemo(() => {
     const filtered = reports.filter((report) => {
       const term = search.toLowerCase();
 
       return (
-        report.product_name?.toLowerCase().includes(term) ||
-        report.marketplace?.toLowerCase().includes(term)
+        report.product_name.toLowerCase().includes(term) ||
+        (report.marketplace ?? "")
+          .toLowerCase()
+          .includes(term)
       );
     });
 
     switch (sortBy) {
       case "opportunity":
         filtered.sort(
-          (a, b) => b.opportunity_score - a.opportunity_score
+          (a, b) =>
+            b.opportunity_score - a.opportunity_score
         );
         break;
 
       case "confidence":
         filtered.sort(
-          (a, b) => b.confidence_score - a.confidence_score
+          (a, b) =>
+            b.confidence_score - a.confidence_score
         );
         break;
 
@@ -47,61 +98,21 @@ export default function ReportsPage() {
     return filtered;
   }, [reports, search, sortBy]);
 
-  async function handleDelete(id: number) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this report?"
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await deleteReport(id);
-
-toast.success("Report deleted successfully.");
-
-setReports((prev) =>
-  prev.filter((report) => report.id !== id)
-);
-
-      setReports((prev) =>
-        prev.filter((report) => report.id !== id)
-      );
-    } catch (err) {
-      console.error(err);
-     toast.error("Failed to delete report.");
-    }
-  }
-
-  useEffect(() => {
-    async function loadReports() {
-      try {
-        const data = await getReports();
-        setReports(data ?? []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadReports();
-  }, []);
-
   if (loading) {
-  return (
-    <div className="p-8">
-      <h1 className="mb-6 text-3xl font-bold">
-        Reports History
-      </h1>
+    return (
+      <div className="p-8">
+        <h1 className="mb-6 text-3xl font-bold">
+          Reports History
+        </h1>
 
-      <div className="grid gap-6">
-        <SkeletonCard />
-        <SkeletonCard />
-        <SkeletonCard />
+        <div className="grid gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="p-8">
@@ -114,16 +125,19 @@ setReports((prev) =>
           type="text"
           placeholder="Search reports..."
           value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
+          onChange={(e) => setSearch(e.target.value)}
           className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white"
         />
 
         <select
           value={sortBy}
           onChange={(e) =>
-            setSortBy(e.target.value)
+            setSortBy(
+              e.target.value as
+                | "newest"
+                | "opportunity"
+                | "confidence"
+            )
           }
           className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white"
         >
@@ -148,13 +162,13 @@ setReports((prev) =>
           {filteredReports.map((report) => (
             <div
               key={report.id}
-              className="rounded-xl border p-5 shadow-sm"
+              className="rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-sm"
             >
               <h2 className="text-xl font-semibold">
                 {report.product_name}
               </h2>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-400">
                 {report.marketplace}
               </p>
 
@@ -177,14 +191,14 @@ setReports((prev) =>
               <div className="mt-4 flex gap-4">
                 <Link
                   href={`/dashboard/report/${report.id}`}
-                  className="text-indigo-600 hover:underline"
+                  className="text-indigo-500 hover:underline"
                 >
                   View Report →
                 </Link>
 
                 <button
                   onClick={() =>
-                    handleDelete(report.id)
+                    setReportToDelete(report.id)
                   }
                   className="text-red-500 hover:text-red-700"
                 >
@@ -195,6 +209,21 @@ setReports((prev) =>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={reportToDelete !== null}
+        title="Delete Report"
+        description="Are you sure you want to delete this report? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={deleting}
+        onCancel={() => setReportToDelete(null)}
+        onConfirm={() => {
+          if (reportToDelete !== null) {
+            void handleDelete(reportToDelete);
+          }
+        }}
+      />
     </div>
   );
 }

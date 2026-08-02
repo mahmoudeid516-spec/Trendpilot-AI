@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, RefreshCcw } from "lucide-react";
+import { motion } from "framer-motion";
+import { FileText, RefreshCcw, Sparkles, WandSparkles } from "lucide-react";
 import type { ReportProductInput } from "../../types/AIReport";
 import { generateAIReport } from "../../lib/services/reports";
 import ReportErrorCard from "./ReportErrorCard";
@@ -87,11 +88,14 @@ export default function AIReportExperience({ product, onPersisted }: Props) {
   }
 
   return (
-    <section className="mt-6 rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="mt-8 rounded-[32px] border border-violet-200/70 bg-gradient-to-b from-white via-white to-violet-50/45 p-5 shadow-[0_30px_80px_-50px_rgba(124,58,237,0.45)] sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">AI Report System</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Generate Premium Business Intelligence</h2>
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+            <Sparkles size={13} />
+            AI Report System
+          </p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Generate Premium Business Intelligence</h2>
           <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">
             Generate one saved AI report for this product. If a report already exists, TrendPilot opens the stored version instead of regenerating it.
           </p>
@@ -102,9 +106,9 @@ export default function AIReportExperience({ product, onPersisted }: Props) {
             type="button"
             onClick={() => void handleGenerate(false)}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl border border-indigo-300 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/40 bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#06B6D4] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <FileText size={15} />
+            <WandSparkles size={15} />
             Generate Report
           </button>
 
@@ -112,7 +116,7 @@ export default function AIReportExperience({ product, onPersisted }: Props) {
             type="button"
             onClick={() => void handleGenerate(true)}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RefreshCcw size={15} className={loading ? "animate-spin" : ""} />
             Regenerate
@@ -135,21 +139,36 @@ export default function AIReportExperience({ product, onPersisted }: Props) {
         ) : null}
 
         {!loading && !error ? (
-          <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-            <p className="font-semibold text-slate-900">What happens next</p>
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
+            <p className="inline-flex items-center gap-2 font-semibold text-slate-900">
+              <FileText size={16} className="text-violet-600" />
+              What happens next
+            </p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <motion.div
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-2xl border border-violet-200/60 bg-gradient-to-b from-violet-50/70 to-white p-4"
+              >
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 1</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">TrendPilot checks whether this product already has a saved report for your account.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-2xl border border-cyan-200/60 bg-gradient-to-b from-cyan-50/70 to-white p-4"
+              >
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 2</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">If none exists, OpenAI generates one structured report which is validated and stored in Supabase.</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-2xl border border-emerald-200/60 bg-gradient-to-b from-emerald-50/70 to-white p-4"
+              >
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Step 3</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">The saved report opens on its own page and becomes available in your report history immediately.</p>
-              </div>
+              </motion.div>
             </div>
           </div>
         ) : null}

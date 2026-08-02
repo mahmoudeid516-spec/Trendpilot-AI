@@ -56,11 +56,14 @@ export default function LoginClientPage({ toastMessage = "", redirectTo = "/dash
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white rounded-3xl shadow-xl p-10 w-full max-w-md text-slate-900">
-        <h1 className="text-3xl font-bold mb-8 text-center text-slate-900">
-          Login
+    <main className="flex min-h-screen items-center justify-center bg-transparent px-4 py-10">
+      <div className="w-full max-w-md rounded-3xl border border-white/80 bg-white/90 p-10 text-slate-900 shadow-[0_32px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <h1 className="mb-2 text-center text-3xl font-black tracking-tight text-slate-900">
+          Welcome Back
         </h1>
+        <p className="mb-8 text-center text-sm text-slate-600">
+          Sign in to access your AI workspace.
+        </p>
         {toastMessage ? (
           <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
             {toastMessage}
@@ -76,7 +79,7 @@ export default function LoginClientPage({ toastMessage = "", redirectTo = "/dash
               type="email"
               placeholder="Email"
               autoComplete="email"
-              className="w-full rounded-xl border border-slate-300 bg-white p-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+              className="w-full rounded-xl border border-slate-300 bg-white p-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -91,7 +94,7 @@ export default function LoginClientPage({ toastMessage = "", redirectTo = "/dash
               type="password"
               placeholder="Password"
               autoComplete="current-password"
-              className="w-full rounded-xl border border-slate-300 bg-white p-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+              className="w-full rounded-xl border border-slate-300 bg-white p-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -104,7 +107,7 @@ export default function LoginClientPage({ toastMessage = "", redirectTo = "/dash
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl p-4 disabled:opacity-50"
+            className="w-full rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] p-4 font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 disabled:opacity-50"
           >
             {loading ? "Signing In..." : "Login"}
           </button>

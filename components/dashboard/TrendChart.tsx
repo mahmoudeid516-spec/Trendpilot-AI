@@ -23,13 +23,13 @@ const data = [
 
 export default function TrendChart() {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-[32px] border border-white/70 bg-white/88 p-6 shadow-[0_24px_65px_-45px_rgba(15,23,42,0.35)] backdrop-blur-xl">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="inline-flex items-center gap-2 text-2xl font-semibold tracking-tight text-slate-900">
+        <h2 className="inline-flex items-center gap-2 text-2xl font-black tracking-tight text-slate-900">
           <TrendingUp className="h-5 w-5 text-indigo-500" />
           Product Trend
         </h2>
-        <span className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-700">
+        <span className="rounded-full border border-indigo-100 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-700 shadow-sm">
           7 day signal
         </span>
       </div>
@@ -45,9 +45,10 @@ export default function TrendChart() {
           <Tooltip
             contentStyle={{
               background: "#FFFFFF",
-              border: "1px solid rgba(148,163,184,0.35)",
+              border: "1px solid rgba(148,163,184,0.32)",
               borderRadius: "12px",
               color: "#0F172A",
+              boxShadow: "0 14px 32px -20px rgba(15,23,42,0.45)",
             }}
           />
 

@@ -41,8 +41,8 @@ export default function ProGate({ children }: Props) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
-        <p className="text-gray-500">
+      <div className="mt-8 rounded-3xl border border-white/70 bg-white/88 p-8 text-slate-700 shadow-[0_24px_65px_-45px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+        <p className="text-sm font-medium text-slate-600">
           Checking your subscription...
         </p>
       </div>
@@ -51,13 +51,13 @@ export default function ProGate({ children }: Props) {
 
   if (plan !== "Pro" && plan !== "Premium") {
     return (
-      <div className="bg-gradient-to-r from-purple-700 to-indigo-700 rounded-3xl text-white p-10 mt-8">
+      <div className="mt-8 rounded-3xl border border-violet-300/30 bg-gradient-to-r from-[#7C3AED] via-[#8B5CF6] to-[#06B6D4] p-10 text-white shadow-[0_30px_90px_-40px_rgba(124,58,237,0.75)]">
 
-        <h2 className="text-3xl font-bold">
+        <h2 className="text-3xl font-black tracking-tight">
           🔒 Pro Feature
         </h2>
 
-        <p className="mt-4 text-purple-100">
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-white/90">
           Upgrade to Pro to unlock AI Analyzer,
           Product Research, AI Marketing,
           Sales Forecast and all premium tools.
@@ -65,7 +65,7 @@ export default function ProGate({ children }: Props) {
 
         <Link
           href="/"
-          className="inline-block mt-8 bg-white text-purple-700 px-8 py-4 rounded-xl font-bold"
+          className="mt-8 inline-block rounded-2xl bg-white px-8 py-3 text-sm font-bold text-violet-700 shadow-lg transition hover:-translate-y-0.5"
         >
           Upgrade to Pro
         </Link>

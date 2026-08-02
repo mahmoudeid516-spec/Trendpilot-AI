@@ -101,12 +101,12 @@ export default function DashboardHero() {
   return (
     <section>
       <motion.div
-        className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_24px_65px_-45px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_6%,rgba(99,102,241,0.09),transparent_30%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_6%,rgba(99,102,241,0.12),transparent_32%)]" />
 
         <div className="relative z-10 grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className="xl:col-span-8">
@@ -121,7 +121,7 @@ export default function DashboardHero() {
               </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
               {greeting}, {firstName}
             </h1>
 
@@ -130,7 +130,7 @@ export default function DashboardHero() {
             </p>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <article className="rounded-2xl border border-violet-100 bg-gradient-to-b from-violet-50/80 to-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Current plan</p>
                 <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
                   <Crown size={14} className="text-amber-500" />
@@ -138,7 +138,7 @@ export default function DashboardHero() {
                 </p>
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <article className="rounded-2xl border border-cyan-100 bg-gradient-to-b from-cyan-50/70 to-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Search quota</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">71%</p>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
@@ -146,13 +146,13 @@ export default function DashboardHero() {
                 </div>
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <article className="rounded-2xl border border-emerald-100 bg-gradient-to-b from-emerald-50/70 to-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">AI confidence</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">96%</p>
                 <p className="mt-1 text-xs text-emerald-700">Signal quality above benchmark</p>
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <article className="rounded-2xl border border-amber-100 bg-gradient-to-b from-amber-50/70 to-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Today</p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">{today}</p>
                 <p className="mt-1 text-xs text-slate-500">Peak demand window: 4pm to 10pm</p>
@@ -160,7 +160,7 @@ export default function DashboardHero() {
             </div>
 
             <div className="mt-6 grid gap-3 lg:grid-cols-2">
-              <article className="rounded-2xl border border-slate-200 bg-white p-4">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Today&apos;s insights</p>
                 <div className="mt-2 space-y-2 text-sm text-slate-700">
                   <p className="inline-flex items-center gap-2"><Dot className="h-4 w-4 text-indigo-500" /> Portable kitchen tools continue strong conversion.</p>
@@ -169,7 +169,7 @@ export default function DashboardHero() {
                 </div>
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-white p-4">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Quick actions</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {quickActions.map((item) => {
@@ -179,7 +179,7 @@ export default function DashboardHero() {
                       <button
                         key={item.label}
                         type="button"
-                        className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                        className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                       >
                         <Icon size={13} />
                         {item.label}
@@ -192,14 +192,14 @@ export default function DashboardHero() {
           </div>
 
           <div className="xl:col-span-4">
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Recent searches</p>
 
               {recentSearches.map((query) => (
                 <button
                   key={query}
                   type="button"
-                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <span className="line-clamp-1">{query}</span>
                   <Search className="h-4 w-4 shrink-0" />
@@ -213,7 +213,7 @@ export default function DashboardHero() {
 
               <button
                 type="button"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
               >
                 Open full insight feed
                 <ArrowUpRight size={14} />
@@ -221,12 +221,12 @@ export default function DashboardHero() {
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <article className="rounded-2xl border border-slate-200 bg-white p-4">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Opportunity score</p>
                 <p className="mt-1 text-2xl font-semibold text-slate-900">94</p>
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-white p-4">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Market radar</p>
                 <p className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
                   <Radar size={14} />
@@ -234,7 +234,7 @@ export default function DashboardHero() {
                 </p>
               </article>
 
-              <article className="col-span-2 rounded-2xl border border-slate-200 bg-white p-4">
+              <article className="col-span-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Today&apos;s opportunity</p>
                 <p className="mt-1 text-sm text-slate-700">
                   Portable blender category shows $22 average margin advantage with reduced ad CPM in US and UK this morning.

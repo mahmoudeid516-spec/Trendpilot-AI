@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { getReports } from "@/services/reports";
+import type { ReportHistoryItem } from "@/types/AIReport";
 import {
+  
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -15,7 +17,7 @@ import {
 } from "recharts";
 
 export default function AnalyticsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<ReportHistoryItem[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -48,15 +50,21 @@ export default function AnalyticsPage() {
           ) / totalReports
         );
 
-  const marketplaces = reports.reduce((acc: any, report: any) => {
-    acc[report.marketplace] = (acc[report.marketplace] || 0) + 1;
+  const marketplaces = reports.reduce<Record<string, number>>(
+  (acc, report) => {
+    const marketplace = report.marketplace ?? "Unknown";
+
+    acc[marketplace] = (acc[marketplace] ?? 0) + 1;
+
     return acc;
-  }, {});
+  },
+  {}
+);
 
   const bestMarketplace =
     Object.entries(marketplaces).sort(
-      (a: any, b: any) => Number(b[1]) - Number(a[1])
-    )[0]?.[0] ?? "-";
+  (a, b) => b[1] - a[1]
+)[0]?.[0] ?? "-";
 
   const barData = reports.map((report) => ({
     name: report.product_name?.slice(0, 12) || "Product",

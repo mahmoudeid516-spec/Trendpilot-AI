@@ -79,19 +79,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="min-h-screen bg-transparent text-slate-900">
       <div className="relative z-10 flex min-h-screen">
         <Sidebar />
 
-        <main className="flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1480px]">
-            <div className="grid grid-cols-12 gap-6">
+        <main className="flex-1 px-4 pb-14 pt-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1400px]">
+            <div className="grid grid-cols-12 gap-7">
               <div className="col-span-12">
                 <DashboardHero />
                 <div className="mt-4 flex justify-end">
                   <Link
                     href="/dashboard/billing"
-                    className="inline-flex items-center rounded-xl border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                    className="inline-flex items-center rounded-2xl border border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50"
                   >
                     Manage Billing
                   </Link>
@@ -114,13 +114,13 @@ export default function DashboardPage() {
                 <AICommandCenter />
               </div>
 
-              <section className="col-span-12 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <section className="col-span-12 rounded-[32px] border border-white/70 bg-white/80 p-5 shadow-[0_24px_65px_-45px_rgba(15,23,42,0.35)] backdrop-blur-xl sm:p-6">
                 <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                       Product Discovery
                     </p>
-                    <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
                       Winning Products Table
                     </h2>
                   </div>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={loadDummyProducts}
-                    className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                    className="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-700"
                   >
                     Import Demo Products
                   </button>
@@ -168,11 +168,13 @@ export default function DashboardPage() {
             </div>
 
             {showProductModal && selectedProduct && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
-                <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-3xl border border-slate-200 bg-slate-50 shadow-[0_40px_100px_-30px_rgba(0,0,0,0.85)]">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm sm:p-6">
+                <div className="relative max-h-[92vh] w-full max-w-[1400px] overflow-y-auto rounded-[32px] border border-white/60 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 shadow-[0_50px_120px_-45px_rgba(0,0,0,0.85)]">
                   <button
+                    type="button"
+                    aria-label="Close product insights modal"
                     onClick={() => setShowProductModal(false)}
-                    className="absolute right-6 top-5 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-2xl font-bold text-slate-500 transition hover:text-slate-900"
+                    className="absolute right-6 top-5 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/95 text-2xl font-bold text-slate-500 shadow-md transition hover:text-slate-900"
                   >
                     ×
                   </button>
