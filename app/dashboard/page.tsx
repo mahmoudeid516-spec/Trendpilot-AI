@@ -21,6 +21,7 @@ import MarketingKit from "../../components/dashboard/MarketingKit";
 import type { Product } from "../../components/dashboard/ProductsTable";
 import { importProducts } from "../../lib/importers/importProducts";
 import { dummyProducts } from "../../lib/importers/dummyProducts";
+import ProductAnalysisDrawer from "../../components/dashboard/ProductAnalysisDrawer";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -28,7 +29,6 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reportRefreshSignal, setReportRefreshSignal] = useState(0);
 
@@ -151,10 +151,7 @@ export default function DashboardPage() {
                   refreshKey={refreshKey}
                   search={search}
                   platform={platform}
-                  onSelectProduct={(product) => {
-                    setSelectedProduct(product);
-                    setShowProductModal(true);
-                  }}
+                  onSelectProduct={setSelectedProduct}
                 />
               </section>
 
@@ -167,27 +164,17 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {showProductModal && selectedProduct && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm sm:p-6">
-                <div className="relative max-h-[92vh] w-full max-w-[1400px] overflow-y-auto rounded-[32px] border border-white/60 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 shadow-[0_50px_120px_-45px_rgba(0,0,0,0.85)]">
-                  <button
-                    type="button"
-                    aria-label="Close product insights modal"
-                    onClick={() => setShowProductModal(false)}
-                    className="absolute right-6 top-5 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/95 text-2xl font-bold text-slate-500 shadow-md transition hover:text-slate-900"
-                  >
-                    ×
-                  </button>
+            <ProductAnalysisDrawer
+    product={selectedProduct}
+    onClose={() => setSelectedProduct(null)}
+    onReportGenerated={() =>
+        setReportRefreshSignal((prev) => prev + 1)
+    }
+/>
 
-                  <ProductDetails
-                    product={selectedProduct}
-                    onReportGenerated={() => setReportRefreshSignal((prev) => prev + 1)}
-                  />
-                  <AISalesForecast product={selectedProduct} />
-                  <MarketingKit productName={selectedProduct.name} />
-                </div>
-              </div>
-            )}
+<pre className="fixed bottom-5 left-5 z-[99999] rounded bg-black p-3 text-white">
+  {JSON.stringify(selectedProduct?.name)}
+</pre>
           </div>
         </main>
       </div>

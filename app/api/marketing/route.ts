@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { openai } from "../../../lib/openai";
+import { runOpenAIRequest } from "../../../lib/ai/openaiRequest";
 import {
   requirePlanOrThrow,
   requireUserIdOrThrow,
@@ -18,9 +19,10 @@ export async function POST(req: NextRequest) {
 
     const body = marketingSchema.parse(await req.json());
 
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: `
+    const response = await runOpenAIRequest(() =>
+      openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: `
 You are a professional e-commerce marketing expert.
 
 Create marketing content for this product:
@@ -38,7 +40,8 @@ Return ONLY valid JSON.
   "hashtags":""
 }
 `,
-    });
+      }),
+    );
 
     const text = response.output_text ?? "";
 

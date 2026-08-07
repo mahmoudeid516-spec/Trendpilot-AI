@@ -98,9 +98,17 @@ export async function handleGenerateReport(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[handleGenerateReport] Caught exception:", error);
-    return toErrorResponse(error);
+  console.error("========== REPORT ERROR ==========");
+  console.error(error);
+
+  if (error instanceof Error) {
+    console.error(error.stack);
   }
+
+  console.error("==================================");
+
+  return toErrorResponse(error);
+}
 }
 
 export async function handleListReports(req: NextRequest) {

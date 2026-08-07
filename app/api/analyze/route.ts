@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { openai } from "../../../lib/openai";
+import { runOpenAIRequest } from "../../../lib/ai/openaiRequest";
 import {
   requirePlanOrThrow,
   requireUserIdOrThrow,
@@ -18,9 +19,10 @@ export async function POST(req: NextRequest) {
 
     const body = analyzeSchema.parse(await req.json());
 
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: `
+    const response = await runOpenAIRequest(() =>
+      openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: `
 You are TrendPilot AI.
 
 You are an expert Shopify consultant, Amazon consultant, TikTok Shop expert and Meta Ads strategist.
@@ -83,7 +85,8 @@ High
 
 - Recommendation must be professional.
 `,
-    });
+      }),
+    );
 
     const text = response.output_text ?? "";
 

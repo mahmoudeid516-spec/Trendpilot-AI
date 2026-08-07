@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
+import { runOpenAIRequest } from "../../../lib/ai/openaiRequest";
 import {
   requirePlanOrThrow,
   requireUserIdOrThrow,
@@ -38,16 +39,18 @@ Generate:
 Return JSON only.
 `;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      response_format: { type: "json_object" },
-    });
+    const response = await runOpenAIRequest(() =>
+      openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    );
 
     const content = response.choices[0].message.content;
 

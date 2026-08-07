@@ -285,6 +285,8 @@ async function handleInvoiceEvent(invoice: Stripe.Invoice, eventType: string): P
 }
 
 export async function POST(req: NextRequest) {
+  console.log("🔥🔥🔥 WEBHOOK HIT");
+
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

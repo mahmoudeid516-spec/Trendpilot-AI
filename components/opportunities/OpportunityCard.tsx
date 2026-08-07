@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Compass, Rocket } from "lucide-react";
 import type { Opportunity } from "../../types/opportunity";
+import { supabase } from "../../lib/supabase";
 
 type Props = {
   product: Opportunity;
@@ -116,13 +117,45 @@ export default function OpportunityCard({ product }: Props) {
   View Details
 </Link>
           <button
-            type="button"
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:-translate-y-0.5 hover:shadow-xl"
-            aria-label={`Generate report for ${product.name}`}
-          >
-            <Rocket size={14} aria-hidden="true" />
-            Generate Report
-          </button>
+  type="button"
+  onClick={async () => {
+    try {
+      
+      const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+if (!session) {
+  alert("Please login first");
+  return;
+}
+      console.log("PRODUCT SENT TO REPORT:", product);
+      const response = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      },
+        body: JSON.stringify({ product }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate report");
+      }
+
+      const report = await response.json();
+      console.log(report);
+      window.location.href = `/dashboard/report/${report.reportId}`;
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate report");
+    }
+  }}
+  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:-translate-y-0.5 hover:shadow-xl"
+>
+  <Rocket size={14} />
+  Generate Report
+</button>
         </div>
       </div>
     </div>

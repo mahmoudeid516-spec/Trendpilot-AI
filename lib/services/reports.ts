@@ -33,8 +33,11 @@ async function getAccessToken(): Promise<string | null> {
   return session?.access_token || null;
 }
 
-async function authedFetch(input: string, init?: RequestInit): Promise<Response> {
+async function authedFetch(input: string, init?: RequestInit) {
   const token = await getAccessToken();
+
+  console.log("TOKEN:", token);
+
   const headers = new Headers(init?.headers);
   headers.set("Content-Type", "application/json");
 

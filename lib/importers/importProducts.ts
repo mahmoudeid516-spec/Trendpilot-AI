@@ -8,15 +8,15 @@ export async function importProducts(products: ProductLike[]) {
       .select("id")
       .eq("name", product.name)
       .eq("platform", product.platform)
-      .limit(1);
+      .maybeSingle();
 
-    if (existing && existing.length > 0) {
-      continue;
-    }
+    if (existing) {
+  continue;
+}
 
     const { error } = await supabase
       .from("products")
-      .insert(product);
+      .insert([product]);
 
     if (error) {
       return false;

@@ -34,9 +34,9 @@ export default function AICommandCenter() {
 
       const products = await productSearch(filters);
 
-      const scoredProducts = scoreProducts(products);
+      // const scoredProducts = scoreProducts(products);
 
-      setResults(scoredProducts);
+setResults(products);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Search failed. Please try again.");
     } finally {

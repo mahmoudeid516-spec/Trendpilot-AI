@@ -2,12 +2,17 @@ import { revalidateTag, unstable_cache } from "next/cache";
 import { ZodError } from "zod";
 import { openai } from "../openai";
 import { supabaseAdmin } from "../supabaseAdmin";
-import { buildReportPrompt, parseReportResponse } from "../ai/reportComposer";
+import {
+  buildReportPrompt,
+  parseReportResponse,
+} from "../ai/reportComposer";
+
 import {
   aiReportSchema,
   reportHistoryQuerySchema,
   reportProductInputSchema,
 } from "./schema";
+
 import type {
   GenerateReportResponse,
   ReportDetailResponse,
@@ -39,8 +44,14 @@ export class ReportServiceError extends Error {
   code: string;
   retryable: boolean;
 
-  constructor(message: string, status: number, code: string, retryable = false) {
+  constructor(
+    message: string,
+    status: number,
+    code: string,
+    retryable = false
+  ) {
     super(message);
+
     this.name = "ReportServiceError";
     this.status = status;
     this.code = code;
@@ -48,28 +59,32 @@ export class ReportServiceError extends Error {
   }
 }
 
-const REPORT_REQUEST_TIMEOUT_MS = 60_000;
+const REPORT_REQUEST_TIMEOUT_MS = 60000;
 const REPORT_MAX_ATTEMPTS = 3;
 
-function historyTag(userId: string): string {
+function historyTag(userId: string) {
   return `reports:${userId}`;
 }
 
-function detailTag(userId: string, reportId: number): string {
+function detailTag(userId: string, reportId: number) {
   return `report:${userId}:${reportId}`;
 }
 
-function normalizeMarketplace(product: ReportProductInput): string {
-  return product.marketplace?.trim() || product.platform?.trim() || "Unknown";
+function normalizeMarketplace(product: ReportProductInput) {
+  return (
+    product.marketplace?.trim() ||
+    product.platform?.trim() ||
+    "Unknown"
+  );
 }
 
-function sanitizeSearchTerm(query: string): string {
-  return query
-    .replace(/[,%'"()]/g, " ")
-    .trim();
+function sanitizeSearchTerm(query: string) {
+  return query.replace(/[,%'"()]/g, " ").trim();
 }
 
-function asStoredReportRecord(row: ReportRow): StoredReportRecord {
+function asStoredReportRecord(
+  row: ReportRow
+): StoredReportRecord {
   return {
     id: row.id,
     user_id: row.user_id,
@@ -84,7 +99,9 @@ function asStoredReportRecord(row: ReportRow): StoredReportRecord {
   };
 }
 
-function asReportHistoryItem(row: ReportRow): ReportHistoryItem {
+function asReportHistoryItem(
+  row: ReportRow
+): ReportHistoryItem {
   return {
     id: row.id,
     product_id: row.product_id,
@@ -97,13 +114,16 @@ function asReportHistoryItem(row: ReportRow): ReportHistoryItem {
   };
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+function delay(ms: number) {
+  return new Promise<void>((resolve) =>
+    setTimeout(resolve, ms)
+  );
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number
+): Promise<T> {
   let timeoutId: NodeJS.Timeout | undefined;
 
   try {
@@ -111,14 +131,19 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
       promise,
       new Promise<T>((_, reject) => {
         timeoutId = setTimeout(() => {
-          reject(new ReportServiceError("OpenAI request timed out.", 504, "openai_timeout", true));
+          reject(
+            new ReportServiceError(
+              "OpenAI request timed out.",
+              504,
+              "openai_timeout",
+              true
+            )
+          );
         }, timeoutMs);
       }),
     ]);
   } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
@@ -128,40 +153,75 @@ function mapOpenAIError(error: unknown): ReportServiceError {
   }
 
   if (error instanceof ZodError) {
-  console.error("========== ZOD VALIDATION ERROR ==========");
-  console.error(JSON.stringify(error.issues, null, 2));
-  console.error("==========================================");
+    console.error(error.issues);
+
+    return new ReportServiceError(
+      "Invalid JSON returned by OpenAI.",
+      502,
+      "invalid_json"
+    );
+  }
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : "AI report generation failed.";
+
+  const lowered = message.toLowerCase();
+
+  if (
+    lowered.includes("invalid json") ||
+    lowered.includes("invalid report structure")
+  ) {
+    return new ReportServiceError(
+      "Invalid report JSON.",
+      502,
+      "invalid_json",
+      true
+    );
+  }
+
+  if (
+    lowered.includes("rate limit") ||
+    lowered.includes("429")
+  ) {
+    return new ReportServiceError(
+      "Rate limited.",
+      429,
+      "rate_limited",
+      true
+    );
+  }
+
+  if (
+    lowered.includes("timeout") ||
+    lowered.includes("timed out")
+  ) {
+    return new ReportServiceError(
+      "OpenAI timeout.",
+      504,
+      "openai_timeout",
+      true
+    );
+  }
 
   return new ReportServiceError(
-    JSON.stringify(error.issues, null, 2),
+    message,
     502,
-    "invalid_json",
-    false
+    "openai_failure"
   );
 }
 
-  const message = error instanceof Error ? error.message : "AI report generation failed.";
-  const lowered = message.toLowerCase();
-
-  if (lowered.includes("invalid json") || lowered.includes("invalid report structure")) {
-    return new ReportServiceError("OpenAI returned an invalid report structure.", 502, "invalid_json", true);
-  }
-
-  if (lowered.includes("rate limit") || lowered.includes("429")) {
-    return new ReportServiceError("Rate limit reached while generating the report.", 429, "rate_limited", true);
-  }
-
-  if (lowered.includes("timeout") || lowered.includes("timed out") || lowered.includes("etimedout")) {
-    return new ReportServiceError("OpenAI request timed out.", 504, "openai_timeout", true);
-  }
-
-  return new ReportServiceError(message, 502, "openai_failure", false);
-}
-
-async function requestAIReport(product: ReportProductInput) {
+async function requestAIReport(
+  product: ReportProductInput
+) {
   let lastError: ReportServiceError | null = null;
 
-  for (let attempt = 1; attempt <= REPORT_MAX_ATTEMPTS; attempt += 1) {
+  for (
+    let attempt = 1;
+    attempt <= REPORT_MAX_ATTEMPTS;
+    attempt++
+  ) {
     try {
       const completion = await withTimeout(
         openai.chat.completions.create({
@@ -172,50 +232,71 @@ async function requestAIReport(product: ReportProductInput) {
               content: buildReportPrompt(product),
             },
           ],
-          response_format: { type: "json_object" },
+          response_format: {
+            type: "json_object",
+          },
         }),
-        REPORT_REQUEST_TIMEOUT_MS,
+        REPORT_REQUEST_TIMEOUT_MS
       );
 
-      const content = completion.choices?.[0]?.message?.content;
+      const content =
+        completion.choices?.[0]?.message?.content;
 
-if (!content?.trim()) {
-    throw new ReportServiceError(
-        "OpenAI returned an empty response.",
-        502,
-        "empty_response",
-        true
-    );
-}
+        console.log("=========== OPENAI RAW RESPONSE ===========");
+console.log(content);
+console.log("===========================================");
 
-      if (!content) {
-        throw new ReportServiceError("OpenAI returned an empty report payload.", 502, "empty_response", true);
+      if (!content?.trim()) {
+        throw new ReportServiceError(
+          "OpenAI returned empty response.",
+          502,
+          "empty_response",
+          true
+        );
       }
 
-      return parseReportResponse(content, product);
-    } catch (error) {
-      const mappedError = mapOpenAIError(error);
-      lastError = mappedError;
+      try {
+  return parseReportResponse(content, product);
+} catch (e) {
+  console.log("RAW CONTENT:");
+  console.log(content);
 
-      if (!mappedError.retryable || attempt === REPORT_MAX_ATTEMPTS) {
-        throw mappedError;
+  throw e;
+}
+    } catch (error) {
+      const mapped = mapOpenAIError(error);
+
+      lastError = mapped;
+
+      if (
+        !mapped.retryable ||
+        attempt === REPORT_MAX_ATTEMPTS
+      ) {
+        throw mapped;
       }
 
       await delay(400 * attempt);
     }
   }
 
-  throw lastError ?? new ReportServiceError("AI report generation failed.", 502, "openai_failure", false);
+  throw lastError!;
 }
 
-async function findExistingReport(userId: string, product: ReportProductInput): Promise<StoredReportRecord | null> {
+async function findExistingReport(
+  userId: string,
+  product: ReportProductInput
+): Promise<StoredReportRecord | null> {
   let query = supabaseAdmin
     .from("reports")
-    .select("id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at")
+    .select(
+      "id,user_id,product_id,product_name,marketplace,report_json,opportunity_score,confidence_score,created_at,updated_at"
+    )
     .eq("user_id", userId)
     .eq("product_name", product.name)
     .eq("marketplace", normalizeMarketplace(product))
-    .order("created_at", { ascending: false })
+    .order("created_at", {
+      ascending: false,
+    })
     .limit(1);
 
   if (product.id) {
@@ -224,12 +305,9 @@ async function findExistingReport(userId: string, product: ReportProductInput): 
 
   const { data, error } = await query;
 
-if (error) {
-  console.error("SUPABASE ERROR:", error);
-  throw error;
-}
+  if (error) throw error;
 
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     return null;
   }
 
@@ -239,40 +317,41 @@ if (error) {
 async function insertReport(
   userId: string,
   product: ReportProductInput,
-  report: GenerateReportResponse["report"],
+  report: GenerateReportResponse["report"]
 ): Promise<StoredReportRecord> {
   const { data, error } = await supabaseAdmin
-    .from("reports")
-    .insert({
-  user_id: userId,
-  product_id: product.id ?? null,
-  product_name: report.product_name,
-  marketplace: report.marketplace,
+  .from("reports")
+  .insert({
+    user_id: userId,
+    product_id: product.id ?? null,
 
-  report: report,
-  report_json: report,
+    product_name: report.product_name,
 
-  opportunity_score: report.opportunity_score,
-  confidence_score: report.confidence_score,
-})
+    platform: report.marketplace,
+    marketplace: report.marketplace,
+
+    report: report,
+    report_json: report,
+
+    opportunity_score: report.opportunity_score,
+    confidence_score: report.confidence_score,
+    ai_score: report.ai_score ?? 0,
+  })
     .select(
-      "id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at"
+      "id,user_id,product_id,product_name,marketplace,report_json,opportunity_score,confidence_score,created_at,updated_at"
     )
     .single<ReportRow>();
 
-  if (error || !data) {
-    console.error("========== SUPABASE INSERT ERROR ==========");
-    console.error(error);
-    console.error(data);
-    console.error("==========================================");
+  console.log("INSERT DATA:", data);
+  console.log("INSERT ERROR:", error);
 
+  if (error || !data) {
     throw new ReportServiceError(
-        error?.message ?? "Failed to save the generated report.",
-        500,
-        "supabase_insert",
-        false
+      error?.message ?? "Failed to insert report.",
+      500,
+      "supabase_insert"
     );
-}
+  }
 
   return asStoredReportRecord(data);
 }
@@ -280,25 +359,41 @@ async function insertReport(
 async function updateReport(
   existingId: number,
   userId: string,
-  report: GenerateReportResponse["report"],
+  report: GenerateReportResponse["report"]
 ): Promise<StoredReportRecord> {
   const { data, error } = await supabaseAdmin
     .from("reports")
     .update({
-      report_json: report,
-      product_name: report.product_name,
-      marketplace: report.marketplace,
-      opportunity_score: report.opportunity_score,
-      confidence_score: report.confidence_score,
-      updated_at: new Date().toISOString(),
-    })
+  report: report,
+  report_json: report,
+
+  product_name: report.product_name,
+
+  platform: report.marketplace,
+  marketplace: report.marketplace,
+
+  opportunity_score: report.opportunity_score,
+  confidence_score: report.confidence_score,
+  ai_score: report.ai_score ?? 0,
+
+  updated_at: new Date().toISOString(),
+})
     .eq("id", existingId)
     .eq("user_id", userId)
-    .select("id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at")
+    .select(
+      "id,user_id,product_id,product_name,marketplace,report_json,opportunity_score,confidence_score,created_at,updated_at"
+    )
     .single<ReportRow>();
 
+  console.log("UPDATE DATA:", data);
+  console.log("UPDATE ERROR:", error);
+
   if (error || !data) {
-    throw new ReportServiceError("Failed to update the existing report.", 500, "supabase_update", false);
+    throw new ReportServiceError(
+      error?.message ?? "Failed to update report.",
+      500,
+      "supabase_update"
+    );
   }
 
   return asStoredReportRecord(data);
@@ -307,12 +402,19 @@ async function updateReport(
 export async function generateOrReuseReport(
   userId: string,
   input: ReportProductInput,
-  options: GenerateReportOptions = {},
+  options: GenerateReportOptions = {}
 ): Promise<GenerateReportResponse> {
+  console.log("=== generateOrReuseReport CALLED ===");
   const product = reportProductInputSchema.parse(input);
+
   const existing = await findExistingReport(userId, product);
 
+  console.log("EXISTING REPORT:", existing);
+  console.log("FORCE REGENERATE:", options.forceRegenerate);
+
   if (existing && !options.forceRegenerate) {
+    console.log("Returning existing report.");
+
     return {
       reportId: existing.id,
       report: existing.report_json,
@@ -321,9 +423,13 @@ export async function generateOrReuseReport(
   }
 
   const report = await requestAIReport(product);
-  const stored = existing && options.forceRegenerate
-    ? await updateReport(existing.id, userId, report)
-    : await insertReport(userId, product, report);
+
+  const stored =
+    existing && options.forceRegenerate
+      ? await updateReport(existing.id, userId, report)
+      : await insertReport(userId, product, report);
+
+  console.log("STORED REPORT:", stored);
 
   revalidateTag(historyTag(userId), "max");
   revalidateTag(detailTag(userId, stored.id), "max");
@@ -337,7 +443,11 @@ export async function generateOrReuseReport(
 
 export async function listStoredReports(
   userId: string,
-  input: { query?: string; page?: number; pageSize?: number },
+  input: {
+    query?: string;
+    page?: number;
+    pageSize?: number;
+  }
 ): Promise<ReportHistoryResponse> {
   const parsed = reportHistoryQuerySchema.parse({
     query: input.query,
@@ -347,67 +457,90 @@ export async function listStoredReports(
 
   const from = (parsed.page - 1) * parsed.pageSize;
   const to = from + parsed.pageSize - 1;
+
   let query = supabaseAdmin
     .from("reports")
-    .select("id, user_id, product_id, product_name, marketplace, platform, report_json, opportunity_score, confidence_score, created_at, updated_at")
+    .select(
+      "id,user_id,product_id,product_name,marketplace,report_json,opportunity_score,confidence_score,created_at,updated_at",
+      { count: "exact" }
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (parsed.query) {
     const term = sanitizeSearchTerm(parsed.query);
+
     if (term) {
-      query = query.or(`product_name.ilike.%${term}%,marketplace.ilike.%${term}%`);
+      query = query.or(
+        `product_name.ilike.%${term}%,marketplace.ilike.%${term}%`
+      );
     }
   }
 
   const { data, count, error } = await query;
 
   if (error) {
-    throw new ReportServiceError("Failed to load report history.", 500, "supabase_history", false);
+    throw new ReportServiceError(
+      error.message,
+      500,
+      "supabase_history"
+    );
   }
 
-  const rows = (data ?? []) as ReportRow[];
-
   return {
-    reports: rows.map(asReportHistoryItem),
+    reports: (data ?? []).map((row) =>
+      asReportHistoryItem(row as ReportRow)
+    ),
     total: count ?? 0,
     page: parsed.page,
     pageSize: parsed.pageSize,
   };
 }
 
-export async function getStoredReportById(userId: string, reportId: number): Promise<ReportDetailResponse> {
+export async function getStoredReportById(
+  userId: string,
+  reportId: number
+): Promise<ReportDetailResponse> {
   const loadReport = unstable_cache(
     async () => {
       const { data, error } = await supabaseAdmin
         .from("reports")
-        .select("id, user_id, product_id, product_name, marketplace, report_json, opportunity_score, confidence_score, created_at, updated_at")
+        .select(
+          "id,user_id,product_id,product_name,marketplace,report_json,opportunity_score,confidence_score,created_at,updated_at"
+        )
         .eq("id", reportId)
         .eq("user_id", userId)
-        .single()
+        .single();
 
       if (error) {
-    throw error;
-}
+        throw error;
+      }
 
-if (!data) {
-    return null;
-}
+      if (!data) {
+        return null;
+      }
 
-      return asStoredReportRecord(data);
+      return asStoredReportRecord(data as ReportRow);
     },
     ["report-detail", userId, String(reportId)],
     {
       revalidate: 300,
-      tags: [detailTag(userId, reportId), historyTag(userId)],
-    },
+      tags: [
+        detailTag(userId, reportId),
+        historyTag(userId),
+      ],
+    }
   );
 
   const stored = await loadReport();
 
   if (!stored) {
-    throw new ReportServiceError("Report not found.", 404, "report_not_found", false);
+    throw new ReportServiceError(
+      "Report not found.",
+      404,
+      "report_not_found"
+    );
   }
 
   return {
@@ -426,7 +559,10 @@ if (!data) {
   };
 }
 
-export async function deleteStoredReport(userId: string, reportId: number): Promise<void> {
+export async function deleteStoredReport(
+  userId: string,
+  reportId: number
+): Promise<void> {
   const { error } = await supabaseAdmin
     .from("reports")
     .delete()
@@ -434,7 +570,11 @@ export async function deleteStoredReport(userId: string, reportId: number): Prom
     .eq("user_id", userId);
 
   if (error) {
-    throw new ReportServiceError("Failed to delete the report.", 500, "supabase_delete", false);
+    throw new ReportServiceError(
+      error.message,
+      500,
+      "supabase_delete"
+    );
   }
 
   revalidateTag(historyTag(userId), "max");

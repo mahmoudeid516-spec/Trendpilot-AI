@@ -28,18 +28,47 @@ function extractJsonObject(inputText: string): unknown {
 
 export function parseReportResponse(inputText: string, product: ReportProductInput): AIReport {
   const parsed = extractJsonObject(inputText) as AIReport;
+  (parsed as any).ai_score ??=
+    product.ai_score ??
+    product.trend_score ??
+    50;
   const normalizedGeneratedAt = new Date(parsed.generated_at).toISOString();
   const marketplace = normalizeMarketplace(product, parsed.marketplace);
-  const estimatedCogs = Math.max(0, toNumber(product.buy_price, parsed.profit_estimation.estimated_cogs));
-  const suggestedSellingPrice = Math.max(
-    estimatedCogs + 1,
-    toNumber(product.selling_price, parsed.profit_estimation.suggested_selling_price),
-  );
-  const grossProfitPerUnit = Math.max(0, suggestedSellingPrice - estimatedCogs);
-  const grossMarginPercent = Math.max(
-    0,
-    Math.min(100, Math.round((grossProfitPerUnit / suggestedSellingPrice) * 100)),
-  );
+  const hasBuyPrice =
+  product.buy_price !== undefined &&
+  product.buy_price > 0;
+
+const hasSellingPrice =
+  product.selling_price !== undefined &&
+  product.selling_price > 0;
+
+const hasPricing = hasBuyPrice && hasSellingPrice;
+
+const estimatedCogs = hasBuyPrice
+  ? product.buy_price!
+  : Math.max(
+      0,
+      toNumber(product.buy_price, parsed.profit_estimation.estimated_cogs)
+    );
+
+const suggestedSellingPrice = hasSellingPrice
+  ? product.selling_price!
+  : Math.max(
+      estimatedCogs + 1,
+      toNumber(
+        product.selling_price,
+        parsed.profit_estimation.suggested_selling_price
+      )
+    );
+
+const grossProfitPerUnit = hasPricing
+  ? Math.max(0, suggestedSellingPrice - estimatedCogs)
+  : 0;
+
+const grossMarginPercent =
+  hasPricing && suggestedSellingPrice > 0
+    ? Math.round((grossProfitPerUnit / suggestedSellingPrice) * 100)
+    : 0;
 
  const normalizedReport = {
   ...parsed,
@@ -47,15 +76,34 @@ export function parseReportResponse(inputText: string, product: ReportProductInp
   product_name: product.name.trim(),
   marketplace,
   profit_estimation: {
-    ...parsed.profit_estimation,
-    estimated_cogs: estimatedCogs,
-    suggested_selling_price: suggestedSellingPrice,
-    gross_profit_per_unit: grossProfitPerUnit,
-    gross_margin_percent: grossMarginPercent,
-  },
-};
+  ...parsed.profit_estimation,
 
-return aiReportSchema.parse(normalizedReport);
+  estimated_cogs: estimatedCogs,
+
+  suggested_selling_price: suggestedSellingPrice,
+
+  gross_profit_per_unit: grossProfitPerUnit,
+
+  gross_margin_percent: grossMarginPercent,
+
+  break_even_units: hasPricing
+    ? parsed.profit_estimation.break_even_units
+    : 1,
+},
+};
+normalizedReport.profit_estimation.break_even_units =
+  Math.max(
+    1,
+    Number(normalizedReport.profit_estimation.break_even_units) || 1
+  );
+
+normalizedReport.ai_score =
+  normalizedReport.ai_score ??
+  product.ai_score ??
+  product.trend_score ??
+  50;
+
+  return aiReportSchema.parse(normalizedReport);
 }
 
 export function buildReportPrompt(product: ReportProductInput): string {
@@ -77,6 +125,13 @@ Critical operating rules:
 5) Keep all scores internally consistent with the analysis and profit math.
 6) Output must remain commercially useful, specific, and execution-oriented.
 7) Output JSON only. No markdown, no commentary, no code fences.
+8) If buy_price or selling_price is missing, undefined, or equal to 0:
+- Do NOT estimate profit margins from assumptions.
+- gross_margin_percent must be 0.
+- gross_profit_per_unit must be 0.
+- break_even_units must be 1.
+- pricing_strategy must clearly state that accurate pricing cannot be determined because pricing data is unavailable.
+- executive_summary and business_verdict must mention that missing pricing data lowers confidence.
 
 Provided product context (single source of truth):
 - Product name: ${product.name}
@@ -85,10 +140,20 @@ Provided product context (single source of truth):
 - Country: ${product.country?.trim() || "Worldwide"}
 - Buy price: ${toNumber(product.buy_price, 0)}
 - Selling price: ${toNumber(product.selling_price, 0)}
-- Profit per unit: ${toNumber(product.profit, 0)}
-- AI score seed: ${toNumber(product.ai_score, 0)}
-- Trend score seed: ${toNumber(product.trend_score, 0)}
-- Competition seed: ${(product.competition || "Medium").toString()}
+- Estimated profit: ${toNumber(product.profit, 0)}
+
+- Opportunity Score: ${toNumber(product.ai_score, 0)}
+- Trend Score: ${toNumber(product.trend_score, 0)}
+- Confidence Score: ${toNumber(product.ai_score, 0)}
+
+- Competition: ${(product.competition || "Medium").toString()}
+
+- Rating: ${toNumber(product.rating, 0)}
+- Reviews: ${toNumber(product.reviews, 0)}
+- Monthly Sales: ${toNumber(product.sales, 0)}
+
+- Amazon Choice: ${product.isAmazonChoice ? "YES" : "NO"}
+- Best Seller: ${product.isBestSeller ? "YES" : "NO"}
 - Product description: ${product.description?.trim() || "Not provided"}
 - AI reasoning context: ${product.ai_reason?.trim() || "Not provided"}
 

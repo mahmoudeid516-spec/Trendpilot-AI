@@ -10,8 +10,10 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
-  }, [error]);
+  console.error("ERROR:", error);
+  console.error("MESSAGE:", error.message);
+  console.error("STACK:", error.stack);
+}, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

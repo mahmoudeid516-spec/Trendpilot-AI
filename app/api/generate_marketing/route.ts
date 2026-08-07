@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { openai } from "../../../lib/openai";
+import { runOpenAIRequest } from "../../../lib/ai/openaiRequest";
 import {
   requirePlanOrThrow,
   requireUserIdOrThrow,
@@ -59,10 +60,12 @@ Generate:
 Return beautiful markdown.
 `;
 
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
-    });
+    const response = await runOpenAIRequest(() =>
+      openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: prompt,
+      }),
+    );
 
     return NextResponse.json({
       marketing: response.output_text ?? "",

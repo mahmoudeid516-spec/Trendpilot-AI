@@ -15,6 +15,14 @@ export interface ReportProductInput {
   competition?: CompetitionLevel | string;
   description?: string;
   ai_reason?: string;
+  confidence?: number;
+  rating?: number;
+  reviews?: number;
+  sales?: number;
+
+  isAmazonChoice?: boolean;
+  isBestSeller?: boolean;
+
   image?: string;
   supplier?: string;
   supplier_url?: string;
@@ -91,6 +99,7 @@ export interface ReportEvidence {
 }
 
 export interface AIReport {
+  ai_score: number;
   generated_at: string;
   product_name: string;
   marketplace: string;

@@ -1,3 +1,4 @@
+import { calculateScores } from "./ai/scoringEngine";
 
 export interface DiscoveredProductInput {
     id?: number;
@@ -31,6 +32,7 @@ export interface DiscoveredProductInput {
     success_probability?: number;
     trend_stage?: string;
     market_saturation?: string;
+    ai_verdict?: string;
 }
 
 function asObject(value: unknown): Record<string, unknown> {
@@ -291,6 +293,35 @@ function normalizeOne(raw: unknown, index: number): DiscoveredProductInput {
     `Discovered Product ${index + 1}`;
   const name = normalizeTitle(rawName);
 
+  const blockedBrands = [
+  "Apple",
+  "Samsung",
+  "Sony",
+  "LG",
+  "Ninja",
+  "Philips",
+  "Bosch",
+  "Dyson",
+  "KitchenAid",
+  "Dell",
+  "HP",
+  "Lenovo",
+  "Canon",
+  "Epson",
+  "Microsoft",
+  "Logitech",
+  "Bose",
+  "JBL",
+];
+
+if (
+  blockedBrands.some((brand) =>
+    name.toLowerCase().startsWith(brand.toLowerCase())
+  )
+) {
+  return null as any;
+}
+
   const image = pickString(obj, [
     "image_url",
     "image",
@@ -321,15 +352,49 @@ function normalizeOne(raw: unknown, index: number): DiscoveredProductInput {
       "offerPrice",
     ]);
 
-  const buyPrice = pickNumber(obj, [
-    "buy_price",
-    "buyPrice",
-    "cost",
-    "costPrice",
-    "wholesalePrice",
-  ]);
+  let buyPrice = pickNumber(obj, [
+  "buy_price",
+  "buyPrice",
+  "cost",
+  "costPrice",
+  "wholesalePrice",
+]);
 
-  const profit = pickNumber(obj, ["profit", "estimated_profit", "estimatedProfit"]);
+// Estimate supplier cost if missing
+if (
+  buyPrice === undefined &&
+  sellingPrice !== undefined
+) {
+  if (sellingPrice < 20) {
+    buyPrice = sellingPrice * 0.55;
+  } else if (sellingPrice < 50) {
+    buyPrice = sellingPrice * 0.45;
+  } else {
+    buyPrice = sellingPrice * 0.35;
+  }
+
+  buyPrice = Number(buyPrice.toFixed(2));
+}
+
+
+let profit = pickNumber(obj, [
+  "profit",
+  "estimated_profit",
+  "estimatedProfit",
+]);
+
+if (
+  profit === undefined &&
+  buyPrice !== undefined &&
+  sellingPrice !== undefined
+) {
+  profit = Number(
+    (sellingPrice - buyPrice).toFixed(2)
+  );
+}
+  (sellingPrice && buyPrice
+    ? Math.round(sellingPrice - buyPrice)
+    : 0);
 
   const ratingValue =
     pickNestedNumber(obj, [["rating", "value"], ["rating", "rating_value"], ["rating", "average"]]) ??
@@ -352,40 +417,30 @@ function normalizeOne(raw: unknown, index: number): DiscoveredProductInput {
   const isBestSeller = parseBoolean(obj["is_best_seller"]) ?? false;
   const deliveryInfo = pickString(obj, ["delivery_info"]);
 
-  const derivedAiScore = computeDerivedAiScore(
-    ratingValue,
-    ratingVotes,
+  const scores = calculateScores({
+    sellingPrice,
+    buyPrice,
+    profit,
+
+    rating: ratingValue,
+    reviews: ratingVotes,
+    sales: salesFromBoughtPastMonth,
+
     isAmazonChoice,
-    isBestSeller
-  );
-
-  const derivedTrendScore = computeDerivedTrendScore(
-    salesFromBoughtPastMonth,
-    ratingVotes,
-    isBestSeller
-  );
-
-  const aiScore =
-    pickNumber(obj, ["ai_score", "aiScore"]) ??
-    derivedAiScore;
-
-  const trendScore =
-    pickNumber(obj, ["trend_score", "trendScore", "trend"]) ??
-    derivedTrendScore;
-
-  const opportunityScore =
-    pickNumber(obj, ["opportunity_score", "opportunityScore", "score"]) ??
-    computeDerivedOpportunityScore(
-      aiScore,
-      trendScore,
-      sellingPrice,
-      ratingVotes,
-      isAmazonChoice,
-      isBestSeller
-    );
+    isBestSeller,
+});
 
   const successProbability =
     ratingValue !== undefined ? Math.min(99, Math.max(0, ratingValue * 20)) : undefined;
+
+  const aiVerdict =
+    scores.aiScore >= 90
+      ? "Excellent Opportunity"
+      : scores.aiScore >= 80
+      ? "Strong Buy"
+      : scores.aiScore >= 70
+      ? "Worth Testing"
+      : "High Risk";
 
   const normalizedId =
     pickNumber(obj, ["id", "productId", "product_id"]) ??
@@ -403,23 +458,30 @@ function normalizeOne(raw: unknown, index: number): DiscoveredProductInput {
     selling_price: sellingPrice,
     profit,
     rating: ratingValue,
-
+  
 is_amazon_choice: isAmazonChoice,
 
 is_best_seller: isBestSeller,
-    trend_score: trendScore,
-    opportunity_score: opportunityScore,
-    ai_score: aiScore,
+    trend_score:
+      pickNumber(obj, ["trend_score", "trendScore", "trend"]) ??
+      scores.trendScore,
+    opportunity_score:
+      pickNumber(obj, ["opportunity_score", "opportunityScore", "score"]) ??
+      scores.opportunityScore,
+   ai_score:
+    pickNumber(obj, ["ai_score", "aiScore"]) ??
+    scores.aiScore,
     reviews: ratingVotes,
     sales:
       pickNumber(obj, ["sales", "orders", "sold", "monthlySales"]) ??
       salesFromBoughtPastMonth,
     competition:
-      pickString(obj, ["competition", "saturation", "market_saturation"]) ??
-      (isBestSeller ? "High" : undefined),
+    pickString(obj, ["competition", "saturation", "market_saturation"]) ??
+    scores.competition,
     success_probability:
-      pickNumber(obj, ["success_probability", "successProbability"]) ??
-      successProbability,
+    pickNumber(obj, ["success_probability", "successProbability"]) ??
+    scores.successProbability,
+    ai_verdict: aiVerdict,
     trend_stage:
       pickString(obj, ["trend_stage", "trendStage"]) ??
       inferTrendStage(
@@ -429,8 +491,8 @@ is_best_seller: isBestSeller,
         deliveryInfo
       ),
     market_saturation:
-      pickString(obj, ["market_saturation", "marketSaturation"]) ??
-      (isBestSeller ? "High" : undefined),
+    pickString(obj, ["market_saturation", "marketSaturation"]) ??
+    scores.marketSaturation,
   };
 }
 
@@ -466,7 +528,9 @@ export function normalizeDiscoverProducts(
     }
   }
 
-  return items.map((item, index) =>
-    normalizeOne(item, index)
+  return items
+  .map((item, index) => normalizeOne(item, index))
+  .filter(
+    (item): item is DiscoveredProductInput => item !== null
   );
 }

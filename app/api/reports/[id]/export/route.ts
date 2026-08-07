@@ -8,7 +8,13 @@ function parseReportId(id: string): number | NextResponse {
   const reportId = Number(id);
 
   if (!Number.isInteger(reportId) || reportId <= 0) {
-    return NextResponse.json({ error: "Invalid report id." }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: "Invalid report id.",
+        code: "invalid_report_id",
+      },
+      { status: 400 },
+    );
   }
 
   return reportId;

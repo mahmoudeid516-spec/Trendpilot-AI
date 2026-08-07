@@ -1,9 +1,8 @@
 "use client";
-
+import { getRecommendation } from "@/lib/ai/recommendationEngine";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { supabase } from "../../lib/supabase";
 import {
   Bot,
   ChevronLeft,
@@ -25,9 +24,9 @@ export type Product = {
   platform: string;
   ai_score: number;
   trend_score: number;
-  profit: number;
-  buy_price: number;
-  selling_price: number;
+  profit?: number;
+  buy_price?: number;
+  selling_price?: number;
   supplier: string;
   supplier_url: string;
   product_url: string;
@@ -37,6 +36,8 @@ export type Product = {
   description?: string;
   ai_reason?: string;
   opportunity_score?: number;
+  ai_verdict?: string;
+success_probability?: number;
 };
 
 type Props = {
@@ -63,26 +64,47 @@ export default function ProductsTable({
   const [sortBy, setSortBy] = useState<"ai" | "opportunity" | "profit" | "trend" | "competition">("ai");
 
   const loadProducts = async () => {
-    setLoading(true);
+  setLoading(true);
 
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .order("ai_score", { ascending: false });
+  try {
+    const endpoint = search?.trim()
+      ? `/api/discover?search=${encodeURIComponent(search)}`
+      : "/api/live-market";
 
-    setProducts(data || []);
+    const response = await fetch(endpoint, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load products");
+    }
+
+    const data = await response.json();
+
+const cleanProducts = Array.isArray(data)
+  ? data.filter((p) => p && p.name)
+  : [];
+
+setProducts(cleanProducts);
+  } catch (error) {
+    console.error(error);
+    setProducts([]);
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadProducts();
-  }, [refreshKey]);
+  loadProducts();
+}, [refreshKey, search]);
 
   const filtered = useMemo(() => {
+    const safeProducts = products.filter(
+  (p) => p && p.name && p.ai_score != null
+);
     const deduped = new Map<string, Product>();
 
-    for (const item of products) {
+    for (const item of safeProducts) {
       const dedupeKey = `${(item.name || "").trim().toLowerCase()}::${(item.platform || "").trim().toLowerCase()}`;
       if (!deduped.has(dedupeKey)) {
         deduped.set(dedupeKey, item);
@@ -250,6 +272,12 @@ export default function ProductsTable({
                 const platformInfo = platformBadge(product.platform);
                 const PlatformIcon = platformInfo.icon;
                 const opportunity = Math.round(product.opportunity_score ?? product.ai_score ?? 0);
+                const recommendation = getRecommendation(
+  product.ai_score,
+  opportunity,
+  product.profit ?? 0,
+  product.competition
+);
 
                 return (
                   <motion.tr
@@ -275,6 +303,27 @@ export default function ProductsTable({
                         <div className="min-w-0">
                           <p className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900">{product.name}</p>
                           <p className="mt-1 text-xs text-slate-500">{product.category}</p>
+
+                          <p
+  className={`mt-1 text-xs font-semibold ${
+    recommendation === "Strong Buy"
+      ? "text-emerald-600"
+      : recommendation === "Worth Testing"
+      ? "text-amber-600"
+      : "text-rose-600"
+  }`}
+>
+  {recommendation}
+</p>
+
+                        <p className="mt-1 text-xs font-semibold text-emerald-600">
+                       {product.ai_verdict}
+                        </p>
+
+                        <p className="text-[11px] text-slate-500">
+                        Success {product.success_probability}%
+                         </p>
+
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-700">
                               Opportunity {opportunity}
@@ -327,13 +376,7 @@ export default function ProductsTable({
                       </div>
                     </td>
 
-                    {!loading && paginated.length === 0 ? (
-                      <div className="m-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                        <PackageSearch className="mx-auto h-6 w-6 text-slate-500" />
-                        <p className="mt-3 text-sm font-semibold text-slate-800">No products match your filters</p>
-                        <p className="mt-1 text-xs text-slate-500">Try a broader keyword, switch platform, or sort by another metric.</p>
-                      </div>
-                    ) : null}
+                    
 
                     <td className="px-4 py-4 text-xs text-slate-700">{product.country || "-"}</td>
 
@@ -363,13 +406,15 @@ export default function ProductsTable({
                         </a>
 
                         <button
-                          type="button"
-                          onClick={() => onSelectProduct(product)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 transition hover:border-indigo-300"
-                          title="Open report"
-                        >
-                          <FileText size={14} />
-                        </button>
+  type="button"
+  onClick={() => {
+    console.log("Clicked:", product);
+    onSelectProduct(product);
+  }}
+  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700"
+>
+  <FileText size={14} />
+</button>
                       </div>
                     </td>
                   </motion.tr>

@@ -39,11 +39,16 @@ function calculateOpportunityScore(product: {
 type ScoreableProduct = ApifyProductSource | Product;
 
 function toMappedProduct(product: ScoreableProduct): Product {
-  if ("ai_score" in product && "trend_score" in product && "profit" in product) {
-    return product;
+  // لو المنتج جاي بالفعل من DataForSEO أو normalizeDiscoverProducts
+  if (
+    typeof (product as Product).ai_score === "number" &&
+    typeof (product as Product).trend_score === "number"
+  ) {
+    return product as Product;
   }
 
-  return mapApifyProduct(product);
+  // غير كده يبقى بيانات Apify القديمة
+  return mapApifyProduct(product as ApifyProductSource);
 }
 
 export function scoreProducts(products: ScoreableProduct[]) {

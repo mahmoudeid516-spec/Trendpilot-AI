@@ -104,35 +104,30 @@ export function calculateOpportunityStats(
   };
 }
 
+
 export async function getTodaysOpportunities(): Promise<Opportunity[]> {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
     "http://localhost:3000";
 
   const response = await fetch(
-    `${baseUrl}/api/discover?search=${encodeURIComponent(
-      "winning products"
-    )}`,
+    `${baseUrl}/api/discover?search=${encodeURIComponent("winning products")}`,
     {
       cache: "no-store",
     }
   );
 
-  console.log("========================================");
-  console.log("Status:", response.status);
-  console.log("URL:", response.url);
-  console.log(
-    "Content-Type:",
-    response.headers.get("content-type")
-  );
+  if (!response.ok) {
+    throw new Error("Failed to load opportunities");
+  }
 
-  const body = await response.text();
+  const data = await response.json();
 
-  console.log("----------- RESPONSE -----------");
-  console.log(body.substring(0, 1000));
-  console.log("========================================");
+  const normalized = normalizeDiscoverProducts(data);
 
-  return [];
+  const ranked = rankOpportunities(normalized);
+
+  return ranked.map(toOpportunity);
 }
 
 export async function getOpportunitySummary(

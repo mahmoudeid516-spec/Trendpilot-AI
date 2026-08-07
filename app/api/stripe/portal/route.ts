@@ -3,6 +3,25 @@ import { getAppBaseUrl, stripe } from "../../../../lib/stripe";
 import { requireUserIdOrThrow, toSubscriptionGuardResponse } from "../../../../lib/billing/subscriptionMiddleware";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
+function resolveSafeReturnUrl(inputUrl: unknown, defaultReturnUrl: string): string {
+  if (typeof inputUrl !== "string" || inputUrl.trim().length === 0) {
+    return defaultReturnUrl;
+  }
+
+  try {
+    const baseUrl = new URL(defaultReturnUrl);
+    const candidate = new URL(inputUrl);
+
+    if (candidate.origin !== baseUrl.origin) {
+      return defaultReturnUrl;
+    }
+
+    return candidate.toString();
+  } catch {
+    return defaultReturnUrl;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const userId = await requireUserIdOrThrow(req);
@@ -29,9 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     const defaultReturnUrl = `${getAppBaseUrl()}/dashboard/billing`;
-    const returnUrl = typeof body.returnUrl === "string" && body.returnUrl.startsWith("http")
-      ? body.returnUrl
-      : defaultReturnUrl;
+    const returnUrl = resolveSafeReturnUrl(body.returnUrl, defaultReturnUrl);
 
     const session = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,

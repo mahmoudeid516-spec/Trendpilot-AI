@@ -118,18 +118,9 @@ export default function AIAnalyzer({
   
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Product analysis failed.";
-      const stack = err instanceof Error ? err.stack : undefined;
+      console.error("AIAnalyzer error:", err);
   
-      setResult(
-        JSON.stringify(
-          {
-            message,
-            stack,
-          },
-          null,
-          2
-        )
-      );
+      setResult(`❌ ${message}`);
   
     } finally {
       setLoading(false);

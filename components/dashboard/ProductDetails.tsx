@@ -265,15 +265,6 @@ export default function ProductDetails({
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="text-sm font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}
-
 function MetaPill({ label, value }: { label: string; value: string }) {
   return (
     <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3.5 py-1.5 shadow-sm">

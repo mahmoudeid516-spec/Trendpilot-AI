@@ -111,6 +111,10 @@ const reportEvidenceSchema: z.ZodType<ReportEvidence> = z.object({
 
 export const aiReportSchema: z.ZodType<AIReport> = z.object({
   generated_at: z.string().datetime(),
+
+  // أصبح اختياريًا
+  ai_score: score.default(50),
+
   product_name: trimmedString,
   marketplace: trimmedString,
   executive_summary: trimmedString,
@@ -118,22 +122,30 @@ export const aiReportSchema: z.ZodType<AIReport> = z.object({
   market_potential: trimmedString,
   demand_analysis: trimmedString,
   competition_analysis: trimmedString,
+
   pricing_strategy: pricingStrategySchema,
   profit_estimation: profitEstimationSchema,
+
   target_audience: targetAudienceProfileSchema,
   customer_persona: customerPersonaSchema,
   marketing_angles: marketingAnglesSchema,
+
   unique_selling_proposition: trimmedString,
   seo_keywords: stringList,
   shopify_description: trimmedString,
   product_description: trimmedString,
+
   ad_creative_ideas: adCreativeIdeasSchema,
   launch_strategy: launchStrategySchema,
   swot_analysis: swotAnalysisSchema,
+
   risks: stringList,
   recommendations: stringList,
+
   business_verdict: trimmedString,
+
   confidence_score: score,
+
   score_explanations: scoreExplanationsSchema.optional(),
   evidence: reportEvidenceSchema.optional(),
 });

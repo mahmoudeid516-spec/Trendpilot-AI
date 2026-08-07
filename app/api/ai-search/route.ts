@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
+import { runOpenAIRequest } from "../../../lib/ai/openaiRequest";
 import { consumeUsageOrThrow, requireUserIdOrThrow, toSubscriptionGuardResponse } from "../../../lib/billing/subscriptionMiddleware";
 import { recordBillingEvent } from "../../../lib/services/billing";
 
@@ -135,14 +136,16 @@ Otherwise
 - Use null if the user didn't specify a value.
 `;
 
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: `${systemPrompt}
+    const response = await runOpenAIRequest(() =>
+      openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: `${systemPrompt}
 
 User Request:
 
 ${prompt}`,
-    });
+      }),
+    );
 
     const text = response.output_text ?? "";
 

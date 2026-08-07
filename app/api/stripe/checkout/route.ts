@@ -95,12 +95,13 @@ async function getOrCreateStripeCustomer(accessToken: string, userId: string): P
       );
 
     if (profileCreateError) {
-      console.error("[stripe-checkout] getOrCreateStripeCustomer.profileCreate failed", {
-        userId,
-        profileCreateError,
-      });
-      throw new Error("Failed to create profile for checkout.");
-    }
+  console.error("PROFILE CREATE ERROR:");
+  console.error(profileCreateError);
+
+  throw new Error(
+    profileCreateError.message || "Failed to create profile for checkout."
+  );
+}
   }
 
   const { data: refreshedProfile, error: refreshedProfileError } = await supabase

@@ -34,11 +34,11 @@ export default function SearchResults({ results }: Props) {
             </h3>
 
             <p className="mt-2 text-sm font-medium text-slate-500">
-              ⭐ {product.ai_score / 20} • {product.sales.toLocaleString()} Sold
+              ⭐ {((product.ai_score ?? 0) / 20).toFixed(1)} • {(product.sales ?? 0).toLocaleString()} Sold
             </p>
 
             <p className="mt-3 text-2xl font-semibold text-emerald-700">
-              ${product.buy_price.toFixed(2)}
+              ${(product.selling_price ?? product.buy_price ?? 0).toFixed(2)}
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
