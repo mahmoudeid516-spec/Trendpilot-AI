@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOpenAI } from "../../../lib/openai";
+import { getOpenAI, OPENAI_MODEL } from "../../../lib/openai";
 
 type MarketingPayload = {
   facebook_ad: string;
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     const openai = getOpenAI();
 
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: OPENAI_MODEL,
       input: `
 You are a professional e-commerce marketing expert.
 
