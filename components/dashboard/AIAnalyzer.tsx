@@ -116,19 +116,12 @@ export default function AIAnalyzer({
       }, 500);
   
     } catch (err: any) {
-      console.error("FULL CLIENT ERROR:", err);
-  
+      console.error("Product analysis failed:", err);
+
       setResult(
-        JSON.stringify(
-          {
-            message: err.message,
-            stack: err.stack,
-          },
-          null,
-          2
-        )
+        `❌ ${err?.message || "Something went wrong while analyzing this product."}`
       );
-  
+
     } finally {
       setLoading(false);
     }
