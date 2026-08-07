@@ -18,9 +18,6 @@ export async function getProfile() {
     return null;
   }
 
-  console.log("Current User:", user);
-  console.log("Profile Data:", data);
-
   return data;
 
 }

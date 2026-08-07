@@ -55,15 +55,7 @@ function normalizeCompetition(reviews: number): Product["competition"] {
 function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
   const products: Product[] = [];
 
-  for (const [index, item] of items.entries()) {
-    console.log("[TRACE][DataForSEO][raw API item]", {
-      index,
-      rank_absolute: item.rank_absolute,
-      title: item.title,
-      url: item.url,
-      seller: item.seller,
-    });
-
+  for (const item of items) {
     const buyPrice = asNumber(item.price?.current, 0);
     if (!buyPrice) continue;
 
@@ -137,13 +129,6 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
     };
 
     if (!product.name || !product.image || !product.product_url) continue;
-
-    console.log("[TRACE][DataForSEO][mapped Product]", {
-      id: product.id,
-      name: product.name,
-      product_url: product.product_url,
-      supplier_url: product.supplier_url,
-    });
 
     products.push(product);
   }

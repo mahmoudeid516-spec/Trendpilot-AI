@@ -110,9 +110,7 @@ export default function Pricing() {
       });
       
       const data = await res.json();
-      
-      console.log("Checkout Response:", data);
-      
+
       if (!res.ok) {
         alert(data.error || "Checkout failed");
         return;

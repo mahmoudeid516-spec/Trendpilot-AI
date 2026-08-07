@@ -39,15 +39,10 @@ export default function ProductsTable({
     void loadProducts();
   }, [refreshKey]);
 
-  console.log("RAW PRODUCTS", displayedProducts);
   const displayProducts =
     searchResults.length > 0
       ? searchResults
       : savedProducts;
-      console.log(
-  "IDS",
-  ensureUniqueProductIds(displayedProducts).map((p) => p.id)
-);
 
   const isSearchResultsMode = searchResults.length > 0;
 

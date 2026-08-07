@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOpenAI } from "../../../lib/openai";
+import { getOpenAI, OPENAI_MODEL } from "../../../lib/openai";
 
 function fallbackMarketingMarkdown(product: unknown): string {
   const input = product as {
@@ -63,7 +63,7 @@ Return beautiful markdown.
 `;
 
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: OPENAI_MODEL,
       input: prompt,
     });
 

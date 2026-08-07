@@ -12,8 +12,6 @@ export async function productSearch(filters: ProductSearchFilters) {
   filters?.search ||
   "wireless earbuds";
 
-console.log("SEARCH KEYWORD:", search);
-
   const response = await fetch(
     "/api/product-search",
     {

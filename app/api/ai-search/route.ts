@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOpenAI } from "../../../lib/openai";
+import { getOpenAI, OPENAI_MODEL } from "../../../lib/openai";
 
 export async function POST(req: Request) {
   try {
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     
     User:
     Find low competition beauty products for Germany
-    
+
     Return:
     {
      "max_price":null,
@@ -87,34 +87,30 @@ export async function POST(req: Request) {
      "category":"Beauty",
      "platform":null,
      "sort":"ai_score"
-     Sorting Rules:
-
-If the user asks:
-
-highest profit
-best profit
-most profitable
-
-Return:
-
-"sort":"profit"
-
-If the user asks:
-
-trending
-viral
-popular
-hot products
-
-Return:
-
-"sort":"trend"
-
-Otherwise
-
-"sort":"ai_score"
     }
-    
+
+    Sorting Rules:
+
+    If the user asks:
+    highest profit
+    best profit
+    most profitable
+
+    Return:
+    "sort":"profit"
+
+    If the user asks:
+    trending
+    viral
+    popular
+    hot products
+
+    Return:
+    "sort":"trend"
+
+    Otherwise:
+    "sort":"ai_score"
+
     User:
     Find TikTok products under $30
     
@@ -138,7 +134,7 @@ Otherwise
 `;
 
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: OPENAI_MODEL,
       input: `${systemPrompt}
 
 User Request:

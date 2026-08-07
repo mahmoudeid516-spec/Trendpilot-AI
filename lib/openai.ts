@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 
+export const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
 let openaiClient: OpenAI | null = null;
 
 export function getOpenAI(): OpenAI {
