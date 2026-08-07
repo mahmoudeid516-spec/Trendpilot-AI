@@ -27,9 +27,7 @@ export default function AIMarketing({ product }: Props) {
         }),
       });
 
-      const data = await res.json();
-
-      console.log(data);
+      await res.json();
 
       router.refresh();
     } catch (err) {

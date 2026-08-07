@@ -11,9 +11,6 @@ export async function analyzeProduct(product: string) {
 
   const data = await response.json();
 
-  console.log("ANALYZE RESPONSE:");
-  console.log(data);
-
   if (!response.ok) {
     throw new Error(JSON.stringify(data, null, 2));
   }

@@ -26,17 +26,11 @@ export async function importProducts(products: Array<Product | Record<string, un
       );
 
       if (error) {
-        console.error("RAW ERROR", error);
-        console.dir(error, { depth: null });
-        console.log("USED ROW", JSON.stringify(payload, null, 2));
-
+        console.error("Failed to import product:", error);
         return false;
       }
     } catch (error) {
-      console.error("RAW ERROR", error);
-      console.dir(error, { depth: null });
-      console.log("USED ROW", JSON.stringify(payload, null, 2));
-
+      console.error("Failed to import product:", error);
       return false;
     }
   }

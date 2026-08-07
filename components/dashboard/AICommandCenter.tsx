@@ -29,11 +29,7 @@ export default function AICommandCenter() {
     try {
       const filters = await aiSearch(prompt);
 
-      console.log("FILTERS:", filters);
-
       const products = await productSearch(filters);
-
-      console.log("PRODUCTS:", products);
 
       const scoredProducts = scoreProducts(products);
 

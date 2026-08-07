@@ -22,8 +22,6 @@ import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
 
-  console.log("SUPABASE URL =", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("ANON KEY =", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 20));
   const router = useRouter();
   const hasSupabaseClient = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -37,20 +35,6 @@ console.log("ANON KEY =", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 20
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  useEffect(() => {
-    if (!searchResults.length) {
-      return;
-    }
-
-    console.log("[TRACE][Dashboard][state searchResults]", {
-      count: searchResults.length,
-      ids: searchResults.map((product) => product.id),
-      invalidIds: searchResults.filter(
-        (product) => typeof product.id !== "string" || !product.id.trim() || product.id === "NaN"
-      ).map((product) => ({ name: product.name, id: product.id })),
-    });
-  }, [searchResults]);
 
   useEffect(() => {
     async function checkUser() {
@@ -79,9 +63,6 @@ console.log("ANON KEY =", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 20
       return;
     }
 
-    console.log("Search:", searchText);
-    console.log("Platform:", selectedPlatform);
-
     if (!searchText.trim()) {
       alert("Please enter a product name.");
       return;
@@ -94,18 +75,10 @@ console.log("ANON KEY =", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 20
         keyword: searchText,
         platform: selectedPlatform,
       });
-      console.log("RAW PRODUCTS");
-      console.log(products);
-      console.log("COUNT:", products.length);
 
       const mappedProducts: Product[] = ensureUniqueProductIds(
         products as Product[]
       );
-
-      console.log("MAPPED PRODUCTS");
-      console.log(mappedProducts);
-      console.log("COUNT:", mappedProducts.length);
-      console.log("[TRACE][Dashboard][post-map ids]", mappedProducts.map((product) => product.id));
 
       setSearchResults(mappedProducts);
 
