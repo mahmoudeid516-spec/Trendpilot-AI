@@ -7,7 +7,7 @@ import { productSearch } from "../../services/productSearch";
 import {
   getBestProduct,
   scoreProducts,
-} from "../../services/businessAdvisor";
+} from "../../lib/ai/searchRanking";
 
 import type { Product } from "../../types/Product";
 

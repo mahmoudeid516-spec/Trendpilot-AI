@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
-import { analyzeProduct } from "../../services/decisionEngine";
+import { analyzeProduct } from "../../lib/ai/decisionEngine";
 import { generateMarketing } from "../../lib/services/generateMarketing";
-import { analyzeMarket } from "../../services/marketAnalyzer";
+import { analyzeMarket } from "../../lib/ai/marketAnalyzer";
 import SimilarProducts from "./SimilarProducts";
 import { calculateROI } from "../../services/roiCalculator";
 import type { Product } from "../../types/Product";
-import { generateBusinessPlan } from "../../services/businessCoach";
+import { generateBusinessPlan } from "../../lib/ai/businessCoach";
 
 
 type Props = {

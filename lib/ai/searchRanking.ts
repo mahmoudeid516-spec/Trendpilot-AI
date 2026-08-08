@@ -1,5 +1,5 @@
-import { ensureUniqueProductIds, normalizeProductId } from "../lib/services/productIdentity";
-import type { Product } from "../types/Product";
+import { ensureUniqueProductIds, normalizeProductId } from "../services/productIdentity";
+import type { Product } from "../../types/Product";
 
 function competitionScore(level: string) {
   switch (level) {
