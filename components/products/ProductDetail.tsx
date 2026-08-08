@@ -86,8 +86,6 @@ export default function ProductDetail({ id }: Props) {
 
       <ProductHero product={product} />
 
-      {/* <TrendChart /> */}
-
       <SupplierCard product={product} />
 
       <AIReport product={product} />

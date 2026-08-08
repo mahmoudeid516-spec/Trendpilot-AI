@@ -88,6 +88,8 @@ export default function AIAnalyzer({
       const productObject = {
         name: productData.name,
         image: searchData.image ?? "",
+        data_source: "AI Analyzer (OpenAI estimate)",
+        buy_price_confidence: "estimated",
         platform,
         category: productData.category ?? "General",
         description: productData.description ?? "",
@@ -139,9 +141,14 @@ export default function AIAnalyzer({
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
 
-      <h2 className="text-3xl font-bold mb-6">
+      <h2 className="text-3xl font-bold mb-2">
         🤖 AI Product Analyzer
       </h2>
+
+      <p className="mb-6 text-sm text-gray-500">
+        Pricing, scores, and recommendations below are AI-generated estimates
+        based on the product name you enter -- not verified market data.
+      </p>
 
       <div className="flex flex-col md:flex-row gap-4">
 

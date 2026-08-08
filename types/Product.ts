@@ -1,9 +1,19 @@
+export type DataConfidence = "real" | "estimated";
+
 export interface Product {
   // Identity
   id: string;
   user_id?: string;
   source: "AliExpress" | "Amazon" | "Shopify";
   platform: string;
+
+  // Provenance -- who this row actually came from, and whether buy_price
+  // is a real, verified figure or an AI-invented estimate. Every other
+  // derived number (selling_price, profit, ai_score, trend_score, etc.)
+  // is a heuristic estimate regardless of pipeline, and is labeled as such
+  // in the UI unconditionally rather than tracked per row.
+  data_source?: string;
+  buy_price_confidence?: DataConfidence;
 
   // Basic Info
   name: string;

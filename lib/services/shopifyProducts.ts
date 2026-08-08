@@ -110,6 +110,8 @@ export async function fetchShopifyProducts(params: {
       }),
       source: "Shopify",
       platform: "Shopify",
+      data_source: "Shopify store (your catalog)",
+      buy_price_confidence: "real",
       name: node.title,
       description: stripHtml(node.descriptionHtml),
       image: node.featuredImage?.url ?? "",

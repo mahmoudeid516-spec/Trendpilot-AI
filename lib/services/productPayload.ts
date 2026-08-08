@@ -40,6 +40,8 @@ type ProductPayloadSource = {
   supplier_url?: unknown;
   product_url?: unknown;
   competition?: unknown;
+  data_source?: unknown;
+  buy_price_confidence?: unknown;
 };
 
 export const PRODUCT_INSERT_COLUMNS = [
@@ -83,6 +85,8 @@ export const PRODUCT_INSERT_COLUMNS = [
   "viral_score",
   "opportunity_score",
   "roi",
+  "data_source",
+  "buy_price_confidence",
 ] as const;
 
 export type ProductInsertColumn = (typeof PRODUCT_INSERT_COLUMNS)[number];
@@ -155,6 +159,8 @@ export function buildProductInsertPayload(product: ProductPayloadSource): Produc
     supplier_url: asString(product.supplier_url),
     product_url: asString(product.product_url),
     competition: asString(product.competition, "Medium"),
+    data_source: asString(product.data_source),
+    buy_price_confidence: asString(product.buy_price_confidence),
   });
 
   return sanitizeProductInsertRow(payload);

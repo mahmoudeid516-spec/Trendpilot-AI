@@ -120,6 +120,8 @@ function normalizeItemsToProducts(
       }),
       source: PRODUCT_SOURCE,
       platform: PRODUCT_SOURCE,
+      data_source: "Amazon (via DataForSEO)",
+      buy_price_confidence: "real",
       name: String(item.title ?? "").trim(),
       description: String(item.description ?? item.title ?? "").trim(),
       image: String(item.image_url ?? "").trim(),

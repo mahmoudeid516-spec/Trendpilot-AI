@@ -64,11 +64,16 @@ Rules:
 - No markdown.
 - No explanation.
 
-- Buy price must always be lower than selling price.
-- Profit = selling_price - buy_price.
+- buy_price and selling_price are your best estimate of realistic market
+  figures for this product -- do not invent numbers unrelated to how this
+  product is actually priced and sold. Buy price must be lower than
+  selling price. Profit = selling_price - buy_price.
 
-- market_score between 85 and 99.
-- trend_score between 85 and 99.
+- market_score and trend_score are your own honest 0-100 confidence
+  estimate for this specific product. Use the full range: a weak or
+  saturated product should score low, not just under 85. Do not default
+  to a narrow high band -- these numbers are shown to users as estimates,
+  and a score that is always 85-99 regardless of the product is dishonest.
 
 - competition must be one of:
 Low
