@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [savedProducts, setSavedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     async function checkUser() {
@@ -54,6 +55,64 @@ export default function DashboardPage() {
 
     checkUser();
   }, [hasSupabaseClient, router]);
+
+  // Single source of truth for the user's saved products, shared by the
+  // hero stats, business overview, and AI insights cards below -- avoids
+  // each of them independently querying the same table.
+  useEffect(() => {
+    async function loadSavedProducts() {
+      if (!hasSupabaseClient) {
+        return;
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setSavedProducts([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Failed loading saved products:", error.message);
+        return;
+      }
+
+      setSavedProducts((data ?? []) as Product[]);
+    }
+
+    void loadSavedProducts();
+  }, [hasSupabaseClient, refreshKey]);
+
+  const winningProducts = savedProducts.filter(
+    (p) => (p.opportunity_score ?? 0) >= 90
+  );
+
+  const avgOpportunityScore =
+    savedProducts.length === 0
+      ? null
+      : Math.round(
+          savedProducts.reduce(
+            (sum, p) => sum + (p.opportunity_score ?? 0),
+            0
+          ) / savedProducts.length
+        );
+
+  const avgWinningProbability =
+    savedProducts.length === 0
+      ? null
+      : Math.round(
+          savedProducts.reduce(
+            (sum, p) => sum + (p.winning_probability ?? 0),
+            0
+          ) / savedProducts.length
+        );
 
   async function handleSearch(
     searchText: string,
@@ -109,13 +168,18 @@ export default function DashboardPage() {
 
         <div className="max-w-7xl mx-auto">
 
-          <DashboardHero totalProducts={0} winningProducts={0} /> 
+          <DashboardHero
+            totalProducts={savedProducts.length}
+            winningProducts={winningProducts.length}
+            avgOpportunityScore={avgOpportunityScore}
+            avgWinningProbability={avgWinningProbability}
+          />
 
           <StatsCards refreshKey={refreshKey} />
 
-          <BusinessOverview />
+          <BusinessOverview products={savedProducts} />
 
-          <AIInsights />
+          <AIInsights products={savedProducts} />
 
           <AICommandCenter />
 

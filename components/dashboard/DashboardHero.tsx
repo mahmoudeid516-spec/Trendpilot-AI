@@ -6,11 +6,15 @@ import { getProfile } from "../../services/profile";
 type Props = {
   totalProducts: number;
   winningProducts: number;
+  avgOpportunityScore?: number | null;
+  avgWinningProbability?: number | null;
 };
 
 export default function DashboardHero({
   totalProducts,
   winningProducts,
+  avgOpportunityScore = null,
+  avgWinningProbability = null,
 }: Props) {
   const [name, setName] = useState("User");
 
@@ -89,21 +93,23 @@ export default function DashboardHero({
 
             <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
               <p className="text-sm text-purple-200">
-                Business Health
+                Avg Opportunity Score
               </p>
 
               <h2 className="mt-2 text-5xl font-bold">
-                92%
+                {avgOpportunityScore === null ? "N/A" : `${avgOpportunityScore}%`}
               </h2>
 
               <p className="mt-3 text-green-300 font-semibold">
-                Excellent
+                {avgOpportunityScore === null
+                  ? "No saved products yet"
+                  : "Across saved products"}
               </p>
             </div>
 
             <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
               <p className="text-sm text-purple-200">
-                AI Reports
+                Saved Products
               </p>
 
               <h2 className="mt-2 text-5xl font-bold">
@@ -111,7 +117,7 @@ export default function DashboardHero({
               </h2>
 
               <p className="mt-3 text-yellow-300 font-semibold">
-                Generated
+                {totalProducts === 0 ? "No data available" : "In your library"}
               </p>
             </div>
 
@@ -125,21 +131,23 @@ export default function DashboardHero({
               </h2>
 
               <p className="mt-3 text-cyan-300 font-semibold">
-                Available
+                {winningProducts === 0 ? "No data available" : "Opportunity Score ≥ 90"}
               </p>
             </div>
 
             <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
               <p className="text-sm text-purple-200">
-                Success Rate
+                Avg Win Probability
               </p>
 
               <h2 className="mt-2 text-5xl font-bold">
-                96%
+                {avgWinningProbability === null ? "N/A" : `${avgWinningProbability}%`}
               </h2>
 
               <p className="mt-3 text-green-300 font-semibold">
-                AI Optimized
+                {avgWinningProbability === null
+                  ? "No saved products yet"
+                  : "Across saved products"}
               </p>
             </div>
 

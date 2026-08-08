@@ -1,3 +1,5 @@
+import type { Product } from "../../types/Product";
+
 type CardProps = {
   title: string;
   value: string;
@@ -50,38 +52,75 @@ function OverviewCard({
   );
 }
 
-export default function BusinessOverview() {
+type Props = {
+  products: Product[];
+};
+
+export default function BusinessOverview({ products }: Props) {
+  const hasProducts = products.length > 0;
+
+  const totalProfitPotential = products.reduce(
+    (sum, p) => sum + (p.profit ?? 0),
+    0
+  );
+
+  const winningProducts = products.filter(
+    (p) => (p.opportunity_score ?? 0) >= 90
+  );
+
+  const avgOpportunityScore = hasProducts
+    ? Math.round(
+        products.reduce((sum, p) => sum + (p.opportunity_score ?? 0), 0) /
+          products.length
+      )
+    : null;
+
+  const avgWinningProbability = hasProducts
+    ? Math.round(
+        products.reduce((sum, p) => sum + (p.winning_probability ?? 0), 0) /
+          products.length
+      )
+    : null;
+
   return (
     <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 mb-10">
 
       <OverviewCard
-        title="Revenue Potential"
-        value="$24,850"
-        subtitle="+18.2% this month"
+        title="Profit Potential"
+        value={hasProducts ? `$${totalProfitPotential.toFixed(2)}` : "$0"}
+        subtitle={
+          hasProducts
+            ? `Across ${products.length} saved product${products.length === 1 ? "" : "s"}`
+            : "No data available"
+        }
         icon="💰"
         color="from-green-500 to-emerald-500"
       />
 
       <OverviewCard
         title="Winning Products"
-        value="14"
-        subtitle="3 products added today"
+        value={String(winningProducts.length)}
+        subtitle={
+          winningProducts.length > 0
+            ? "Opportunity Score ≥ 90"
+            : "No data available"
+        }
         icon="🚀"
         color="from-purple-500 to-indigo-500"
       />
 
       <OverviewCard
-        title="AI Confidence"
-        value="96%"
-        subtitle="Excellent market prediction"
+        title="Avg Opportunity Score"
+        value={avgOpportunityScore === null ? "N/A" : `${avgOpportunityScore}%`}
+        subtitle={avgOpportunityScore === null ? "No data available" : "Across saved products"}
         icon="🤖"
         color="from-blue-500 to-cyan-500"
       />
 
       <OverviewCard
-        title="Success Probability"
-        value="91%"
-        subtitle="Average launch score"
+        title="Avg Win Probability"
+        value={avgWinningProbability === null ? "N/A" : `${avgWinningProbability}%`}
+        subtitle={avgWinningProbability === null ? "No data available" : "Across saved products"}
         icon="📈"
         color="from-orange-500 to-red-500"
       />

@@ -5,8 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import {
   LayoutDashboard,
-  Sparkles,
-  BarChart3,
   ShoppingBag,
   Plug,
   Settings,
@@ -36,11 +34,6 @@ export default function Sidebar() {
       icon: LayoutDashboard,
     },
     {
-      title: "AI Analyzer",
-      href: "/dashboard",
-      icon: Sparkles,
-    },
-    {
       title: "Products",
       href: "/products",
       icon: ShoppingBag,
@@ -49,11 +42,6 @@ export default function Sidebar() {
       title: "Integrations",
       href: "/dashboard/integrations",
       icon: Plug,
-    },
-    {
-      title: "Analytics",
-      href: "/analytics",
-      icon: BarChart3,
     },
     {
       title: "Upgrade Pro",
