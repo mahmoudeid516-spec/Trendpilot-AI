@@ -1,24 +1,49 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { hasSupabaseConfig, supabase } from "../../lib/supabase";
 import ProductsClient from "../../components/products/ProductsClient";
 import DashboardHero from "../../components/dashboard/DashboardHero";
 
-export default async function ProductsPage() {
-  let products: Array<{ opportunity_score?: number }> = [];
+export default function ProductsPage() {
+  const router = useRouter();
+  const isSupabaseConfigured = hasSupabaseConfig();
 
-  if (hasSupabaseConfig()) {
-    try {
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", {
-        ascending: false,
-      });
+  const [products, setProducts] = useState<Array<{ opportunity_score?: number }>>([]);
 
-    products = (data ?? []) as Array<{ opportunity_score?: number }>;
-    } catch (error) {
-      console.warn("Products page fallback:", error);
+  useEffect(() => {
+    async function loadProducts() {
+      if (!isSupabaseConfigured) {
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from("products")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("created_at", {
+            ascending: false,
+          });
+
+        setProducts((data ?? []) as Array<{ opportunity_score?: number }>);
+      } catch (error) {
+        console.warn("Products page fallback:", error);
+      }
     }
-  }
+
+    loadProducts();
+  }, [isSupabaseConfigured, router]);
 
   return (
     <div className="max-w-7xl mx-auto p-8">

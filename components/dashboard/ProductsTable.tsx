@@ -25,14 +25,24 @@ export default function ProductsTable({
 
   useEffect(() => {
     async function loadProducts() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setSavedProducts([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("products")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id);
 
       if (error) {
         console.error("Failed loading products:", error.message);
       }
-  
+
       setSavedProducts(ensureUniqueProductIds(data || []));
     }
 

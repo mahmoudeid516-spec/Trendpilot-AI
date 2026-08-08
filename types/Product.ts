@@ -1,6 +1,7 @@
 export interface Product {
   // Identity
   id: string;
+  user_id?: string;
   source: "AliExpress" | "Amazon" | "Shopify";
   platform: string;
 

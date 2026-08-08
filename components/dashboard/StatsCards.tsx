@@ -32,9 +32,16 @@ export default function StatsCards({
 
   useEffect(() => {
     async function loadStats() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
       const { data, error } = await supabase
         .from("products")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id);
 
       if (error || !data) return;
 

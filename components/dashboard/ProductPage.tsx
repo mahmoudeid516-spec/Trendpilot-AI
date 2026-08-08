@@ -25,15 +25,27 @@ export default function ProductPage({ id }: Props) {
         return;
       }
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setErrorMessage("You must be signed in to view this product.");
+        setLoading(false);
+        return;
+      }
+
       const [productResponse, listResponse] = await Promise.all([
         supabase
           .from("products")
           .select("*")
           .eq("id", id)
+          .eq("user_id", user.id)
           .single(),
         supabase
           .from("products")
-          .select("*"),
+          .select("*")
+          .eq("user_id", user.id),
       ]);
 
       if (productResponse.error) {

@@ -1,4 +1,5 @@
 type ProductPayloadSource = {
+  user_id?: unknown;
   name?: unknown;
   image?: unknown;
   platform?: unknown;
@@ -42,6 +43,7 @@ type ProductPayloadSource = {
 };
 
 export const PRODUCT_INSERT_COLUMNS = [
+  "user_id",
   "name",
   "image",
   "platform",
@@ -113,6 +115,7 @@ export function sanitizeProductInsertRow(row: Record<string, unknown>): ProductI
 
 export function buildProductInsertPayload(product: ProductPayloadSource): ProductInsertPayload {
   const payload = stripUndefinedValues({
+    user_id: typeof product.user_id === "string" ? product.user_id : undefined,
     name: asString(product.name),
     image: asString(product.image),
     platform: asString(product.platform),

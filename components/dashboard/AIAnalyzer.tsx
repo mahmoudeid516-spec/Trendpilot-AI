@@ -65,9 +65,18 @@ export default function AIAnalyzer({
   });
   
       // Check duplicate
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("You must be signed in to analyze and save a product.");
+      }
+
       const { data: existingProduct } = await supabase
         .from("products")
         .select("id")
+        .eq("user_id", user.id)
         .eq("name", productData.name)
         .limit(1);
   
