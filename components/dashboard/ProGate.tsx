@@ -79,10 +79,10 @@ export default function ProGate({ children }: Props) {
 
       const data = await response.json();
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.success && data.data?.url) {
+        window.location.href = data.data.url;
       } else {
-        alert(data.error ?? "Unable to start checkout.");
+        alert(data.error?.message ?? "Unable to start checkout.");
       }
     } catch (error) {
       console.error(error);
@@ -116,10 +116,10 @@ export default function ProGate({ children }: Props) {
 
       const data = await response.json();
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.success && data.data?.url) {
+        window.location.href = data.data.url;
       } else {
-        alert(data.error ?? "Unable to open billing settings.");
+        alert(data.error?.message ?? "Unable to open billing settings.");
       }
     } catch (error) {
       console.error(error);

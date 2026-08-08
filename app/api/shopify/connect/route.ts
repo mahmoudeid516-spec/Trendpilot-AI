@@ -6,20 +6,22 @@ import {
   SHOPIFY_CALLBACK_PATH,
   SHOPIFY_CONNECT_UID_COOKIE,
 } from "../../../../lib/shopify";
+import { apiError } from "../../../../lib/apiResponse";
 
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.SHOPIFY_API_KEY || !process.env.SHOPIFY_API_SECRET) {
-      return NextResponse.json(
-        { error: "Shopify integration is not configured." },
-        { status: 503 }
+      return apiError(
+        "SHOPIFY_PROVIDER_ERROR",
+        "Shopify integration is not configured.",
+        503
       );
     }
 
     const authHeader = req.headers.get("authorization") ?? "";
 
     if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const supabase = createClient(
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const body = (await req.json().catch(() => ({}))) as { shop?: unknown };
@@ -49,12 +51,10 @@ export async function POST(req: NextRequest) {
       .toLowerCase();
 
     if (!isValidShopDomain(shop)) {
-      return NextResponse.json(
-        {
-          error:
-            "Enter a valid Shopify store domain, e.g. your-store.myshopify.com",
-        },
-        { status: 400 }
+      return apiError(
+        "INVALID_SHOP_DOMAIN",
+        "Enter a valid Shopify store domain, e.g. your-store.myshopify.com",
+        400
       );
     }
 
@@ -79,7 +79,10 @@ export async function POST(req: NextRequest) {
       throw new Error("Shopify did not return an authorization URL.");
     }
 
-    const response = NextResponse.json({ url: authorizeUrl });
+    const response = NextResponse.json({
+      success: true,
+      data: { url: authorizeUrl },
+    });
 
     const setCookies =
       typeof beginResponse.headers.getSetCookie === "function"
@@ -112,6 +115,6 @@ export async function POST(req: NextRequest) {
         ? error.message
         : "Unable to start the Shopify connection.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError("SHOPIFY_CONNECT_FAILED", message, 500);
   }
 }

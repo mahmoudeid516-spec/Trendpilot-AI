@@ -1,3 +1,5 @@
+import type { Product } from "../types/Product";
+
 type ProductSearchFilters = {
   keyword?: string;
   platform?: string;
@@ -19,7 +21,9 @@ export class ProductSearchError extends Error {
   }
 }
 
-export async function productSearch(filters: ProductSearchFilters) {
+export async function productSearch(
+  filters: ProductSearchFilters
+): Promise<Product[]> {
   const search =
   filters?.keyword ||
   filters?.query ||
@@ -40,25 +44,16 @@ export async function productSearch(filters: ProductSearchFilters) {
     }
   );
 
-  if (!response.ok) {
-    const contentType = response.headers.get("content-type") ?? "";
+  const body = await response.json().catch(() => null);
 
-    let message = "Product search failed.";
-
-    if (contentType.includes("application/json")) {
-      const body = await response.json().catch(() => null);
-      if (body && typeof body.error === "string") {
-        message = body.error;
-      }
-    } else {
-      const text = await response.text().catch(() => "");
-      if (text) {
-        message = text;
-      }
-    }
+  if (!response.ok || !body?.success) {
+    const message =
+      body?.error?.message ??
+      (typeof body?.error === "string" ? body.error : null) ??
+      "Product search failed.";
 
     throw new ProductSearchError(message, response.status);
   }
 
-  return await response.json();
+  return (body.data ?? []) as Product[];
 }

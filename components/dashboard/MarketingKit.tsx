@@ -38,7 +38,11 @@ export default function MarketingKit({
 
       const data = await res.json();
 
-      setMarketing(data);
+      if (res.ok && data?.success) {
+        setMarketing(data.data);
+      } else {
+        console.error(data?.error?.message ?? "Marketing generation failed.");
+      }
     } catch (err) {
       console.error(err);
     }

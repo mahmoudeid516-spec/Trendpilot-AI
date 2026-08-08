@@ -111,13 +111,13 @@ export default function Pricing() {
       
       const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.error || "Checkout failed");
+      if (!res.ok || !data?.success) {
+        alert(data?.error?.message || "Checkout failed");
         return;
       }
-      
-      window.location.href = data.url;
-    } 
+
+      window.location.href = data.data.url;
+    }
     catch (error: unknown) {
       console.error(error);
     

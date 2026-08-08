@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { getOpenAI, OPENAI_MODEL } from "../../../lib/openai";
+import { apiSuccess, apiError } from "../../../lib/apiResponse";
 
 type MarketingPayload = {
   facebook_ad: string;
@@ -58,7 +58,9 @@ export async function POST(req: Request) {
     const { product } = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(buildFallbackMarketing(product));
+      return apiSuccess(buildFallbackMarketing(product), {
+        meta: { source: "fallback" },
+      });
     }
 
     const openai = getOpenAI();
@@ -108,17 +110,10 @@ Return ONLY valid JSON.
       hashtags: normalizeHashtags(parsed.hashtags),
     };
 
-    return NextResponse.json(payload);
+    return apiSuccess(payload, { meta: { source: "openai" } });
   } catch (err) {
     console.error(err);
 
-    return NextResponse.json(
-      {
-        error: "Marketing generation failed.",
-      },
-      {
-        status: 500,
-      }
-    );
+    return apiError("AI_REQUEST_FAILED", "Marketing generation failed.", 500);
   }
 }

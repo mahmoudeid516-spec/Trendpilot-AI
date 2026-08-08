@@ -11,9 +11,10 @@ export async function analyzeProduct(product: string) {
 
   const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(JSON.stringify(data, null, 2));
+  if (!response.ok || !data?.success) {
+    const message = data?.error?.message ?? "Product analysis failed.";
+    throw new Error(message);
   }
 
-  return data.result;
+  return data.data;
 }

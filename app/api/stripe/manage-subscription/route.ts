@@ -1,22 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getStripe } from "../../../../lib/stripe";
+import { apiSuccess, apiError } from "../../../../lib/apiResponse";
 
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization") ?? "";
 
     if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !anonKey) {
-      return NextResponse.json(
-        { error: "Supabase configuration is missing." },
-        { status: 500 }
+      return apiError(
+        "CONFIG_ERROR",
+        "Supabase configuration is missing.",
+        500
       );
     }
 
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -44,9 +46,10 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (profileError || !profile?.email) {
-      return NextResponse.json(
-        { error: "Profile email is required to manage subscriptions." },
-        { status: 400 }
+      return apiError(
+        "PROFILE_EMAIL_MISSING",
+        "Profile email is required to manage subscriptions.",
+        400
       );
     }
 
@@ -60,9 +63,10 @@ export async function POST(req: NextRequest) {
     const customerId = customers.data[0]?.id;
 
     if (!customerId) {
-      return NextResponse.json(
-        { error: "No Stripe customer found for this account." },
-        { status: 404 }
+      return apiError(
+        "NO_STRIPE_CUSTOMER",
+        "No Stripe customer found for this account.",
+        404
       );
     }
 
@@ -76,13 +80,13 @@ export async function POST(req: NextRequest) {
       return_url: `${origin}/dashboard`,
     });
 
-    return NextResponse.json({ url: portalSession.url });
+    return apiSuccess({ url: portalSession.url });
   } catch (error: unknown) {
     console.error("Manage subscription error:", error);
 
     const message =
       error instanceof Error ? error.message : "Unable to open billing portal.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError("BILLING_PORTAL_FAILED", message, 500);
   }
 }

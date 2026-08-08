@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { getOpenAI, OPENAI_MODEL } from "../../../lib/openai";
+import { apiSuccess, apiError } from "../../../lib/apiResponse";
 
 function fallbackMarketingMarkdown(product: unknown): string {
   const input = product as {
@@ -22,9 +22,10 @@ export async function POST(req: Request) {
     const { product } = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({
-        marketing: fallbackMarketingMarkdown(product),
-      });
+      return apiSuccess(
+        { marketing: fallbackMarketingMarkdown(product) },
+        { meta: { source: "fallback" } }
+      );
     }
 
     const openai = getOpenAI();
@@ -67,21 +68,15 @@ Return beautiful markdown.
       input: prompt,
     });
 
-    return NextResponse.json({
-      marketing: response.output_text,
-    });
+    return apiSuccess(
+      { marketing: response.output_text },
+      { meta: { source: "openai" } }
+    );
 
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Marketing generation failed.";
 
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      {
-        status: 500,
-      }
-    );
+    return apiError("AI_REQUEST_FAILED", message, 500);
   }
 }

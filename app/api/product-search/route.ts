@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { searchDataForSeoProducts } from "../../../lib/services/dataforseoProductSearch";
+import { apiSuccess, apiError } from "../../../lib/apiResponse";
 
 export async function POST(req: Request) {
   try {
@@ -27,24 +27,19 @@ export async function POST(req: Request) {
         ? products
         : products.filter((product) => product.platform === platform);
 
-    return NextResponse.json(filtered);
+    return apiSuccess(filtered, {
+      meta: { query: String(search), platform, total: filtered.length },
+    });
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Product search failed.";
 
-    const status =
+    const isProviderNotConfigured =
       error instanceof Error &&
-      error.message.includes("DataForSEO credentials are missing")
-        ? 503
-        : 500;
+      error.message.includes("DataForSEO credentials are missing");
 
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      {
-        status,
-      }
-    );
+    return isProviderNotConfigured
+      ? apiError("PRODUCT_PROVIDER_ERROR", message, 503)
+      : apiError("PRODUCT_SEARCH_FAILED", message, 500);
   }
 }

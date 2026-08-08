@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getValidShopifyAccessToken } from "../../../../lib/services/shopifyConnections";
 import { fetchShopifyProducts } from "../../../../lib/services/shopifyProducts";
+import { apiSuccess, apiError } from "../../../../lib/apiResponse";
 
 // Returns the connected store's products as plain catalog data (never a
 // token). The access token is decrypted and used only inside this request,
@@ -15,16 +16,17 @@ import { fetchShopifyProducts } from "../../../../lib/services/shopifyProducts";
 export async function GET(req: NextRequest) {
   try {
     if (!process.env.SHOPIFY_API_KEY || !process.env.SHOPIFY_API_SECRET) {
-      return NextResponse.json(
-        { error: "Shopify integration is not configured." },
-        { status: 503 }
+      return apiError(
+        "SHOPIFY_PROVIDER_ERROR",
+        "Shopify integration is not configured.",
+        503
       );
     }
 
     const authHeader = req.headers.get("authorization") ?? "";
 
     if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const supabase = createClient(
@@ -45,18 +47,16 @@ export async function GET(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const connection = await getValidShopifyAccessToken(user.id);
 
     if (!connection) {
-      return NextResponse.json(
-        {
-          error:
-            "No connected Shopify store found. Connect a store first.",
-        },
-        { status: 404 }
+      return apiError(
+        "SHOPIFY_NOT_CONNECTED",
+        "No connected Shopify store found. Connect a store first.",
+        404
       );
     }
 
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       accessToken: connection.accessToken,
     });
 
-    return NextResponse.json(products);
+    return apiSuccess(products);
   } catch (error: unknown) {
     console.error("Shopify products fetch error:", error);
 
@@ -74,6 +74,6 @@ export async function GET(req: NextRequest) {
         ? error.message
         : "Unable to fetch Shopify products.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError("SHOPIFY_PRODUCTS_FETCH_FAILED", message, 500);
   }
 }

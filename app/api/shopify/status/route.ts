@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getShopifyConnectionStatus } from "../../../../lib/services/shopifyConnections";
+import { apiSuccess, apiError } from "../../../../lib/apiResponse";
 
 // Returns connection status only -- never a token, encrypted or otherwise.
 export async function GET(req: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("authorization") ?? "";
 
     if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const supabase = createClient(
@@ -29,12 +30,12 @@ export async function GET(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const status = await getShopifyConnectionStatus(user.id);
 
-    return NextResponse.json(status);
+    return apiSuccess(status);
   } catch (error: unknown) {
     console.error("Shopify status error:", error);
 
@@ -43,6 +44,6 @@ export async function GET(req: NextRequest) {
         ? error.message
         : "Unable to load Shopify connection status.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError("SHOPIFY_STATUS_FAILED", message, 500);
   }
 }

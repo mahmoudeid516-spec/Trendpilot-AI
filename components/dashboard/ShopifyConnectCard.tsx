@@ -51,8 +51,8 @@ export default function ShopifyConnectCard({ onProductsImported }: Props) {
 
         const data = await res.json();
 
-        if (res.ok) {
-          setStatus(data);
+        if (res.ok && data?.success) {
+          setStatus(data.data);
         }
       } catch (err) {
         console.error("Failed to load Shopify status:", err);
@@ -84,8 +84,8 @@ export default function ShopifyConnectCard({ onProductsImported }: Props) {
 
       const data = await res.json();
 
-      if (res.ok) {
-        setStatus(data);
+      if (res.ok && data?.success) {
+        setStatus(data.data);
       }
     } catch (err) {
       console.error("Failed to load Shopify status:", err);
@@ -125,13 +125,15 @@ export default function ShopifyConnectCard({ onProductsImported }: Props) {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Unable to start the Shopify connection.");
+      if (!res.ok || !data?.success) {
+        setError(
+          data?.error?.message || "Unable to start the Shopify connection."
+        );
         setConnecting(false);
         return;
       }
 
-      window.location.href = data.url;
+      window.location.href = data.data.url;
     } catch (err) {
       console.error("Shopify connect failed:", err);
       setError("Unable to start the Shopify connection.");
@@ -191,14 +193,14 @@ export default function ShopifyConnectCard({ onProductsImported }: Props) {
 
       const data = await res.json();
 
-      if (!res.ok) {
+      if (!res.ok || !data?.success) {
         setImportResult(
-          `❌ ${data.error || "Unable to import Shopify products."}`
+          `❌ ${data?.error?.message || "Unable to import Shopify products."}`
         );
         return;
       }
 
-      const products = ensureUniqueProductIds(data as Product[]);
+      const products = ensureUniqueProductIds(data.data as Product[]);
 
       const success = await importProducts(products);
 

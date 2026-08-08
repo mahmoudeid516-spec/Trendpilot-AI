@@ -6,12 +6,12 @@ export async function generateMarketing(product: unknown) {
       },
       body: JSON.stringify({ product }),
     });
-  
+
     const data = await response.json();
-  
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to generate marketing.");
+
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error?.message || "Failed to generate marketing.");
     }
-  
-    return data.marketing;
+
+    return data.data.marketing;
   }

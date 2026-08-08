@@ -9,10 +9,12 @@ export async function aiSearch(prompt: string) {
         prompt,
       }),
     });
-  
-    if (!response.ok) {
-      throw new Error("AI Search Failed");
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error?.message || "AI Search Failed");
     }
-  
-    return await response.json();
+
+    return data.data;
   }

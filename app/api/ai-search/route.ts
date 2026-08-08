@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
 import { getOpenAI, OPENAI_MODEL } from "../../../lib/openai";
+import { apiSuccess, apiError } from "../../../lib/apiResponse";
 
 export async function POST(req: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: "OPENAI_API_KEY is not configured." },
-        { status: 503 }
+      return apiError(
+        "AI_PROVIDER_ERROR",
+        "OPENAI_API_KEY is not configured.",
+        503
       );
     }
 
@@ -209,7 +210,7 @@ if (lowerPrompt.includes("aliexpress")) {
   result.platform = "AliExpress";
 }
 
-    return NextResponse.json(result);
+    return apiSuccess(result);
 
   } catch (error: unknown) {
 
@@ -218,14 +219,7 @@ if (lowerPrompt.includes("aliexpress")) {
 
     console.error(error);
 
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      {
-        status: 500,
-      }
-    );
+    return apiError("AI_REQUEST_FAILED", message, 500);
 
   }
 }

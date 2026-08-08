@@ -1,23 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import {
   createCheckoutSession,
   normalizePlan,
 } from "../../../../lib/billing";
+import { apiSuccess, apiError } from "../../../../lib/apiResponse";
 
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization") ?? "";
 
     if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
-      );
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const body = (await req.json().catch(() => ({}))) as {
@@ -44,14 +38,7 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
-      );
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const origin =
@@ -66,9 +53,7 @@ export async function POST(req: NextRequest) {
       origin,
     });
 
-    return NextResponse.json({
-      url: session.url,
-    });
+    return apiSuccess({ url: session.url });
 
   } catch (error: unknown) {
     console.error("Stripe Error:", error);
@@ -76,13 +61,6 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error ? error.message : "Checkout failed.";
 
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      {
-        status: 500,
-      }
-    );
+    return apiError("CHECKOUT_FAILED", message, 500);
   }
 }

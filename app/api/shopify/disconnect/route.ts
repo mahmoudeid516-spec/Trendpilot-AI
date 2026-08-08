@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { revokeShopifyConnection } from "../../../../lib/services/shopifyConnections";
+import { apiSuccess, apiError } from "../../../../lib/apiResponse";
 
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization") ?? "";
 
     if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const supabase = createClient(
@@ -28,12 +29,12 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     await revokeShopifyConnection(user.id);
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ disconnected: true });
   } catch (error: unknown) {
     console.error("Shopify disconnect error:", error);
 
@@ -42,6 +43,6 @@ export async function POST(req: NextRequest) {
         ? error.message
         : "Unable to disconnect the Shopify store.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError("SHOPIFY_DISCONNECT_FAILED", message, 500);
   }
 }
