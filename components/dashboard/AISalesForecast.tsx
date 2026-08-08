@@ -79,14 +79,14 @@ export default function AISalesForecast({ product }: Props) {
         <div className="rounded-2xl bg-green-50 p-6">
           <p className="text-gray-500">30-Day Revenue</p>
           <h2 className="text-4xl font-bold mt-3">
-            ${periods[1].revenue.toLocaleString()}
+            ${periods[1].revenue.toLocaleString("en-US")}
           </h2>
         </div>
 
         <div className="rounded-2xl bg-purple-50 p-6">
           <p className="text-gray-500">30-Day Profit</p>
           <h2 className="text-4xl font-bold mt-3">
-            ${periods[1].profit.toLocaleString()}
+            ${periods[1].profit.toLocaleString("en-US")}
           </h2>
         </div>
 
@@ -114,11 +114,11 @@ export default function AISalesForecast({ product }: Props) {
             </p>
 
             <p className="mt-2 text-gray-700">
-              Revenue ${period.revenue.toLocaleString()}
+              Revenue ${period.revenue.toLocaleString("en-US")}
             </p>
 
             <p className="text-gray-700">
-              Profit ${period.profit.toLocaleString()}
+              Profit ${period.profit.toLocaleString("en-US")}
             </p>
           </div>
         ))}

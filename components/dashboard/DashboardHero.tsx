@@ -1,7 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { getProfile } from "../../services/profile";
+
+// "Today" depends on the reader's local timezone, so the server (running
+// in its own timezone) and the client can legitimately disagree on what
+// today's date is -- rendering it directly during render is what causes
+// React's hydration mismatch here. useSyncExternalStore is the React
+// primitive built for exactly this: getServerSnapshot supplies a
+// deterministic placeholder for the SSR pass and React's first client
+// render (so hydration never mismatches), then the real client-local
+// date is swapped in immediately after.
+function subscribeNever() {
+  return () => {};
+}
+
+function getTodayLabel() {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function getServerTodayLabel() {
+  return null;
+}
+
+function useTodayLabel() {
+  return useSyncExternalStore(
+    subscribeNever,
+    getTodayLabel,
+    getServerTodayLabel
+  );
+}
 
 type Props = {
   totalProducts: number;
@@ -30,11 +62,7 @@ export default function DashboardHero({
     loadProfile();
   }, []);
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const today = useTodayLabel();
 
   return (
     <section className="mb-10">
@@ -71,7 +99,7 @@ export default function DashboardHero({
                 </p>
 
                 <h3 className="font-bold">
-                  {today}
+                  {today ?? " "}
                 </h3>
               </div>
 

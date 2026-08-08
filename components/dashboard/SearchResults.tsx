@@ -66,7 +66,7 @@ export default function SearchResults({ results }: Props) {
             </h3>
 
             <p className="text-gray-500 mt-2">
-              ⭐ {rating.toFixed(1)} • {orders.toLocaleString()} Orders
+              ⭐ {rating.toFixed(1)} • {orders.toLocaleString("en-US")} Orders
             </p>
 
             <p className="text-2xl font-bold text-green-600 mt-3">
