@@ -17,8 +17,13 @@ import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
 import { importProducts } from "../../lib/importers/importProducts";
 import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
-import { productSearch } from "../../services/productSearch";
+import { productSearch, ProductSearchError } from "../../services/productSearch";
 import type { Product } from "../../types/Product";
+
+type SearchStatus = {
+  type: "found" | "empty" | "unavailable" | "error";
+  message: string;
+};
 
 export default function DashboardPage() {
 
@@ -36,6 +41,7 @@ export default function DashboardPage() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [savedProducts, setSavedProducts] = useState<Product[]>([]);
+  const [searchStatus, setSearchStatus] = useState<SearchStatus | null>(null);
 
   useEffect(() => {
     async function checkUser() {
@@ -128,6 +134,7 @@ export default function DashboardPage() {
     }
 
     setIsSearching(true);
+    setSearchStatus(null);
 
     try {
       const products = await productSearch({
@@ -141,18 +148,42 @@ export default function DashboardPage() {
 
       setSearchResults(mappedProducts);
 
-      await importProducts(mappedProducts);
+      if (mappedProducts.length === 0) {
+        setSearchStatus({
+          type: "empty",
+          message: "No matching products found.",
+        });
+      } else {
+        setSearchStatus({
+          type: "found",
+          message: `Found ${mappedProducts.length} product${
+            mappedProducts.length === 1 ? "" : "s"
+          }.`,
+        });
+
+        await importProducts(mappedProducts);
+        setRefreshKey((prev) => prev + 1);
+      }
 
       setSearch(searchText);
       setPlatform(selectedPlatform);
-      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error("Product search failed:", error);
 
-      const message =
-        error instanceof Error ? error.message : "Product search failed.";
+      if (error instanceof ProductSearchError && error.status === 503) {
+        setSearchStatus({
+          type: "unavailable",
+          message: "Product search is temporarily unavailable. Please try again.",
+        });
+      } else {
+        setSearchStatus({
+          type: "error",
+          message:
+            error instanceof Error ? error.message : "Product search failed.",
+        });
+      }
 
-      alert(message);
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -183,13 +214,28 @@ export default function DashboardPage() {
 
           <AICommandCenter />
 
-          <SearchBar 
+          <SearchBar
             search={search}
             setSearch={setSearch}
             platform={platform}
             setPlatform={setPlatform}
             onSearch={handleSearch}
+            isSearching={isSearching}
           />
+
+          {searchStatus && (
+            <div
+              className={`mb-8 rounded-2xl p-4 text-sm font-semibold ${
+                searchStatus.type === "found"
+                  ? "bg-green-100 text-green-700"
+                  : searchStatus.type === "empty"
+                  ? "bg-gray-100 text-gray-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {searchStatus.message}
+            </div>
+          )}
 
           {/* TEMP DISABLED
 
