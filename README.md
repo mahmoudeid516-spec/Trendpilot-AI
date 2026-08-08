@@ -44,6 +44,47 @@ AI product search uses DataForSEO as the only provider.
 - If credentials are missing, the API returns `503`.
 - No fake/mock fallback products are returned.
 
+## Shopify integration
+
+Users connect their own Shopify store from `/dashboard/integrations`. Uses
+the official `@shopify/shopify-api` package and Shopify's expiring
+offline-token OAuth flow (access token + refresh token, both with their own
+expiry) -- not the legacy non-expiring offline token.
+
+### Required environment variables
+
+- `SHOPIFY_API_KEY`:
+	- required
+	- Shopify app Client ID
+- `SHOPIFY_API_SECRET`:
+	- required
+	- Shopify app Client Secret; also used to verify OAuth callback and
+	  webhook HMAC signatures
+- `SHOPIFY_TOKEN_ENCRYPTION_KEY`:
+	- required
+	- base64-encoded 32-byte key used to encrypt stored access/refresh
+	  tokens (AES-256-GCM). Generate with `openssl rand -base64 32`.
+	  Never reuse another secret for this.
+- `NEXT_PUBLIC_SITE_URL`:
+	- required (already used by the Stripe integration)
+	- must exactly match the app's public URL; used to build the OAuth
+	  redirect URI (`${NEXT_PUBLIC_SITE_URL}/api/shopify/callback`), which
+	  must also be allow-listed in the Shopify Partner app configuration.
+
+### Required Shopify app configuration (outside this codebase)
+
+Configure these as **app-specific webhook subscriptions** in the Shopify
+Partner Dashboard (or `shopify.app.toml`, if this app later adopts the
+Shopify CLI), all pointing at
+`${NEXT_PUBLIC_SITE_URL}/api/shopify/webhook`:
+
+- `app/uninstalled`
+- `customers/data_request` (mandatory GDPR/privacy webhook)
+- `customers/redact` (mandatory GDPR/privacy webhook)
+- `shop/redact` (mandatory GDPR/privacy webhook)
+
+The app requests only the `read_products` scope.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

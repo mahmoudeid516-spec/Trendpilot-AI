@@ -8,6 +8,7 @@ import {
   Sparkles,
   BarChart3,
   ShoppingBag,
+  Plug,
   Settings,
   Crown,
   LogOut,
@@ -43,6 +44,11 @@ export default function Sidebar() {
       title: "Products",
       href: "/products",
       icon: ShoppingBag,
+    },
+    {
+      title: "Integrations",
+      href: "/dashboard/integrations",
+      icon: Plug,
     },
     {
       title: "Analytics",
