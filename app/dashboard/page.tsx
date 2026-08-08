@@ -10,9 +10,10 @@ import BusinessOverview from "../../components/dashboard/BusinessOverview";
 import AIInsights from "../../components/dashboard/AIInsights";
 import AICommandCenter from "../../components/dashboard/AICommandCenter";
 import SearchBar from "../../components/dashboard/SearchBar";
+import ProGate from "../../components/dashboard/ProGate";
+import AIAnalyzer from "../../components/dashboard/AIAnalyzer";
 import ProductsTable from "../../components/dashboard/ProductsTable";
 import ProductDetails from "../../components/dashboard/ProductDetails";
-import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
 import { importProducts } from "../../lib/importers/importProducts";
@@ -237,39 +238,13 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TEMP DISABLED
-
-<ProGate>
-  <AIAnalyzer
-    onProductSaved={() => {
-      setRefreshKey((prev) => prev + 1);
-    }}
-  />
-</ProGate>
-
-<Filters
-  platform={platform}
-  setPlatform={setPlatform}
-/>
-
-<ProductsTable
-  products={searchResults}
-  refreshKey={refreshKey}
-  search={search}
-  platform={platform}
-  onSelectProduct={(product) => {
-    setSelectedProduct(product);
-    setShowProductModal(true);
-  }}
-/>
-
-{searchResults.length > 0 &&
-  console.log("[TRACE][Dashboard][ProductsTable props]", {
-    count: searchResults.length,
-    ids: searchResults.map((product) => product.id),
-  })}
-
-*/}
+          <ProGate>
+            <AIAnalyzer
+              onProductSaved={() => {
+                setRefreshKey((prev) => prev + 1);
+              }}
+            />
+          </ProGate>
 
 <ProductsTable
   products={searchResults}
@@ -308,9 +283,6 @@ export default function DashboardPage() {
 
   </div>
 )}
-
-<TrendChart />
-          {/* TEMP DISABLED */}
 
         </div>
 

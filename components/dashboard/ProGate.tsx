@@ -66,7 +66,7 @@ export default function ProGate({ children }: Props) {
         return;
       }
 
-      const response = await fetch("/api/create-checkout-session", {
+      const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,9 +80,9 @@ export default function ProGate({ children }: Props) {
       const data = await response.json();
 
       if (data.url) {
-        router.push(data.url);
+        window.location.href = data.url;
       } else {
-        alert("Unable to start checkout.");
+        alert(data.error ?? "Unable to start checkout.");
       }
     } catch (error) {
       console.error(error);
@@ -117,7 +117,7 @@ export default function ProGate({ children }: Props) {
       const data = await response.json();
 
       if (data.url) {
-        router.push(data.url);
+        window.location.href = data.url;
       } else {
         alert(data.error ?? "Unable to open billing settings.");
       }
