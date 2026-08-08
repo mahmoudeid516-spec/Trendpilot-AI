@@ -12,6 +12,12 @@ type Props = {
   platform: string;
   refreshKey: number;
   onSelectProduct: (product: Product) => void;
+  // True when the most recent search attempt failed (provider error,
+  // credentials missing, timeout, malformed response, etc.) rather than
+  // legitimately returning zero results. The table's own empty state must
+  // never look identical for these two cases -- a failed search is not
+  // "no products found."
+  searchFailed?: boolean;
 };
 
 const PAGE_SIZE = 10;
@@ -34,7 +40,7 @@ function competitionColor(level: string) {
 
 type TableBodyProps = {
   products: Product[];
-  filteredEmpty: boolean;
+  searchFailed: boolean;
   onSelectProduct: (product: Product) => void;
 };
 
@@ -46,7 +52,7 @@ type TableBodyProps = {
 // treats as errors.
 function ProductsTableBody({
   products,
-  filteredEmpty,
+  searchFailed,
   onSelectProduct,
 }: TableBodyProps) {
   const [page, setPage] = useState(1);
@@ -74,7 +80,21 @@ function ProductsTableBody({
         </thead>
 
         <tbody>
-          {products.length === 0 && (
+          {products.length === 0 && searchFailed && (
+            <tr>
+              <td colSpan={7} className="py-12 text-center">
+                <p className="text-xl font-bold text-red-700">
+                  Search failed -- this is not an empty result
+                </p>
+
+                <p className="mt-2 text-gray-500">
+                  See the message above for what went wrong, then try again.
+                </p>
+              </td>
+            </tr>
+          )}
+
+          {products.length === 0 && !searchFailed && (
             <tr>
               <td colSpan={7} className="py-12 text-center">
                 <p className="text-xl font-bold text-gray-700">
@@ -192,12 +212,6 @@ function ProductsTableBody({
         </tbody>
       </table>
 
-      {filteredEmpty && (
-        <div className="text-center py-20 text-gray-500">
-          No Products Found
-        </div>
-      )}
-
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-center gap-4">
           <button
@@ -231,6 +245,7 @@ export default function ProductsTable({
   platform,
   refreshKey,
   onSelectProduct,
+  searchFailed = false,
 }: Props) {
   const [savedProducts, setSavedProducts] = useState<Product[]>([]);
 
@@ -291,9 +306,9 @@ export default function ProductsTable({
 
       <div className="overflow-x-auto">
         <ProductsTableBody
-          key={`${refreshKey}|${search}|${platform}|${isSearchResultsMode}`}
+          key={`${refreshKey}|${search}|${platform}|${isSearchResultsMode}|${searchFailed}`}
           products={stableDisplayedProducts}
-          filteredEmpty={filtered.length === 0}
+          searchFailed={searchFailed}
           onSelectProduct={onSelectProduct}
         />
       </div>

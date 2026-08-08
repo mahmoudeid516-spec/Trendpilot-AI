@@ -305,6 +305,11 @@ export default function DashboardPage() {
   refreshKey={refreshKey}
   search={search}
   platform={platform}
+  searchFailed={Boolean(
+    searchStatus &&
+    searchStatus.type !== "found" &&
+    searchStatus.type !== "empty"
+  )}
   onSelectProduct={(product) => {
     setSelectedProduct(product);
     setShowProductModal(true);
