@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { supabase } from "../../lib/supabase";
+import { productImageOrPlaceholder } from "../../lib/productImagePlaceholder";
 import type { Product } from "../../types/Product";
 
 type Props = {
@@ -127,11 +128,11 @@ Platform
 </th>
 
 <th>
-AI
+AI (Est.)
 </th>
 
 <th>
-Trend
+Trend (Est.)
 </th>
 
 <th>
@@ -139,7 +140,7 @@ Competition
 </th>
 
 <th>
-Profit
+Profit (Est.)
 </th>
 
 <th>
@@ -160,7 +161,7 @@ Profit
       </p>
 
       <p className="mt-2 text-gray-500">
-        Try searching for a product keyword or import demo products to get started.
+        Try searching for a product keyword to get started.
       </p>
     </td>
   </tr>
@@ -178,7 +179,7 @@ className="border-b hover:bg-purple-50 transition duration-300"
 <div className="flex gap-4 items-center">
 
 <img
-  src={product.image || "https://picsum.photos/200"}
+  src={productImageOrPlaceholder(product.image)}
   alt={product.name}
   className="w-20 h-20 rounded-2xl object-cover shadow"
 />

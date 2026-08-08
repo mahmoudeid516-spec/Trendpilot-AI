@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Product } from "../../types/Product";
+import { productImageOrPlaceholder } from "../../lib/productImagePlaceholder";
 
 type Props = {
   product: Product;
@@ -12,11 +13,7 @@ export default function ProductCard({
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300">
 
       <img
-        src={
-          product.image?.trim()
-            ? product.image
-            : "https://picsum.photos/400"
-        }
+        src={productImageOrPlaceholder(product.image)}
         alt={product.name}
         className="w-full h-56 object-cover"
       />
@@ -35,7 +32,7 @@ export default function ProductCard({
 
           <div className="bg-purple-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-500">
-              AI Score
+              AI Score (Est.)
             </p>
 
             <h3 className="text-xl font-bold text-purple-600">
@@ -45,7 +42,7 @@ export default function ProductCard({
 
           <div className="bg-green-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-500">
-              Profit
+              Est. Profit
             </p>
 
             <h3 className="text-xl font-bold text-green-600">
@@ -55,7 +52,7 @@ export default function ProductCard({
 
           <div className="bg-orange-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-500">
-              Trend
+              Trend (Est.)
             </p>
 
             <h3 className="text-xl font-bold text-orange-600">

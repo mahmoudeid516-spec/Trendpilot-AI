@@ -1,4 +1,5 @@
 import type { Product } from "../../types/Product";
+import { productImageOrPlaceholder } from "../../lib/productImagePlaceholder";
 
 type Props = {
   results: Product[];
@@ -55,7 +56,7 @@ export default function SearchResults({ results }: Props) {
 </div>
             
             <img
-              src={product.image}
+              src={productImageOrPlaceholder(product.image)}
               alt={product.name}
               className="w-full h-52 object-cover rounded-xl"
             />
@@ -78,14 +79,14 @@ export default function SearchResults({ results }: Props) {
 
             <div className="grid grid-cols-2 gap-3 mt-5">
               <div className="bg-purple-50 rounded-xl p-3 text-center">
-                <p className="text-xs">Opportunity</p>
+                <p className="text-xs">Opportunity (Est.)</p>
                 <h4 className="font-bold text-xl">
                   {Math.round(opportunity)}
                 </h4>
               </div>
 
               <div className="bg-blue-50 rounded-xl p-3 text-center">
-                <p className="text-xs">AI Score</p>
+                <p className="text-xs">AI Score (Est.)</p>
                 <h4 className="font-bold text-xl">
                   {product.ai_score}%
                 </h4>

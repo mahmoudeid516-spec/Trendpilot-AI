@@ -43,14 +43,24 @@ function asNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function normalizeSource(value: string | undefined): Product["source"] {
-  const source = String(value ?? "").toLowerCase();
+// This provider only ever queries DataForSEO's merchant/amazon/products
+// endpoint (see searchDataForSeoProducts below), so every item it returns
+// genuinely is an Amazon listing -- labeling it as anything else (or
+// guessing from a "source" field the endpoint doesn't reliably populate)
+// would misrepresent real data as something it isn't.
+const PRODUCT_SOURCE: Product["source"] = "Amazon";
 
-  if (source.includes("amazon")) return "Amazon";
-  if (source.includes("shopify")) return "Shopify";
-
-  return "AliExpress";
-}
+// DataForSEO location codes we can honestly label. Falls back to "Unknown"
+// rather than guessing, so the country field never claims a region we
+// didn't actually search.
+const COUNTRY_NAME_BY_LOCATION_CODE: Record<number, string> = {
+  2840: "United States",
+  2826: "United Kingdom",
+  2124: "Canada",
+  2036: "Australia",
+  2276: "Germany",
+  2250: "France",
+};
 
 function normalizeCompetition(reviews: number): Product["competition"] {
   if (reviews > 1000) return "High";
@@ -58,18 +68,31 @@ function normalizeCompetition(reviews: number): Product["competition"] {
   return "Low";
 }
 
-function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
+function normalizeItemsToProducts(
+  items: DataForSeoItem[],
+  keyword: string,
+  locationCode: number
+): Product[] {
   const products: Product[] = [];
 
+  const country = COUNTRY_NAME_BY_LOCATION_CODE[locationCode] ?? "Unknown";
+  const category = keyword.trim()
+    ? keyword.trim().replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Uncategorized";
+
   for (const item of items) {
+    // This is the real, current Amazon listing price for the item --
+    // genuine market data, not an estimate.
     const buyPrice = asNumber(item.price?.current, 0);
     if (!buyPrice) continue;
 
-    const source = normalizeSource(item.source);
     const rating = asNumber(item.rating?.value, 0);
     const reviews = asNumber(item.rating?.votes_count, 0);
     const sales = Math.max(0, Math.round(reviews * 0.4));
 
+    // Everything below this point is a heuristic estimate derived from the
+    // real price/rating/review data above -- none of it is verified market
+    // data. It must be presented in the UI as an estimate, never as fact.
     const sellingPrice = Number((buyPrice * 2.3).toFixed(2));
     const profit = Number((sellingPrice - buyPrice).toFixed(2));
     const roi = buyPrice > 0 ? Math.round((profit / buyPrice) * 100) : 0;
@@ -88,24 +111,24 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
       id: buildStableProductId({
         id: item.url,
         name: item.title,
-        platform: source,
+        platform: PRODUCT_SOURCE,
         product_url: item.url,
         supplier_url: item.url,
-        category: "General",
+        category,
         buy_price: buyPrice,
         selling_price: sellingPrice,
       }),
-      source,
-      platform: source,
+      source: PRODUCT_SOURCE,
+      platform: PRODUCT_SOURCE,
       name: String(item.title ?? "").trim(),
       description: String(item.description ?? item.title ?? "").trim(),
       image: String(item.image_url ?? "").trim(),
-      category: "General",
-      brand: String(item.seller ?? source).trim(),
+      category,
+      brand: String(item.seller ?? PRODUCT_SOURCE).trim(),
       product_url: String(item.url ?? "").trim(),
-      supplier: String(item.seller ?? source).trim(),
+      supplier: String(item.seller ?? PRODUCT_SOURCE).trim(),
       supplier_url: String(item.url ?? "").trim(),
-      store_name: String(item.seller ?? source).trim(),
+      store_name: String(item.seller ?? PRODUCT_SOURCE).trim(),
       store_rating: rating,
       supplier_rating: rating,
       currency: String(item.price?.currency ?? "USD"),
@@ -116,8 +139,7 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
       sales,
       orders: sales,
       reviews,
-      country: "US",
-      shipping_days: 10,
+      country,
       ai_score: aiScore,
       trend_score: trendScore,
       viral_score: viralScore,
@@ -126,12 +148,9 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
       risk_score: competition === "High" ? 80 : competition === "Medium" ? 45 : 20,
       winning_probability: Math.min(100, Math.round((aiScore + opportunityScore) / 2)),
       decision: opportunityScore >= 85 ? "Strong Buy" : opportunityScore >= 70 ? "Test First" : "Avoid",
-      ai_reason: "",
+      ai_reason:
+        "Estimated from the current Amazon price, rating, and review volume. Not verified market or profit data.",
       competition,
-      trend_direction: "Stable",
-      seasonality: "Evergreen",
-      cpm: 0,
-      cpa: 0,
     };
 
     if (!product.name || !product.image || !product.product_url) continue;
@@ -256,5 +275,5 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
 
   const items = getData.tasks?.[0]?.result?.[0]?.items ?? [];
 
-  return normalizeItemsToProducts(items);
+  return normalizeItemsToProducts(items, keyword, locationCode);
 }

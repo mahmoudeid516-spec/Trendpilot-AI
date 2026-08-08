@@ -87,7 +87,7 @@ export default function AIAnalyzer({
   
       const productObject = {
         name: productData.name,
-        image: searchData.image ?? "https://picsum.photos/400",
+        image: searchData.image ?? "",
         platform,
         category: productData.category ?? "General",
         description: productData.description ?? "",
