@@ -89,6 +89,11 @@ export default function DashboardPage() {
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error("Product search failed:", error);
+
+      const message =
+        error instanceof Error ? error.message : "Product search failed.";
+
+      alert(message);
     } finally {
       setIsSearching(false);
     }

@@ -26,6 +26,12 @@ type DataForSeoResult = {
 
 type DataForSeoTask = {
   result?: DataForSeoResult[];
+  // Per-task status, distinct from the top-level API response status_code.
+  // 20000 means this specific task has finished processing and has
+  // results; other codes (e.g. task still queued/in progress) mean the
+  // task isn't ready yet and must be polled again.
+  status_code?: number;
+  status_message?: string;
 };
 
 type DataForSeoResponse = {
@@ -136,6 +142,64 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
   return ensureUniqueProductIds(products);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// task_post only queues the job; DataForSEO processes merchant/product
+// tasks asynchronously and typically takes several seconds to complete.
+// Polling task_get immediately (as this used to do) almost always hits an
+// unfinished task, which silently resolves to zero items rather than an
+// error -- that's the bug this loop fixes. Bounded to stay well under
+// common serverless function timeouts.
+const TASK_POLL_MAX_ATTEMPTS = 10;
+const TASK_POLL_INTERVAL_MS = 2000;
+
+async function pollDataForSeoTask(
+  taskId: string,
+  auth: string
+): Promise<DataForSeoResponse> {
+  for (let attempt = 0; attempt < TASK_POLL_MAX_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(TASK_POLL_INTERVAL_MS);
+    }
+
+    const getResponse = await fetch(
+      `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      }
+    );
+
+    const getData = (await getResponse.json()) as DataForSeoResponse & {
+      status_code?: number;
+      status_message?: string;
+    };
+
+    if (!getResponse.ok || getData.status_code !== 20000) {
+      throw new Error(
+        `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`
+      );
+    }
+
+    // The top-level status_code above only confirms the *request to check
+    // status* succeeded -- the task's own status_code says whether the
+    // task itself has actually finished processing.
+    const taskStatusCode = getData.tasks?.[0]?.status_code;
+
+    if (taskStatusCode === 20000) {
+      return getData;
+    }
+  }
+
+  throw new Error(
+    "DataForSEO task did not complete in time. Please try again."
+  );
+}
+
 export async function searchDataForSeoProducts(keyword: string): Promise<Product[]> {
   const login = process.env.DATAFORSEO_LOGIN;
   const password = process.env.DATAFORSEO_PASSWORD;
@@ -188,26 +252,7 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
     throw new Error("DataForSEO task id was not returned.");
   }
 
-  const getResponse = await fetch(
-    `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
-    }
-  );
-
-  const getData = (await getResponse.json()) as DataForSeoResponse & {
-    status_code?: number;
-    status_message?: string;
-  };
-
-  if (!getResponse.ok || getData.status_code !== 20000) {
-    throw new Error(
-      `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`
-    );
-  }
+  const getData = await pollDataForSeoTask(taskId, auth);
 
   const items = getData.tasks?.[0]?.result?.[0]?.items ?? [];
 
