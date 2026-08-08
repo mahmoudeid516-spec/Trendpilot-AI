@@ -339,32 +339,36 @@ export default function ProductDetails({
 
   <div className="rounded-2xl bg-green-50 border border-green-200 p-6">
 
-    <h3 className="text-2xl font-bold mb-5">
+    <h3 className="text-2xl font-bold mb-2">
       💼 AI Business Coach
     </h3>
+
+    <p className="mb-5 text-sm text-gray-500">
+      {plan.estimateNote}
+    </p>
 
     <div className="grid md:grid-cols-2 gap-6">
 
       <div>
 
         <p className="mb-3">
-          <strong>Verdict:</strong> {plan.verdict}
+          <strong>Verdict (Est.):</strong> {plan.verdict}
         </p>
 
         <p className="mb-3">
-          <strong>Suggested Selling Price:</strong> ${plan.sellingPrice}
+          <strong>Suggested Selling Price (Est.):</strong> ${plan.sellingPrice}
         </p>
 
         <p className="mb-3">
-          <strong>Expected Profit:</strong> ${plan.expectedProfit}
+          <strong>Expected Profit (Est.):</strong> ${plan.expectedProfit}
         </p>
 
         <p className="mb-3">
-          <strong>Daily Budget:</strong> ${plan.dailyBudget}
+          <strong>Daily Budget (Est.):</strong> ${plan.dailyBudget}
         </p>
 
         <p>
-          <strong>Break-even Sales:</strong> {plan.breakEvenSales} sales/day
+          <strong>Break-even Sales (Est.):</strong> {plan.breakEvenSales} sales/day
         </p>
 
       </div>
@@ -372,23 +376,11 @@ export default function ProductDetails({
       <div>
 
         <p className="mb-3">
-          <strong>Best Platform:</strong> {plan.bestPlatform}
+          <strong>Best Platform (Est.):</strong> {plan.bestPlatform}
         </p>
-
-        <p className="font-bold mb-2">
-          Best Countries
-        </p>
-
-        <ul className="list-disc ml-5 space-y-1">
-
-          {plan.bestCountries.map((country) => (
-            <li key={country}>{country}</li>
-          ))}
-
-        </ul>
 
         <p className="font-bold mt-5 mb-2">
-          Launch Strategy
+          Example Launch Checklist
         </p>
 
         <ol className="list-decimal ml-5 space-y-1">
