@@ -38,6 +38,37 @@ type DataForSeoResponse = {
   tasks?: DataForSeoTask[];
 };
 
+// Distinguishes *why* the provider failed so the route/UI can show a
+// specific, actionable state instead of a single generic "no products"
+// message that looks identical to a legitimate empty result. providerStatus
+// is a safe HTTP/provider status code only -- never a credential, header,
+// or raw response body that could leak anything sensitive.
+export type DataForSeoErrorCode =
+  | "MISSING_CREDENTIALS"
+  | "AUTH_FAILED"
+  | "TIMEOUT"
+  | "MALFORMED_RESPONSE"
+  | "REQUEST_FAILED";
+
+export class DataForSeoError extends Error {
+  code: DataForSeoErrorCode;
+  providerStatus?: number;
+
+  constructor(code: DataForSeoErrorCode, message: string, providerStatus?: number) {
+    super(message);
+    this.name = "DataForSeoError";
+    this.code = code;
+    this.providerStatus = providerStatus;
+  }
+}
+
+function log(event: string, details: Record<string, unknown>) {
+  // Safe diagnostics only: query text, provider name, HTTP/provider status
+  // codes, and item counts. Never credentials, auth headers, or raw
+  // response bodies (which could echo back sensitive request data).
+  console.log(`[dataforseo] ${event}`, details);
+}
+
 function asNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -167,6 +198,36 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Reads and parses a DataForSEO response body safely. The provider (or
+// anything in front of it -- a gateway, an egress proxy, a WAF) can return
+// a non-JSON error page instead of the documented JSON envelope; treating
+// that as MALFORMED_RESPONSE instead of letting JSON.parse's SyntaxError
+// leak a raw response body keeps the error message clean and honest about
+// what actually happened.
+async function parseDataForSeoJson(
+  response: Response,
+  step: "task_post" | "task_get"
+): Promise<Record<string, unknown>> {
+  const text = await response.text();
+
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    log(`${step}_malformed_response`, {
+      httpStatus: response.status,
+      bodyPreview: text.slice(0, 200),
+    });
+
+    throw new DataForSeoError(
+      "MALFORMED_RESPONSE",
+      `DataForSEO returned a non-JSON response during ${step} (HTTP ${response.status}). ` +
+        `This usually means the request never reached DataForSEO -- for example an egress/network ` +
+        `policy blocking api.dataforseo.com -- rather than a DataForSEO-side error.`,
+      response.status
+    );
+  }
+}
+
 // task_post only queues the job; DataForSEO processes merchant/product
 // tasks asynchronously and typically takes several seconds to complete.
 // Polling task_get immediately (as this used to do) almost always hits an
@@ -195,14 +256,37 @@ async function pollDataForSeoTask(
       }
     );
 
-    const getData = (await getResponse.json()) as DataForSeoResponse & {
+    // Parse the body before branching on HTTP status: a network/egress
+    // block in front of DataForSEO can also return 401/403 with a plain
+    // text page, and that must surface as MALFORMED_RESPONSE (the request
+    // never reached DataForSEO), not as "DataForSEO rejected your
+    // credentials" -- only a real DataForSEO JSON envelope with a 401/403
+    // means the credentials were actually checked and rejected.
+    const getData = (await parseDataForSeoJson(getResponse, "task_get")) as DataForSeoResponse & {
       status_code?: number;
       status_message?: string;
     };
 
+    if (getResponse.status === 401 || getResponse.status === 403) {
+      log("task_get_auth_failed", { httpStatus: getResponse.status, attempt });
+      throw new DataForSeoError(
+        "AUTH_FAILED",
+        "DataForSEO rejected the configured credentials while checking task status.",
+        getResponse.status
+      );
+    }
+
     if (!getResponse.ok || getData.status_code !== 20000) {
-      throw new Error(
-        `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`
+      log("task_get_failed", {
+        httpStatus: getResponse.status,
+        providerStatusCode: getData.status_code,
+        attempt,
+      });
+
+      throw new DataForSeoError(
+        "REQUEST_FAILED",
+        `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`,
+        getData.status_code ?? getResponse.status
       );
     }
 
@@ -212,12 +296,16 @@ async function pollDataForSeoTask(
     const taskStatusCode = getData.tasks?.[0]?.status_code;
 
     if (taskStatusCode === 20000) {
+      log("task_get_complete", { attempt, taskStatusCode });
       return getData;
     }
   }
 
-  throw new Error(
-    "DataForSEO task did not complete in time. Please try again."
+  log("task_get_timeout", { maxAttempts: TASK_POLL_MAX_ATTEMPTS });
+
+  throw new DataForSeoError(
+    "TIMEOUT",
+    "DataForSEO task did not complete in time. Please try again.",
   );
 }
 
@@ -225,8 +313,18 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
   const login = process.env.DATAFORSEO_LOGIN;
   const password = process.env.DATAFORSEO_PASSWORD;
 
+  log("search_start", {
+    query: keyword,
+    provider: "dataforseo",
+    hasLogin: Boolean(login),
+    hasPassword: Boolean(password),
+    locationCodeConfigured: Boolean(process.env.DATAFORSEO_LOCATION_CODE),
+    languageCodeConfigured: Boolean(process.env.DATAFORSEO_LANGUAGE_CODE),
+  });
+
   if (!login || !password) {
-    throw new Error(
+    throw new DataForSeoError(
+      "MISSING_CREDENTIALS",
       "DataForSEO credentials are missing. Set DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD."
     );
   }
@@ -255,27 +353,59 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
     }
   );
 
-  const postData = (await response.json()) as {
+  // Parse the body before branching on HTTP status: a network/egress block
+  // in front of DataForSEO can also return 401/403 with a plain text page,
+  // and that must surface as MALFORMED_RESPONSE (the request never reached
+  // DataForSEO), not as "DataForSEO rejected your credentials" -- only a
+  // real DataForSEO JSON envelope with a 401/403 means the credentials
+  // were actually checked and rejected.
+  const postData = (await parseDataForSeoJson(response, "task_post")) as {
     tasks?: Array<{ id?: string }>;
     status_code?: number;
     status_message?: string;
   };
 
+  log("task_post_response", {
+    httpStatus: response.status,
+    providerStatusCode: postData.status_code,
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    log("task_post_auth_failed", { httpStatus: response.status });
+    throw new DataForSeoError(
+      "AUTH_FAILED",
+      "DataForSEO rejected the configured credentials. Check DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD.",
+      response.status
+    );
+  }
+
   if (!response.ok || postData.status_code !== 20000) {
-    throw new Error(
-      `DataForSEO task creation failed: ${postData.status_message ?? "Unknown error"}`
+    throw new DataForSeoError(
+      "REQUEST_FAILED",
+      `DataForSEO task creation failed: ${postData.status_message ?? "Unknown error"}`,
+      postData.status_code ?? response.status
     );
   }
 
   const taskId = postData.tasks?.[0]?.id;
 
   if (!taskId) {
-    throw new Error("DataForSEO task id was not returned.");
+    throw new DataForSeoError(
+      "MALFORMED_RESPONSE",
+      "DataForSEO did not return a task id."
+    );
   }
 
   const getData = await pollDataForSeoTask(taskId, auth);
 
   const items = getData.tasks?.[0]?.result?.[0]?.items ?? [];
+  const products = normalizeItemsToProducts(items, keyword, locationCode);
 
-  return normalizeItemsToProducts(items, keyword, locationCode);
+  log("search_complete", {
+    query: keyword,
+    rawItemCount: items.length,
+    normalizedProductCount: products.length,
+  });
+
+  return products;
 }

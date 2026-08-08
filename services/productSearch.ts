@@ -7,17 +7,27 @@ type ProductSearchFilters = {
   search?: string;
 };
 
-// Distinguishes "the provider/config is unavailable" (e.g. missing
-// DataForSEO credentials, 503) from other failures, so the UI can show
-// "Product search is temporarily unavailable" instead of a raw error for
-// that specific case.
+// Carries the API envelope's error code through to the UI so it can show a
+// specific, actionable state (credentials missing, provider auth failed,
+// provider timed out, malformed response, generic failure) instead of one
+// message that reads the same as "no products found."
+export type ProductSearchErrorCode =
+  | "PRODUCT_PROVIDER_ERROR"
+  | "PRODUCT_PROVIDER_AUTH_FAILED"
+  | "PRODUCT_PROVIDER_TIMEOUT"
+  | "PRODUCT_PROVIDER_MALFORMED_RESPONSE"
+  | "PRODUCT_SEARCH_FAILED"
+  | "UNKNOWN";
+
 export class ProductSearchError extends Error {
   status?: number;
+  code: ProductSearchErrorCode;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, code?: ProductSearchErrorCode) {
     super(message);
     this.name = "ProductSearchError";
     this.status = status;
+    this.code = code ?? "UNKNOWN";
   }
 }
 
@@ -52,7 +62,9 @@ export async function productSearch(
       (typeof body?.error === "string" ? body.error : null) ??
       "Product search failed.";
 
-    throw new ProductSearchError(message, response.status);
+    const code: ProductSearchErrorCode = body?.error?.code ?? "UNKNOWN";
+
+    throw new ProductSearchError(message, response.status, code);
   }
 
   return (body.data ?? []) as Product[];

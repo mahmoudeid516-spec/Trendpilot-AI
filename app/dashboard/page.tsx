@@ -21,8 +21,18 @@ import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { productSearch, ProductSearchError } from "../../services/productSearch";
 import type { Product } from "../../types/Product";
 
+// Every one of these is a visually and textually distinct state -- a
+// provider failure must never render the same "no products found" banner
+// as a legitimate zero-result search.
 type SearchStatus = {
-  type: "found" | "empty" | "unavailable" | "error";
+  type:
+    | "found"
+    | "empty"
+    | "unavailable"
+    | "auth_failed"
+    | "timeout"
+    | "malformed"
+    | "error";
   message: string;
 };
 
@@ -171,11 +181,42 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Product search failed:", error);
 
-      if (error instanceof ProductSearchError && error.status === 503) {
-        setSearchStatus({
-          type: "unavailable",
-          message: "Product search is temporarily unavailable. Please try again.",
-        });
+      if (error instanceof ProductSearchError) {
+        switch (error.code) {
+          case "PRODUCT_PROVIDER_ERROR":
+            setSearchStatus({
+              type: "unavailable",
+              message:
+                "Product search is not configured on this server (missing provider credentials). This is not an empty result -- the search could not run.",
+            });
+            break;
+          case "PRODUCT_PROVIDER_AUTH_FAILED":
+            setSearchStatus({
+              type: "auth_failed",
+              message:
+                "The product search provider rejected the configured credentials. This is not an empty result -- the search could not authenticate.",
+            });
+            break;
+          case "PRODUCT_PROVIDER_TIMEOUT":
+            setSearchStatus({
+              type: "timeout",
+              message:
+                "The product search provider took too long to respond. This is not an empty result -- please try again.",
+            });
+            break;
+          case "PRODUCT_PROVIDER_MALFORMED_RESPONSE":
+            setSearchStatus({
+              type: "malformed",
+              message:
+                "The product search provider returned an unexpected response. This is not an empty result -- please try again shortly.",
+            });
+            break;
+          default:
+            setSearchStatus({
+              type: "error",
+              message: error.message || "Product search failed.",
+            });
+        }
       } else {
         setSearchStatus({
           type: "error",
@@ -231,9 +272,22 @@ export default function DashboardPage() {
                   ? "bg-green-100 text-green-700"
                   : searchStatus.type === "empty"
                   ? "bg-gray-100 text-gray-700"
+                  : searchStatus.type === "unavailable"
+                  ? "bg-amber-100 text-amber-800"
+                  : searchStatus.type === "auth_failed"
+                  ? "bg-red-100 text-red-800"
+                  : searchStatus.type === "timeout"
+                  ? "bg-orange-100 text-orange-800"
+                  : searchStatus.type === "malformed"
+                  ? "bg-orange-100 text-orange-800"
                   : "bg-red-100 text-red-700"
               }`}
             >
+              {searchStatus.type === "unavailable" && "⚠️ Search unavailable: "}
+              {searchStatus.type === "auth_failed" && "🔒 Provider authentication failed: "}
+              {searchStatus.type === "timeout" && "⏱️ Provider timed out: "}
+              {searchStatus.type === "malformed" && "⚠️ Unexpected provider response: "}
+              {searchStatus.type === "error" && "❌ Search failed: "}
               {searchStatus.message}
             </div>
           )}
