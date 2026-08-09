@@ -4,20 +4,21 @@ import { buildStableProductId, ensureUniqueProductIds } from "./productIdentity"
 type DataForSeoItem = {
   title?: string;
   description?: string;
-  price?: {
-    current?: number;
-    regular?: number;
-    currency?: string;
-  };
+  url?: string;
+  image_url?: string;
+  price_from?: number;
+  currency?: string;
+  data_asin?: string;
   rating?: {
     value?: number;
     votes_count?: number;
   };
+  votes_count?: number;
+  is_amazon_choice?: boolean;
+  is_best_seller?: boolean;
+  delivery_info?: unknown;
   seller?: string;
-  source?: string;
   rank_absolute?: number;
-  url?: string;
-  image_url?: string;
 };
 
 type DataForSeoResult = {
@@ -27,9 +28,9 @@ type DataForSeoResult = {
 type DataForSeoTask = {
   result?: DataForSeoResult[];
   // Per-task status, distinct from the top-level API response status_code.
-  // 20000 means this specific task has finished processing and has
-  // results; other codes (e.g. task still queued/in progress) mean the
-  // task isn't ready yet and must be polled again.
+  // 20000 means this specific task completed successfully; other codes
+  // (e.g. an invalid field on this task's payload) mean the task itself
+  // failed even though the HTTP request succeeded.
   status_code?: number;
   status_message?: string;
 };
@@ -114,11 +115,11 @@ function normalizeItemsToProducts(
   for (const item of items) {
     // This is the real, current Amazon listing price for the item --
     // genuine market data, not an estimate.
-    const buyPrice = asNumber(item.price?.current, 0);
+    const buyPrice = asNumber(item.price_from, 0);
     if (!buyPrice) continue;
 
     const rating = asNumber(item.rating?.value, 0);
-    const reviews = asNumber(item.rating?.votes_count, 0);
+    const reviews = asNumber(item.rating?.votes_count ?? item.votes_count, 0);
     const sales = Math.max(0, Math.round(reviews * 0.4));
 
     // Everything below this point is a heuristic estimate derived from the
@@ -164,7 +165,7 @@ function normalizeItemsToProducts(
       store_name: String(item.seller ?? PRODUCT_SOURCE).trim(),
       store_rating: rating,
       supplier_rating: rating,
-      currency: String(item.price?.currency ?? "USD"),
+      currency: String(item.currency ?? "USD"),
       buy_price: buyPrice,
       selling_price: sellingPrice,
       profit,
@@ -173,6 +174,10 @@ function normalizeItemsToProducts(
       orders: sales,
       reviews,
       country,
+      asin: item.data_asin ? String(item.data_asin).trim() : undefined,
+      is_amazon_choice: Boolean(item.is_amazon_choice),
+      is_best_seller: Boolean(item.is_best_seller),
+      delivery_info: item.delivery_info,
       ai_score: aiScore,
       trend_score: trendScore,
       viral_score: viralScore,
@@ -194,10 +199,6 @@ function normalizeItemsToProducts(
   return ensureUniqueProductIds(products);
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 // Reads and parses a DataForSEO response body safely. The provider (or
 // anything in front of it -- a gateway, an egress proxy, a WAF) can return
 // a non-JSON error page instead of the documented JSON envelope; treating
@@ -206,7 +207,7 @@ function sleep(ms: number): Promise<void> {
 // what actually happened.
 async function parseDataForSeoJson(
   response: Response,
-  step: "task_post" | "task_get"
+  step: "live_advanced"
 ): Promise<Record<string, unknown>> {
   const text = await response.text();
 
@@ -226,87 +227,6 @@ async function parseDataForSeoJson(
       response.status
     );
   }
-}
-
-// task_post only queues the job; DataForSEO processes merchant/product
-// tasks asynchronously and typically takes several seconds to complete.
-// Polling task_get immediately (as this used to do) almost always hits an
-// unfinished task, which silently resolves to zero items rather than an
-// error -- that's the bug this loop fixes. Bounded to stay well under
-// common serverless function timeouts.
-const TASK_POLL_MAX_ATTEMPTS = 10;
-const TASK_POLL_INTERVAL_MS = 2000;
-
-async function pollDataForSeoTask(
-  taskId: string,
-  auth: string
-): Promise<DataForSeoResponse> {
-  for (let attempt = 0; attempt < TASK_POLL_MAX_ATTEMPTS; attempt += 1) {
-    if (attempt > 0) {
-      await sleep(TASK_POLL_INTERVAL_MS);
-    }
-
-    const getResponse = await fetch(
-      `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Basic ${auth}`,
-        },
-      }
-    );
-
-    // Parse the body before branching on HTTP status: a network/egress
-    // block in front of DataForSEO can also return 401/403 with a plain
-    // text page, and that must surface as MALFORMED_RESPONSE (the request
-    // never reached DataForSEO), not as "DataForSEO rejected your
-    // credentials" -- only a real DataForSEO JSON envelope with a 401/403
-    // means the credentials were actually checked and rejected.
-    const getData = (await parseDataForSeoJson(getResponse, "task_get")) as DataForSeoResponse & {
-      status_code?: number;
-      status_message?: string;
-    };
-
-    if (getResponse.status === 401 || getResponse.status === 403) {
-      log("task_get_auth_failed", { httpStatus: getResponse.status, attempt });
-      throw new DataForSeoError(
-        "AUTH_FAILED",
-        "DataForSEO rejected the configured credentials while checking task status.",
-        getResponse.status
-      );
-    }
-
-    if (!getResponse.ok || getData.status_code !== 20000) {
-      log("task_get_failed", {
-        httpStatus: getResponse.status,
-        providerStatusCode: getData.status_code,
-        attempt,
-      });
-
-      throw new DataForSeoError(
-        "REQUEST_FAILED",
-        `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`,
-        getData.status_code ?? getResponse.status
-      );
-    }
-
-    // The top-level status_code above only confirms the *request to check
-    // status* succeeded -- the task's own status_code says whether the
-    // task itself has actually finished processing.
-    const taskStatusCode = getData.tasks?.[0]?.status_code;
-
-    if (taskStatusCode === 20000) {
-      log("task_get_complete", { attempt, taskStatusCode });
-      return getData;
-    }
-  }
-
-  log("task_get_timeout", { maxAttempts: TASK_POLL_MAX_ATTEMPTS });
-
-  throw new DataForSeoError(
-    "TIMEOUT",
-    "DataForSEO task did not complete in time. Please try again.",
-  );
 }
 
 export async function searchDataForSeoProducts(keyword: string): Promise<Product[]> {
@@ -330,12 +250,12 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
   }
 
   const locationCode = Number(process.env.DATAFORSEO_LOCATION_CODE ?? 2840);
-  const languageCode = process.env.DATAFORSEO_LANGUAGE_CODE ?? "en";
+  const languageCode = process.env.DATAFORSEO_LANGUAGE_CODE ?? "en_US";
 
   const auth = Buffer.from(`${login}:${password}`).toString("base64");
 
   const response = await fetch(
-    "https://api.dataforseo.com/v3/merchant/amazon/products/task_post",
+    "https://api.dataforseo.com/v3/merchant/amazon/products/live/advanced",
     {
       method: "POST",
       headers: {
@@ -347,7 +267,6 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
           keyword,
           location_code: locationCode,
           language_code: languageCode,
-          depth: 30,
         },
       ]),
     }
@@ -359,19 +278,18 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
   // DataForSEO), not as "DataForSEO rejected your credentials" -- only a
   // real DataForSEO JSON envelope with a 401/403 means the credentials
   // were actually checked and rejected.
-  const postData = (await parseDataForSeoJson(response, "task_post")) as {
-    tasks?: Array<{ id?: string }>;
+  const liveData = (await parseDataForSeoJson(response, "live_advanced")) as DataForSeoResponse & {
     status_code?: number;
     status_message?: string;
   };
 
-  log("task_post_response", {
+  log("live_advanced_response", {
     httpStatus: response.status,
-    providerStatusCode: postData.status_code,
+    providerStatusCode: liveData.status_code,
   });
 
   if (response.status === 401 || response.status === 403) {
-    log("task_post_auth_failed", { httpStatus: response.status });
+    log("live_advanced_auth_failed", { httpStatus: response.status });
     throw new DataForSeoError(
       "AUTH_FAILED",
       "DataForSEO rejected the configured credentials. Check DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD.",
@@ -379,26 +297,29 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
     );
   }
 
-  if (!response.ok || postData.status_code !== 20000) {
+  if (!response.ok || liveData.status_code !== 20000) {
     throw new DataForSeoError(
       "REQUEST_FAILED",
-      `DataForSEO task creation failed: ${postData.status_message ?? "Unknown error"}`,
-      postData.status_code ?? response.status
+      `DataForSEO request failed: ${liveData.status_message ?? "Unknown error"}`,
+      liveData.status_code ?? response.status
     );
   }
 
-  const taskId = postData.tasks?.[0]?.id;
+  // The top-level status_code above only confirms the request itself
+  // succeeded -- this task's own status_code says whether DataForSEO
+  // actually processed this keyword (e.g. an invalid field on the task's
+  // payload fails here even though the HTTP call returned 200).
+  const task = liveData.tasks?.[0];
 
-  if (!taskId) {
+  if (!task || task.status_code !== 20000) {
     throw new DataForSeoError(
-      "MALFORMED_RESPONSE",
-      "DataForSEO did not return a task id."
+      "REQUEST_FAILED",
+      `DataForSEO task failed: ${task?.status_message ?? "Unknown error"}`,
+      task?.status_code ?? response.status
     );
   }
 
-  const getData = await pollDataForSeoTask(taskId, auth);
-
-  const items = getData.tasks?.[0]?.result?.[0]?.items ?? [];
+  const items = task.result?.[0]?.items ?? [];
   const products = normalizeItemsToProducts(items, keyword, locationCode);
 
   log("search_complete", {

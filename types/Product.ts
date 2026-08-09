@@ -71,4 +71,10 @@ export interface Product {
   // Ads
   cpm?: number;
   cpa?: number;
+
+  // Amazon-specific (DataForSEO merchant/amazon/products live/advanced)
+  asin?: string;
+  is_amazon_choice?: boolean;
+  is_best_seller?: boolean;
+  delivery_info?: unknown;
 }
