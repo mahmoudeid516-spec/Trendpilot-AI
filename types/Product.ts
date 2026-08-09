@@ -15,6 +15,7 @@ export interface Product {
   product_url: string;
   supplier: string;
   supplier_url: string;
+  asin?: string;
 
   // Store
   store_name?: string;

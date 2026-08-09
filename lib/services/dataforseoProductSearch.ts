@@ -9,15 +9,21 @@ type DataForSeoItem = {
     regular?: number;
     currency?: string;
   };
+  price_from?: number;
+  price_to?: number;
+  currency?: string;
   rating?: {
     value?: number;
     votes_count?: number;
   };
   seller?: string;
   source?: string;
+  domain?: string;
   rank_absolute?: number;
   url?: string;
   image_url?: string;
+  asin?: string;
+  data_asin?: string;
 };
 
 type DataForSeoResult = {
@@ -46,6 +52,17 @@ function normalizeSource(value: string | undefined): Product["source"] {
   return "AliExpress";
 }
 
+function extractPrice(item: DataForSeoItem): number {
+  return asNumber(
+    item.price?.current ?? item.price_from ?? item.price?.regular ?? item.price_to,
+    0
+  );
+}
+
+function extractAsin(item: DataForSeoItem): string {
+  return String(item.asin ?? item.data_asin ?? "").trim();
+}
+
 function normalizeCompetition(reviews: number): Product["competition"] {
   if (reviews > 1000) return "High";
   if (reviews > 250) return "Medium";
@@ -56,10 +73,11 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
   const products: Product[] = [];
 
   for (const item of items) {
-    const buyPrice = asNumber(item.price?.current, 0);
+    const buyPrice = extractPrice(item);
     if (!buyPrice) continue;
 
-    const source = normalizeSource(item.source);
+    const source = normalizeSource(item.source ?? item.domain);
+    const asin = extractAsin(item);
     const rating = asNumber(item.rating?.value, 0);
     const reviews = asNumber(item.rating?.votes_count, 0);
     const sales = Math.max(0, Math.round(reviews * 0.4));
@@ -102,7 +120,8 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
       store_name: String(item.seller ?? source).trim(),
       store_rating: rating,
       supplier_rating: rating,
-      currency: String(item.price?.currency ?? "USD"),
+      currency: String(item.price?.currency ?? item.currency ?? "USD"),
+      asin: asin || undefined,
       buy_price: buyPrice,
       selling_price: sellingPrice,
       profit,
@@ -188,28 +207,51 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
     throw new Error("DataForSEO task id was not returned.");
   }
 
-  const getResponse = await fetch(
-    `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
-    }
-  );
-
-  const getData = (await getResponse.json()) as DataForSeoResponse & {
+  type TaskGetResponse = DataForSeoResponse & {
     status_code?: number;
     status_message?: string;
+    tasks?: Array<
+      DataForSeoTask & { status_code?: number; status_message?: string }
+    >;
   };
 
-  if (!getResponse.ok || getData.status_code !== 20000) {
-    throw new Error(
-      `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`
+  const maxAttempts = 10;
+  const pollDelayMs = 3000;
+  let lastStatusMessage = "Unknown error";
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const getResponse = await fetch(
+      `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      }
     );
+
+    const getData = (await getResponse.json()) as TaskGetResponse;
+
+    if (!getResponse.ok || getData.status_code !== 20000) {
+      throw new Error(
+        `DataForSEO task retrieval failed: ${getData.status_message ?? "Unknown error"}`
+      );
+    }
+
+    const task = getData.tasks?.[0];
+    lastStatusMessage = task?.status_message ?? lastStatusMessage;
+
+    if (task?.status_code === 20000) {
+      const items = task.result?.[0]?.items ?? [];
+      return normalizeItemsToProducts(items);
+    }
+
+    if (attempt < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+    }
   }
 
-  const items = getData.tasks?.[0]?.result?.[0]?.items ?? [];
-
-  return normalizeItemsToProducts(items);
+  throw new Error(
+    `DataForSEO task did not complete in time: ${lastStatusMessage}`
+  );
 }
