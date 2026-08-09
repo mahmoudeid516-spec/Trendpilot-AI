@@ -47,6 +47,23 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function parseDataForSeoJson<T>(response: Response, context: string): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const isJson = contentType.toLowerCase().includes("application/json");
+
+  if (!response.ok || !isJson) {
+    const rawBody = await response.text().catch(() => "");
+    const truncatedBody = rawBody.slice(0, 200).trim().replace(/\s+/g, " ");
+
+    throw new Error(
+      `DataForSEO request failed (${context}): HTTP ${response.status} ${response.statusText}` +
+        (truncatedBody ? ` — ${truncatedBody}` : "")
+    );
+  }
+
+  return (await response.json()) as T;
+}
+
 function asNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -184,13 +201,13 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
     }
   );
 
-  const postData = (await response.json()) as {
+  const postData = await parseDataForSeoJson<{
     tasks?: Array<{ id?: string }>;
     status_code?: number;
     status_message?: string;
-  };
+  }>(response, "task creation");
 
-  if (!response.ok || postData.status_code !== 20000) {
+  if (postData.status_code !== 20000) {
     throw new Error(
       `DataForSEO task creation failed: ${postData.status_message ?? "Unknown error"}`
     );
@@ -223,14 +240,12 @@ async function pollDataForSeoTask(taskId: string, auth: string): Promise<DataFor
       }
     );
 
-    const getData = (await getResponse.json()) as DataForSeoResponse & {
-      status_code?: number;
-      status_message?: string;
-    };
-
-    if (!getResponse.ok) {
-      throw new Error(`DataForSEO task retrieval failed: HTTP ${getResponse.status}`);
-    }
+    const getData = await parseDataForSeoJson<
+      DataForSeoResponse & {
+        status_code?: number;
+        status_message?: string;
+      }
+    >(getResponse, "task retrieval");
 
     const task = getData.tasks?.[0];
     const taskStatusCode = task?.status_code;
