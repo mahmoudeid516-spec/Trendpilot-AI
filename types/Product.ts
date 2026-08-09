@@ -60,4 +60,11 @@ export interface Product {
   // Ads
   cpm?: number;
   cpa?: number;
+
+  // Amazon-specific (optional)
+  asin?: string;
+  amazon_choice?: boolean;
+  best_seller?: boolean;
+  delivery_info?: string;
+  price_to?: number;
 }
