@@ -3,11 +3,25 @@
 type FiltersProps = {
   platform: string;
   setPlatform: (value: string) => void;
+  category: string;
+  setCategory: (value: string) => void;
+  competition: string;
+  setCompetition: (value: string) => void;
+  minScore: number;
+  setMinScore: (value: number) => void;
+  categoryOptions: string[];
 };
 
 export default function Filters({
   platform,
   setPlatform,
+  category,
+  setCategory,
+  competition,
+  setCompetition,
+  minScore,
+  setMinScore,
+  categoryOptions,
 }: FiltersProps) {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
@@ -21,31 +35,43 @@ export default function Filters({
           <option value="All">All Platforms</option>
           <option value="Shopify">Shopify</option>
           <option value="Amazon">Amazon</option>
-          <option value="TikTok Shop">TikTok Shop</option>
           <option value="AliExpress">AliExpress</option>
         </select>
 
-        <select className="border rounded-xl px-4 py-3">
-          <option>Category</option>
-          <option>Beauty</option>
-          <option>Fitness</option>
-          <option>Pets</option>
-          <option>Home</option>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border rounded-xl px-4 py-3"
+        >
+          <option value="All">All Categories</option>
+          {categoryOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
 
-        <select className="border rounded-xl px-4 py-3">
-          <option>Competition</option>
-          <option>Low</option>
-          <option>Medium</option>
-          <option>High</option>
+        <select
+          value={competition}
+          onChange={(e) => setCompetition(e.target.value)}
+          className="border rounded-xl px-4 py-3"
+        >
+          <option value="All">All Competition</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
         </select>
 
-        <select className="border rounded-xl px-4 py-3">
-          <option>Country</option>
-          <option>United States</option>
-          <option>United Kingdom</option>
-          <option>Germany</option>
-          <option>France</option>
+        <select
+          value={minScore}
+          onChange={(e) => setMinScore(Number(e.target.value))}
+          className="border rounded-xl px-4 py-3"
+        >
+          <option value={0}>All AI Scores</option>
+          <option value={70}>70+</option>
+          <option value={80}>80+</option>
+          <option value={90}>90+</option>
+          <option value={95}>95+</option>
         </select>
 
       </div>

@@ -7,6 +7,14 @@ import SimilarProducts from "./SimilarProducts";
 import { calculateROI } from "../../services/roiCalculator";
 import type { Product } from "../../types/Product";
 import { generateBusinessPlan } from "../../services/businessCoach";
+import {
+  formatAsin,
+  formatDeliveryInfo,
+  formatPriceRange,
+  formatRating,
+  formatReviewCount,
+  hasExternalUrl,
+} from "../../lib/utils/productDisplay";
 
 
 type Props = {
@@ -114,7 +122,7 @@ export default function ProductDetails({
               {aiScore}
             </div>
 
-            <p>AI SCORE</p>
+            <p>AI SCORE (est.)</p>
 
           </div>
 
@@ -191,30 +199,36 @@ export default function ProductDetails({
       <div className="grid lg:grid-cols-3 gap-10 p-8">
 
       <div className="mb-8">
-  <img
-    src={product.image}
-    alt={product.name}
-    className="w-full rounded-2xl shadow-lg object-cover"
-  />
+  {product.image?.trim() ? (
+    <img
+      src={product.image}
+      alt={product.name}
+      className="w-full rounded-2xl shadow-lg object-cover"
+    />
+  ) : (
+    <div className="w-full h-64 rounded-2xl shadow-lg bg-gray-100 flex items-center justify-center text-gray-400">
+      No image available
+    </div>
+  )}
 
   <div className="grid grid-cols-2 gap-3 mt-5">
 
     <div className="bg-gray-100 rounded-xl p-4">
       <p className="text-gray-500 text-sm">Buy Price</p>
       <p className="font-bold text-xl">
-        ${product.buy_price}
+        {formatPriceRange(product)}
       </p>
     </div>
 
     <div className="bg-gray-100 rounded-xl p-4">
-      <p className="text-gray-500 text-sm">Selling Price</p>
+      <p className="text-gray-500 text-sm">Selling Price (est.)</p>
       <p className="font-bold text-xl">
         ${product.selling_price}
       </p>
     </div>
 
     <div className="bg-green-100 rounded-xl p-4">
-      <p className="text-gray-500 text-sm">Profit</p>
+      <p className="text-gray-500 text-sm">Profit (est.)</p>
       <p className="font-bold text-green-700 text-xl">
         ${product.profit}
       </p>
@@ -228,6 +242,64 @@ export default function ProductDetails({
     </div>
 
   </div>
+
+  <div className="mt-3 grid grid-cols-2 gap-3">
+
+    <div className="bg-yellow-50 rounded-xl p-4">
+      <p className="text-gray-500 text-sm">Rating</p>
+      <p className="font-bold text-xl">
+        {formatRating(product)}
+      </p>
+      <p className="text-xs text-gray-400">
+        {formatReviewCount(product)} reviews
+      </p>
+    </div>
+
+    <div className="bg-gray-100 rounded-xl p-4">
+      <p className="text-gray-500 text-sm">ASIN</p>
+      <p className="font-bold text-xl">
+        {formatAsin(product)}
+      </p>
+    </div>
+
+  </div>
+
+  <div className="mt-3 bg-gray-100 rounded-xl p-4">
+    <p className="text-gray-500 text-sm">Delivery</p>
+    <p className="font-semibold">
+      {formatDeliveryInfo(product)}
+    </p>
+  </div>
+
+  {(product.amazon_choice || product.best_seller) && (
+    <div className="mt-3 flex gap-2">
+      {product.amazon_choice && (
+        <span className="rounded-full bg-orange-100 text-orange-700 px-3 py-1 text-xs font-bold">
+          Amazon&apos;s Choice
+        </span>
+      )}
+      {product.best_seller && (
+        <span className="rounded-full bg-amber-100 text-amber-700 px-3 py-1 text-xs font-bold">
+          Best Seller
+        </span>
+      )}
+    </div>
+  )}
+
+  {hasExternalUrl(product) ? (
+    <a
+      href={product.product_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 block text-center rounded-xl bg-blue-600 text-white py-3 font-semibold hover:bg-blue-700 transition"
+    >
+      View on Amazon
+    </a>
+  ) : (
+    <p className="mt-3 text-center text-gray-400 text-sm">
+      No product link available
+    </p>
+  )}
 </div>
 
         <div>

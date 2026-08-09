@@ -39,6 +39,13 @@ type ProductPayloadSource = {
   supplier_url?: unknown;
   product_url?: unknown;
   competition?: unknown;
+  asin?: unknown;
+  amazon_choice?: unknown;
+  best_seller?: unknown;
+  delivery_info?: unknown;
+  price_to?: unknown;
+  currency?: unknown;
+  store_rating?: unknown;
 };
 
 export const PRODUCT_INSERT_COLUMNS = [
@@ -81,6 +88,13 @@ export const PRODUCT_INSERT_COLUMNS = [
   "viral_score",
   "opportunity_score",
   "roi",
+  "asin",
+  "amazon_choice",
+  "best_seller",
+  "delivery_info",
+  "price_to",
+  "currency",
+  "store_rating",
 ] as const;
 
 export type ProductInsertColumn = (typeof PRODUCT_INSERT_COLUMNS)[number];
@@ -152,6 +166,36 @@ export function buildProductInsertPayload(product: ProductPayloadSource): Produc
     supplier_url: asString(product.supplier_url),
     product_url: asString(product.product_url),
     competition: asString(product.competition, "Medium"),
+    asin:
+      typeof product.asin === "string" && product.asin.trim()
+        ? product.asin
+        : undefined,
+    amazon_choice:
+      typeof product.amazon_choice === "boolean"
+        ? product.amazon_choice
+        : undefined,
+    best_seller:
+      typeof product.best_seller === "boolean"
+        ? product.best_seller
+        : undefined,
+    delivery_info:
+      typeof product.delivery_info === "string" && product.delivery_info.trim()
+        ? product.delivery_info
+        : undefined,
+    price_to:
+      typeof product.price_to === "number" && Number.isFinite(product.price_to)
+        ? product.price_to
+        : undefined,
+    currency:
+      typeof product.currency === "string" && product.currency.trim()
+        ? product.currency
+        : undefined,
+    store_rating:
+      typeof product.store_rating === "number" &&
+      Number.isFinite(product.store_rating) &&
+      product.store_rating > 0
+        ? product.store_rating
+        : undefined,
   });
 
   return sanitizeProductInsertRow(payload);

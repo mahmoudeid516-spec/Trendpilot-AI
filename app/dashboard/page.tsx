@@ -35,6 +35,8 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkUser() {
@@ -69,6 +71,7 @@ export default function DashboardPage() {
     }
 
     setIsSearching(true);
+    setSearchError(null);
 
     try {
       const products = await productSearch({
@@ -81,6 +84,7 @@ export default function DashboardPage() {
       );
 
       setSearchResults(mappedProducts);
+      setHasSearched(true);
 
       await importProducts(mappedProducts);
 
@@ -89,6 +93,13 @@ export default function DashboardPage() {
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error("Product search failed:", error);
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Product search failed for an unknown reason.";
+
+      setSearchError(message);
     } finally {
       setIsSearching(false);
     }
@@ -161,6 +172,9 @@ export default function DashboardPage() {
   refreshKey={refreshKey}
   search={search}
   platform={platform}
+  setPlatform={setPlatform}
+  hasSearched={hasSearched}
+  searchError={searchError}
   onSelectProduct={(product) => {
     setSelectedProduct(product);
     setShowProductModal(true);
