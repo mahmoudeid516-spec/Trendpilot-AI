@@ -37,9 +37,6 @@ type DataForSeoResponse = {
   tasks?: DataForSeoTask[];
 };
 
-const TASK_IN_QUEUE = 40602;
-const TASK_BEING_PROCESSED = 40603;
-const TASK_OK = 20000;
 const POLL_INTERVAL_MS = 5000;
 const MAX_POLL_DURATION_MS = 120000;
 
@@ -248,24 +245,24 @@ async function pollDataForSeoTask(taskId: string, auth: string): Promise<DataFor
     >(getResponse, "task retrieval");
 
     const task = getData.tasks?.[0];
-    const taskStatusCode = task?.status_code;
     lastStatusMessage = task?.status_message ?? "Unknown error";
 
-    if (taskStatusCode === TASK_OK) {
-      return task ?? {};
+    // DataForSEO documents `result` as always null at task_post time, and
+    // the same null-until-ready contract holds for task_get across their
+    // async APIs generally (confirmed against their official generated
+    // client models). Numeric in-progress status codes are not published
+    // in any first-party machine-readable source, so readiness is
+    // determined by result presence instead: a non-null result -- including
+    // a non-null empty array, a legitimate zero-match search -- means the
+    // task has completed. A null/undefined result means it isn't ready yet.
+    if (task && task.result != null) {
+      return task;
     }
 
-    if (taskStatusCode === TASK_IN_QUEUE || taskStatusCode === TASK_BEING_PROCESSED) {
-      await sleep(POLL_INTERVAL_MS);
-      continue;
-    }
-
-    throw new Error(
-      `DataForSEO task failed: ${taskStatusCode ?? "unknown"} ${lastStatusMessage}`
-    );
+    await sleep(POLL_INTERVAL_MS);
   }
 
   throw new Error(
-    `DataForSEO task polling timed out after ${MAX_POLL_DURATION_MS}ms (last status: ${lastStatusMessage})`
+    `DataForSEO task did not complete within ${MAX_POLL_DURATION_MS}ms (last status: ${lastStatusMessage})`
   );
 }
