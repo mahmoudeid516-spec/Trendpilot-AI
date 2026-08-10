@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/dashboard/Sidebar";
 import DashboardHero from "../../components/dashboard/DashboardHero";
@@ -15,6 +16,7 @@ import ProductDetails from "../../components/dashboard/ProductDetails";
 import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
+import Eyebrow from "../../components/ui/Eyebrow";
 import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
@@ -49,19 +51,20 @@ export default function DashboardPage() {
   }, [hasSupabaseClient, router]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-100 lg:flex-row">
+    <div className="flex min-h-screen flex-col bg-[var(--surface-app)] lg:flex-row">
 
-<Sidebar />
+      <Sidebar />
 
-      <main className="min-w-0 flex-1 p-5 sm:p-10">
+      <main className="min-w-0 flex-1 p-4 sm:p-8 lg:p-10">
 
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto max-w-7xl space-y-10">
 
-          <DashboardHero totalProducts={0} winningProducts={0} /> 
+          <DashboardHero totalProducts={0} winningProducts={0} />
 
-          <StatsCards refreshKey={refreshKey} />
-
-          <BusinessOverview />
+          <section className="space-y-6">
+            <StatsCards refreshKey={refreshKey} />
+            <BusinessOverview />
+          </section>
 
           <AIInsights />
 
@@ -70,37 +73,23 @@ export default function DashboardPage() {
               product search engine you query (real products, real actions).
               The eyebrow labels + icons reinforce that distinction at a
               glance, without duplicating each other's UI. */}
-          <section className="mt-12">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-sm text-white">
-                🧠
-              </span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-purple-600">
-                  AI Advisor
-                </p>
-                <p className="text-sm text-gray-500">
-                  Ask questions and get market intelligence &mdash; not a product list.
-                </p>
-              </div>
+          <section>
+            <div className="mb-4 flex flex-col gap-1">
+              <Eyebrow icon="🧠" label="AI Advisor" tone="ai" />
+              <p className="text-sm text-[var(--ink-500)]">
+                Ask questions and get market intelligence &mdash; not a product list.
+              </p>
             </div>
 
             <AICommandCenter />
           </section>
 
-          <section className="mt-12">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm text-white">
-                🔎
-              </span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
-                  Product Search Engine
-                </p>
-                <p className="text-sm text-gray-500">
-                  Search real products and evaluate opportunities with evidence.
-                </p>
-              </div>
+          <section>
+            <div className="mb-4 flex flex-col gap-1">
+              <Eyebrow icon="🔎" label="Product Search Engine" tone="data" />
+              <p className="text-sm text-[var(--ink-500)]">
+                Search real products and evaluate opportunities with evidence.
+              </p>
             </div>
 
             <ProductResearchPanel
@@ -112,10 +101,15 @@ export default function DashboardPage() {
             />
           </section>
 
-          <h2 className="mt-12 text-2xl font-bold text-gray-900">Saved Products</h2>
-          <p className="mb-4 text-sm text-gray-500">Products you&apos;ve previously searched and saved.</p>
+          <section>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-[var(--ink-900)]">Saved Product Library</h2>
+              <p className="mt-1 text-sm text-[var(--ink-500)]">
+                Products you&apos;ve previously searched and saved &mdash; separate from live search results above.
+              </p>
+            </div>
 
-          {/* TEMP DISABLED
+            {/* TEMP DISABLED
 
 <ProGate>
   <AIAnalyzer
@@ -149,45 +143,43 @@ export default function DashboardPage() {
 
 */}
 
-<ProductsTable
-  products={[]}
-  refreshKey={refreshKey}
-  search=""
-  platform="All"
-  onSelectProduct={(product) => {
-    setSelectedProduct(product);
-    setShowProductModal(true);
-  }}
-/>
+            <ProductsTable
+              products={[]}
+              refreshKey={refreshKey}
+              search=""
+              platform="All"
+              onSelectProduct={(product) => {
+                setSelectedProduct(product);
+                setShowProductModal(true);
+              }}
+            />
+          </section>
 
-{showProductModal && selectedProduct && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
+          {showProductModal && selectedProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6">
 
-    <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white">
+              <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-[var(--surface-card)] shadow-2xl">
 
-      <button
-        onClick={() => setShowProductModal(false)}
-        className="absolute right-6 top-6 text-4xl font-bold text-gray-500 hover:text-black"
-      >
-        ×
-      </button>
+                <button
+                  onClick={() => setShowProductModal(false)}
+                  aria-label="Close product report"
+                  className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[var(--ink-700)] shadow-md hover:bg-white"
+                >
+                  <X size={18} />
+                </button>
 
-      <ProductDetails product={selectedProduct} />
+                <ProductDetails product={selectedProduct} />
 
-      <AISalesForecast
-        product={selectedProduct}
-      />
+                <AISalesForecast product={selectedProduct} />
 
-      <MarketingKit
-        productName={selectedProduct.name}
-      />
+                <MarketingKit productName={selectedProduct.name} />
 
-    </div>
+              </div>
 
-  </div>
-)}
+            </div>
+          )}
 
-<TrendChart />
+          <TrendChart />
           {/* TEMP DISABLED */}
 
         </div>

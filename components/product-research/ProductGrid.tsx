@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ProductWithAnalysis } from "../../types/analysis";
 import ProductCard from "./ProductCard";
+import Card from "../ui/Card";
 
 type SortKey = "opportunity_score" | "profit" | "demand_score" | "winning_probability" | "risk_score" | "sales";
 
@@ -22,6 +23,9 @@ type Props = {
   products: ProductWithAnalysis[];
   onSelectProduct?: (product: ProductWithAnalysis) => void;
 };
+
+const selectClass =
+  "rounded-lg border border-[var(--border-subtle)] bg-white px-3 py-2 text-sm text-[var(--ink-700)] outline-none tp-focus-ring";
 
 export default function ProductGrid({ products, onSelectProduct }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("opportunity_score");
@@ -45,17 +49,17 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
   }, [products, sortKey, decisionFilter, competitionFilter]);
 
   return (
-    <section className="rounded-3xl bg-white p-8 shadow-lg">
+    <Card>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-xl font-bold text-[var(--ink-900)]">
           Products ({filteredAndSorted.length} of {products.length})
         </h2>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <select
             value={decisionFilter}
             onChange={(e) => setDecisionFilter(e.target.value)}
-            className="rounded-xl border px-3 py-2 text-sm"
+            className={selectClass}
           >
             {DECISIONS.map((d) => (
               <option key={d} value={d}>
@@ -67,7 +71,7 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
           <select
             value={competitionFilter}
             onChange={(e) => setCompetitionFilter(e.target.value)}
-            className="rounded-xl border px-3 py-2 text-sm"
+            className={selectClass}
           >
             {COMPETITION_LEVELS.map((c) => (
               <option key={c} value={c}>
@@ -79,7 +83,7 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-xl border px-3 py-2 text-sm"
+            className={selectClass}
           >
             {SORT_OPTIONS.map((option) => (
               <option key={option.key} value={option.key}>
@@ -91,16 +95,18 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
       </div>
 
       {filteredAndSorted.length === 0 ? (
-        <div className="mt-10 py-12 text-center text-gray-500">
-          No products match the current filters.
+        <div className="mt-10 rounded-xl border border-dashed border-[var(--border-subtle)] py-12 text-center">
+          <p className="text-2xl">🗂️</p>
+          <p className="mt-2 font-semibold text-[var(--ink-900)]">No products match the current filters</p>
+          <p className="mt-1 text-sm text-[var(--ink-500)]">Try a broader decision or competition filter.</p>
         </div>
       ) : (
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filteredAndSorted.map((product) => (
             <ProductCard key={product.id} product={product} onSelectProduct={onSelectProduct} />
           ))}
         </div>
       )}
-    </section>
+    </Card>
   );
 }

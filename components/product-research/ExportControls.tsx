@@ -1,7 +1,9 @@
 "use client";
 
+import { Download } from "lucide-react";
 import type { ProductAnalysisResponse } from "../../types/analysis";
 import { toJson, toCsv, downloadFile } from "../../lib/export/exportReport";
+import { buttonClass } from "../ui/button";
 
 type Props = {
   result: ProductAnalysisResponse;
@@ -25,17 +27,13 @@ export default function ExportControls({ result, requestedCount }: Props) {
 
   return (
     <div className="flex gap-2">
-      <button
-        onClick={handleExportJson}
-        className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-      >
-        Export JSON
+      <button onClick={handleExportJson} className={buttonClass({ variant: "outline", size: "sm" })}>
+        <Download size={14} />
+        JSON
       </button>
-      <button
-        onClick={handleExportCsv}
-        className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-      >
-        Export CSV
+      <button onClick={handleExportCsv} className={buttonClass({ variant: "outline", size: "sm" })}>
+        <Download size={14} />
+        CSV
       </button>
     </div>
   );

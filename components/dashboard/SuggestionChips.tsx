@@ -11,12 +11,12 @@ const suggestions = [
 
 export default function SuggestionChips({ onSelect }: Props) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-2">
       {suggestions.map((item) => (
         <button
           key={item}
           onClick={() => onSelect(item)}
-          className="rounded-full bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-600 hover:text-white transition"
+          className="rounded-full border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] px-3.5 py-1.5 text-xs font-medium text-[var(--accent-ai)] transition-colors hover:bg-[var(--accent-ai)] hover:text-white"
         >
           {item}
         </button>

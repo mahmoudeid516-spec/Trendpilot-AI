@@ -1,4 +1,6 @@
 import type { MarketAnalysisText } from "../../types/analysis";
+import Card from "../ui/Card";
+import Pill from "../ui/Pill";
 
 type Props = {
   marketAnalysis: MarketAnalysisText;
@@ -16,39 +18,44 @@ const SECTIONS: Array<{ key: keyof MarketAnalysisText; title: string }> = [
   { key: "opportunity_analysis", title: "Opportunity Analysis" },
   { key: "strategy", title: "Recommended Strategy" },
   { key: "recommended_product_profile", title: "Recommended Product Profile" },
-  { key: "final_recommendation", title: "Final Recommendation" },
 ];
 
 export default function AIMarketReport({ marketAnalysis, aiAvailable }: Props) {
   return (
-    <section className="rounded-3xl bg-white p-8 shadow-lg">
-      <div className="flex items-center justify-between">
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">AI Market Report</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            AI-generated interpretation of the products below -- not a deterministic calculation.
+          <h2 className="text-xl font-bold text-[var(--ink-900)]">AI Market Report</h2>
+          <p className="mt-1 text-sm text-[var(--ink-500)]">
+            AI-generated interpretation of the products below &mdash; not a deterministic calculation.
           </p>
         </div>
-        <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-          AI-GENERATED
-        </span>
+        <Pill tone="ai">AI-Generated</Pill>
       </div>
 
       {!aiAvailable && (
-        <div className="mt-5 rounded-xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800">
+        <div className="mt-5 rounded-xl border border-[var(--accent-warning)]/25 bg-[var(--accent-warning-soft)] p-4 text-sm text-[var(--accent-warning)]">
           AI market analysis is temporarily unavailable. Product scoring, Top Picks, and
           per-product analysis below are still fully available (they don&apos;t depend on AI).
         </div>
       )}
 
-      <div className="mt-6 grid gap-5 md:grid-cols-2">
+      {/* Final recommendation is the one section a user should always read
+          first, so it's promoted above the rest instead of competing for
+          attention as an identical gray tile. */}
+      <div className="mt-6 rounded-xl border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] p-5">
+        <h3 className="text-sm font-bold uppercase tracking-wide text-[var(--accent-ai)]">Final Recommendation</h3>
+        <p className="mt-2 leading-6 text-[var(--ink-900)]">{marketAnalysis.final_recommendation}</p>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
         {SECTIONS.map(({ key, title }) => (
-          <div key={key} className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-gray-500">{title}</h3>
-            <p className="mt-2 leading-6 text-gray-700">{marketAnalysis[key]}</p>
+          <div key={key} className="rounded-xl border border-[var(--border-subtle)] p-5">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--ink-400)]">{title}</h3>
+            <p className="mt-2 leading-6 text-[var(--ink-700)]">{marketAnalysis[key]}</p>
           </div>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }

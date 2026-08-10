@@ -34,88 +34,73 @@ export default function Sidebar() {
   }
 
   const menu = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "AI Analyzer",
-      href: "/dashboard",
-      icon: Sparkles,
-    },
-    {
-      title: "Products",
-      href: "/products",
-      icon: ShoppingBag,
-    },
-    {
-      title: "Analytics",
-      href: "/analytics",
-      icon: BarChart3,
-    },
-    {
-      title: "Upgrade Pro",
-      href: "/pricing",
-      icon: Crown,
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: Settings,
-    },
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "AI Analyzer", href: "/dashboard", icon: Sparkles },
+    { title: "Products", href: "/products", icon: ShoppingBag },
+    { title: "Analytics", href: "/analytics", icon: BarChart3 },
+    { title: "Settings", href: "/settings", icon: Settings },
   ];
+
+  const brand = (
+    <Link href="/dashboard" className="flex items-center gap-2.5 px-6 py-6" onClick={() => setMobileOpen(false)}>
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-ai)] text-sm font-bold text-white">
+        T
+      </span>
+      <span className="text-[15px] font-semibold tracking-tight text-[var(--ink-900)]">
+        TrendPilot <span className="text-[var(--accent-ai)]">AI</span>
+      </span>
+    </Link>
+  );
 
   const navContent = (
     <>
-      <div className="p-8 border-b">
-        <h1 className="text-3xl font-bold text-purple-700">
-          TrendPilot AI
-        </h1>
+      {brand}
 
-        <p className="text-gray-500 text-sm mt-2">
-          AI Product Research
-        </p>
-      </div>
-
-      <nav className="flex-1 p-5 space-y-2">
-
+      <nav className="flex-1 space-y-0.5 px-3">
         {menu.map((item) => {
           const Icon = item.icon;
-
-          const active =
-            pathname === item.href;
+          const active = pathname === item.href;
 
           return (
             <Link
               key={item.title}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition
-              ${
+              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-purple-600 text-white"
-                  : "text-gray-700 hover:bg-purple-100"
+                  ? "bg-[var(--accent-ai-soft)] text-[var(--accent-ai)]"
+                  : "text-[var(--ink-500)] hover:bg-[var(--surface-muted)] hover:text-[var(--ink-900)]"
               }`}
             >
-              <Icon size={20} />
+              {active && (
+                <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-[var(--accent-ai)]" />
+              )}
+              <Icon size={18} strokeWidth={2} />
               <span>{item.title}</span>
             </Link>
           );
         })}
-
       </nav>
 
-      <div className="p-5 border-t">
+      <div className="px-3 pb-3">
+        <Link
+          href="/pricing"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg border border-[var(--accent-warning)]/25 bg-[var(--accent-warning-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--accent-warning)] transition-colors hover:border-[var(--accent-warning)]/40"
+        >
+          <Crown size={18} strokeWidth={2} />
+          Upgrade to Pro
+        </Link>
+      </div>
 
-      <button
-  onClick={handleLogout}
-  className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition"
->
-          <LogOut size={18} />
-          Logout
+      <div className="border-t border-[var(--border-subtle)] px-3 py-3">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--ink-500)] transition-colors hover:bg-[var(--accent-risk-soft)] hover:text-[var(--accent-risk)]"
+        >
+          <LogOut size={18} strokeWidth={2} />
+          Log out
         </button>
-
       </div>
     </>
   );
@@ -124,31 +109,33 @@ export default function Sidebar() {
     <>
       {/* Mobile/tablet top bar with menu button. Hidden on desktop where the
           persistent sidebar (below) is shown instead. */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b bg-white px-5 py-4 shadow-sm lg:hidden">
-        <span className="text-xl font-bold text-purple-700">TrendPilot AI</span>
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-card)]/90 px-4 py-3 backdrop-blur lg:hidden">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--accent-ai)] text-xs font-bold text-white">
+            T
+          </span>
+          <span className="text-sm font-semibold text-[var(--ink-900)]">TrendPilot AI</span>
+        </Link>
 
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open navigation menu"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-700 hover:bg-purple-100"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--ink-700)] hover:bg-[var(--surface-muted)]"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
       </div>
 
       {/* Mobile/tablet drawer + backdrop */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMobileOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
 
-          <aside className="relative z-50 flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-xl">
+          <aside className="relative z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[var(--surface-card)] shadow-2xl">
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-[var(--ink-500)] hover:bg-[var(--surface-muted)]"
             >
               <X size={20} />
             </button>
@@ -159,7 +146,7 @@ export default function Sidebar() {
       )}
 
       {/* Desktop persistent sidebar */}
-      <aside className="hidden w-72 shrink-0 flex-col border-r bg-white shadow-xl lg:flex lg:min-h-screen">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-card)] lg:flex lg:min-h-screen">
         {navContent}
       </aside>
     </>

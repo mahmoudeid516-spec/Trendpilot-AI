@@ -3,17 +3,71 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* --- TrendPilot AI design tokens -----------------------------------
+     A restrained SaaS palette: neutral slate surfaces carry the product,
+     and three accent hues are used *intentionally* rather than
+     decoratively --
+       - violet  = AI / intelligence (AI Advisor, AI-generated content)
+       - blue    = product data / search (Product Search Engine, real data)
+       - emerald = positive opportunity / profit
+     Amber/rose are reserved for warnings and risk, never decoration. */
+  --surface-app: #f6f7fb;
+  --surface-card: #ffffff;
+  --surface-muted: #f8fafc;
+  --border-subtle: #e7e9f0;
+
+  --ink-900: #0f1222;
+  --ink-700: #3a3f52;
+  --ink-500: #6b7086;
+  --ink-400: #9498ab;
+
+  --accent-ai: #6d4aff;
+  --accent-ai-soft: #f2effe;
+  --accent-data: #2563eb;
+  --accent-data-soft: #eaf1ff;
+  --accent-positive: #059669;
+  --accent-positive-soft: #eafaf2;
+  --accent-warning: #d97706;
+  --accent-warning-soft: #fef6e7;
+  --accent-risk: #dc2626;
+  --accent-risk-soft: #fdecec;
+
+  --shadow-card: 0 1px 2px rgba(15, 18, 34, 0.04), 0 1px 1px rgba(15, 18, 34, 0.03);
+  --shadow-card-hover: 0 12px 24px -12px rgba(15, 18, 34, 0.18), 0 2px 6px rgba(15, 18, 34, 0.05);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-app-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface-app);
+  color: var(--ink-900);
+  font-family: var(--font-app-sans, ui-sans-serif), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tp-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.tp-card-interactive {
+  transition: box-shadow 180ms ease, transform 180ms ease, border-color 180ms ease;
+}
+
+.tp-card-interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.tp-focus-ring:focus-visible {
+  outline: 2px solid var(--accent-data);
+  outline-offset: 2px;
 }

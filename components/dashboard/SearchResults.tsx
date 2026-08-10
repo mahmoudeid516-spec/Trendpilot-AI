@@ -1,4 +1,7 @@
+import Image from "next/image";
 import type { Product } from "../../types/Product";
+import ScoreBadge from "../product-research/ScoreBadge";
+import DecisionBadge from "../product-research/DecisionBadge";
 
 type Props = {
   results: Product[];
@@ -14,97 +17,73 @@ export default function SearchResults({ results }: Props) {
 
   return (
     <div className="mt-10">
-      <p className="text-xs font-semibold uppercase tracking-wide text-purple-500">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-ai)]">
         AI-Suggested Products
       </p>
-      <h2 className="text-3xl font-bold mb-6">
+      <h2 className="mb-6 text-2xl font-bold text-[var(--ink-900)]">
         {results.length} product{results.length === 1 ? "" : "s"} matching your question
       </h2>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-     
-       
-{sortedResults.map((product: Product, index: number) => {
-  const opportunity = product.opportunity_score ?? 0;
-  const rating = Number(product.store_rating ?? product.supplier_rating ?? 0);
-  const orders = Number(product.orders ?? product.sales ?? 0);
-  const estimatedProfit = Number(
-    product.profit ?? product.selling_price - product.buy_price
-  );
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
 
-  return (
-          <div
-            key={index}
-            className="bg-white rounded-2xl shadow hover:shadow-xl transition p-5"
-          >
-            <div className="absolute top-3 left-3 z-10">
+        {sortedResults.map((product: Product, index: number) => {
+          const opportunity = product.opportunity_score ?? 0;
+          const rating = Number(product.store_rating ?? product.supplier_rating ?? 0);
+          const orders = Number(product.orders ?? product.sales ?? 0);
+          const estimatedProfit = Number(
+            product.profit ?? product.selling_price - product.buy_price
+          );
 
-<span
-  className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
-    opportunity >= 90
-      ? "bg-green-600"
-      : opportunity >= 70
-      ? "bg-yellow-500"
-      : "bg-red-600"
-  }`}
->
-  {opportunity >= 90
-    ? "🏆 Winning Product"
-    : opportunity >= 70
-    ? "⭐ Good Opportunity"
-    : "⚠️ Avoid"}
-</span>
-
-</div>
-            
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-52 object-cover rounded-xl"
-            />
-
-            <h3 className="font-bold mt-4 line-clamp-2">
-              {product.name}
-            </h3>
-
-            <p className="text-gray-500 mt-2">
-              ⭐ {rating.toFixed(1)} • {orders.toLocaleString()} Orders
-            </p>
-
-            <p className="text-2xl font-bold text-green-600 mt-3">
-              ${product.buy_price.toFixed(2)}
-            </p>
-
-            <p className="text-sm text-gray-600 mt-1">
-              Est. Profit ${estimatedProfit.toFixed(2)}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 mt-5">
-              <div className="bg-purple-50 rounded-xl p-3 text-center">
-                <p className="text-xs">Opportunity</p>
-                <h4 className="font-bold text-xl">
-                  {Math.round(opportunity)}
-                </h4>
+          return (
+            <div
+              key={index}
+              className="tp-card tp-card-interactive flex flex-col overflow-hidden"
+            >
+              <div className="relative h-44 w-full shrink-0">
+                <Image
+                  src={product.image || "https://placehold.co/400x300?text=No+Image"}
+                  alt={product.name}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+                <div className="absolute left-3 top-3">
+                  <DecisionBadge decision={opportunity >= 90 ? "Strong Buy" : opportunity >= 70 ? "Buy" : product.decision} />
+                </div>
               </div>
 
-              <div className="bg-blue-50 rounded-xl p-3 text-center">
-                <p className="text-xs">AI Score</p>
-                <h4 className="font-bold text-xl">
-                  {product.ai_score}%
-                </h4>
+              <div className="flex flex-1 flex-col p-5">
+                <h3 className="font-bold text-[var(--ink-900)] line-clamp-2">
+                  {product.name}
+                </h3>
+
+                <p className="mt-2 text-sm text-[var(--ink-500)]">
+                  ⭐ {rating.toFixed(1)} &middot; {orders.toLocaleString()} orders
+                </p>
+
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold text-[var(--ink-900)]">${product.buy_price.toFixed(2)}</span>
+                  <span className="text-sm text-[var(--ink-500)]">
+                    Est. profit <span className="font-semibold text-[var(--accent-positive)]">${estimatedProfit.toFixed(2)}</span>
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <ScoreBadge label="Opportunity" value={opportunity} />
+                  <ScoreBadge label="AI Score" value={product.ai_score} suffix="%" />
+                </div>
+
+                <a
+                  href={product.product_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 block rounded-xl bg-[var(--accent-ai)] py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#5b3ce0]"
+                >
+                  View Product
+                </a>
               </div>
             </div>
-
-            <a
-              href={product.product_url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 block text-center bg-purple-600 text-white rounded-xl py-3 hover:bg-purple-700"
-            >
-              View Product
-            </a>
-          </div>
-        );
+          );
         })}
       </div>
     </div>

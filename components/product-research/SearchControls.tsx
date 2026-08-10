@@ -1,6 +1,10 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { PRODUCT_COUNT_OPTIONS } from "../../lib/services/productCount";
+import Card from "../ui/Card";
+import Eyebrow from "../ui/Eyebrow";
+import { buttonClass } from "../ui/button";
 
 export type SearchPhase = "idle" | "searching" | "analyzing" | "done" | "error" | "empty";
 
@@ -16,54 +20,60 @@ type Props = {
 // These two labels map 1:1 to the two real network requests this panel
 // makes (search, then analysis) -- no fabricated intermediate stages.
 const PHASE_LABEL: Partial<Record<SearchPhase, string>> = {
-  searching: "Searching for products...",
+  searching: "Searching for real products...",
   analyzing: "Analyzing market and building AI report...",
 };
 
-const PIPELINE_STEPS = ["Search", "Real Products", "Opportunity Score", "Analysis"];
+const PIPELINE_STEPS = ["Search", "Real Products", "Opportunity Score", "Market Analysis"];
 
 export default function SearchControls({ keyword, setKeyword, count, setCount, onSearch, phase }: Props) {
   const isBusy = phase === "searching" || phase === "analyzing";
 
   return (
-    <div className="rounded-3xl border border-blue-100 bg-white p-6 shadow-lg">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">
-        🔎 Product Search Engine
-      </span>
+    <Card>
+      <Eyebrow icon="🔎" label="Product Search Engine" tone="data" />
 
-      <h2 className="mt-3 text-2xl font-bold text-gray-900">Find Winning Products</h2>
-      <p className="mt-1 text-sm text-gray-500">
-        Search real products and identify the best opportunities to sell.
+      <h2 className="mt-3 text-2xl font-bold text-[var(--ink-900)]">Find Winning Products</h2>
+      <p className="mt-1 text-sm text-[var(--ink-500)]">
+        Search real products and evaluate them using market evidence &mdash; not AI guesses.
       </p>
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-gray-400">
+      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-medium text-[var(--ink-400)]">
         {PIPELINE_STEPS.map((step, i) => (
-          <span key={step} className="flex items-center gap-1.5">
-            <span className="rounded-full bg-gray-100 px-2.5 py-1">{step}</span>
-            {i < PIPELINE_STEPS.length - 1 && <span>&rarr;</span>}
+          <span key={step} className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full bg-[var(--surface-muted)] px-2.5 py-1">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-data-soft)] text-[10px] font-bold text-[var(--accent-data)]">
+                {i + 1}
+              </span>
+              {step}
+            </span>
+            {i < PIPELINE_STEPS.length - 1 && <span className="text-[var(--ink-400)]">&rarr;</span>}
           </span>
         ))}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 md:flex-row">
-        <input
-          type="text"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !isBusy) onSearch();
-          }}
-          placeholder="e.g. wireless earbuds, smart watch..."
-          className="flex-1 rounded-xl border px-5 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div className="relative min-w-0 flex-1">
+          <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ink-400)]" />
+          <input
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isBusy) onSearch();
+            }}
+            placeholder="e.g. wireless earbuds, smart watch..."
+            className="w-full rounded-xl border border-[var(--border-subtle)] py-3 pl-10 pr-4 text-[var(--ink-900)] outline-none tp-focus-ring placeholder:text-[var(--ink-400)]"
+          />
+        </div>
 
-        <label className="flex items-center gap-2 rounded-xl border px-4 py-3 text-sm text-gray-500">
+        <label className="flex items-center gap-2 rounded-xl border border-[var(--border-subtle)] px-4 py-3 text-sm text-[var(--ink-500)]">
           Analyze
           <select
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
             disabled={isBusy}
-            className="font-semibold text-gray-900 outline-none disabled:opacity-60"
+            className="font-semibold text-[var(--ink-900)] outline-none disabled:opacity-60"
           >
             {PRODUCT_COUNT_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -76,7 +86,7 @@ export default function SearchControls({ keyword, setKeyword, count, setCount, o
         <button
           onClick={onSearch}
           disabled={isBusy}
-          className="rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
+          className={buttonClass({ tone: "data", className: "px-8 py-3" })}
         >
           {isBusy ? "Working..." : "Search Products"}
         </button>
@@ -84,12 +94,12 @@ export default function SearchControls({ keyword, setKeyword, count, setCount, o
 
       {isBusy && (
         <div className="mt-5">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-            <div className="h-2 w-full animate-pulse rounded-full bg-blue-600" />
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--accent-data-soft)]">
+            <div className="h-full w-full animate-pulse rounded-full bg-[var(--accent-data)]" />
           </div>
-          <p className="mt-2 text-sm font-medium text-gray-500">{PHASE_LABEL[phase]}</p>
+          <p className="mt-2 text-sm font-medium text-[var(--ink-500)]">{PHASE_LABEL[phase]}</p>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

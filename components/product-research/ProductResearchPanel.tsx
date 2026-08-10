@@ -155,32 +155,34 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
       />
 
       {phase === "error" && uiError && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+        <div className="flex items-start gap-3 rounded-2xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-5 text-sm text-[var(--accent-risk)]">
           <span className="mt-0.5 text-lg">⚠️</span>
           <div>
             <p className="font-semibold">{uiError.title}</p>
             <p className="mt-1">{uiError.message}</p>
-            {uiError.hint && <p className="mt-2 text-xs text-red-500">{uiError.hint}</p>}
+            {uiError.hint && <p className="mt-2 text-xs opacity-80">{uiError.hint}</p>}
           </div>
         </div>
       )}
 
       {phase === "empty" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+        <div className="rounded-2xl border border-dashed border-[var(--border-subtle)] bg-[var(--surface-card)] p-10 text-center">
           <p className="text-3xl">🔍</p>
-          <p className="mt-3 text-lg font-semibold text-gray-700">No products found</p>
-          <p className="mt-1 text-gray-500">Try a different or broader keyword.</p>
+          <p className="mt-3 text-lg font-semibold text-[var(--ink-900)]">No products found for &quot;{keyword}&quot;</p>
+          <p className="mt-1 text-[var(--ink-500)]">
+            Try a broader or more generic keyword, or increase the product count and search again.
+          </p>
         </div>
       )}
 
       {phase === "done" && result && (
         <div className="space-y-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">
                 Results
               </p>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-[var(--ink-900)]">
                 Analysis for &quot;{result.keyword}&quot;
               </h2>
             </div>
