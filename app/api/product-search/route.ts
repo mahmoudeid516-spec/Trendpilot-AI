@@ -17,11 +17,13 @@ export async function POST(req: Request) {
     const message =
       error instanceof Error ? error.message : "Product search failed.";
 
-    const status =
+    const isConfigurationError =
       error instanceof Error &&
-      error.message.includes("DataForSEO credentials are missing")
-        ? 503
-        : 500;
+      (error.message.includes("DataForSEO credentials are missing") ||
+        error.message.includes("DATAFORSEO_LOCATION_CODE is required") ||
+        error.message.includes("DATAFORSEO_LOCATION_CODE is not a valid number"));
+
+    const status = isConfigurationError ? 503 : 500;
 
     return NextResponse.json(
       {

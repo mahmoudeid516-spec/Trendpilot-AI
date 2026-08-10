@@ -1,5 +1,6 @@
 import type { Product } from "../../types/Product";
 import { buildStableProductId, ensureUniqueProductIds } from "./productIdentity";
+import { scoreProduct } from "../scoring/opportunityScore";
 
 type DataForSeoItem = {
   title?: string;
@@ -92,12 +93,26 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
     const aiScore = Math.min(100, Math.round(rating * 20 + Math.min(sales / 15, 30)));
     const trendScore = Math.min(100, Math.round(Math.max(rating * 18, 10)));
     const viralScore = Math.min(100, Math.round(aiScore * 0.6 + trendScore * 0.4));
-    const opportunityScore = Math.min(
-      100,
-      Math.round(aiScore * 0.4 + trendScore * 0.25 + Math.min(roi, 100) * 0.35)
-    );
-
+    const demandScore = Math.min(100, Math.round(sales / 20 + reviews / 50));
     const competition = normalizeCompetition(reviews);
+    const riskScore = competition === "High" ? 80 : competition === "Medium" ? 45 : 20;
+
+    // opportunity_score / winning_probability / decision are computed by the
+    // single canonical scoring pipeline (lib/scoring/opportunityScore.ts) so
+    // every code path that touches a Product sees the same values -- this
+    // used to be computed here AND separately (differently) in
+    // services/businessAdvisor.ts, which meant the same product could show
+    // two different scores depending on which search path found it.
+    const { opportunity_score: opportunityScore, winning_probability: winningProbability, decision } =
+      scoreProduct({
+        ai_score: aiScore,
+        trend_score: trendScore,
+        viral_score: viralScore,
+        demand_score: demandScore,
+        risk_score: riskScore,
+        roi,
+        competition,
+      });
 
     const product: Product = {
       id: buildStableProductId({
@@ -137,10 +152,10 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
       trend_score: trendScore,
       viral_score: viralScore,
       opportunity_score: opportunityScore,
-      demand_score: Math.min(100, Math.round((sales / 20) + reviews / 50)),
-      risk_score: competition === "High" ? 80 : competition === "Medium" ? 45 : 20,
-      winning_probability: Math.min(100, Math.round((aiScore + opportunityScore) / 2)),
-      decision: opportunityScore >= 85 ? "Strong Buy" : opportunityScore >= 70 ? "Test First" : "Avoid",
+      demand_score: demandScore,
+      risk_score: riskScore,
+      winning_probability: winningProbability,
+      decision,
       ai_reason: "",
       competition,
       trend_direction: "Stable",
@@ -174,8 +189,51 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
     );
   }
 
-  const locationCode = Number(process.env.DATAFORSEO_LOCATION_CODE ?? 2840);
+  // merchant/amazon/products location codes are NOT confirmed to follow
+  // DataForSEO's general SERP/Ads numbering (where 2840 = United States).
+  // Their own OpenAPI spec's example for this specific endpoint's
+  // location_code is a 7-digit value (9045969), and a real documented
+  // Amazon Merchant location entry is {'location_code': 9041134,
+  // 'location_name': '90290,California,United States'} -- both nothing
+  // like 2840. The correct value cannot be verified without a live call to
+  // GET https://api.dataforseo.com/v3/merchant/amazon/locations (not
+  // available in this environment), so there is no safe default: silently
+  // falling back to a guessed value risks creating tasks against an
+  // invalid location that will never return meaningful results. This is a
+  // required configuration value -- set it explicitly after confirming it
+  // against a real /locations response for your target market.
+  const locationCodeEnv = process.env.DATAFORSEO_LOCATION_CODE;
+
+  if (!locationCodeEnv) {
+    throw new Error(
+      "DATAFORSEO_LOCATION_CODE is required for Amazon Merchant Products"
+    );
+  }
+
+  const locationCode = Number(locationCodeEnv);
+
+  if (!Number.isFinite(locationCode)) {
+    throw new Error(
+      `DATAFORSEO_LOCATION_CODE is not a valid number: "${locationCodeEnv}"`
+    );
+  }
+
+  if (locationCode < 1_000_000) {
+    console.warn("[dataforseo] location_code_looks_unconfirmed", {
+      locationCode,
+      reason:
+        "Documented Amazon Merchant Products location codes are 7-digit " +
+        "values (~9,0xx,xxx). This configured value is far smaller and may " +
+        "be from DataForSEO's general SERP/Ads location numbering instead. " +
+        "Verify via GET https://api.dataforseo.com/v3/merchant/amazon/locations.",
+    });
+  }
+
   const languageCode = process.env.DATAFORSEO_LANGUAGE_CODE ?? "en";
+  const depth = 30;
+
+  // Diagnostic only -- never logs credentials or the Authorization header.
+  console.log("[dataforseo] search_start", { keyword, locationCode, languageCode, depth });
 
   const auth = Buffer.from(`${login}:${password}`).toString("base64");
 
@@ -192,17 +250,26 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
           keyword,
           location_code: locationCode,
           language_code: languageCode,
-          depth: 30,
+          depth,
         },
       ]),
     }
   );
 
   const postData = await parseDataForSeoJson<{
-    tasks?: Array<{ id?: string }>;
+    tasks?: Array<{ id?: string; status_code?: number; status_message?: string }>;
     status_code?: number;
     status_message?: string;
   }>(response, "task creation");
+
+  console.log("[dataforseo] task_post_response", {
+    httpStatus: response.status,
+    topLevelStatusCode: postData.status_code,
+    topLevelStatusMessage: postData.status_message,
+    taskStatusCode: postData.tasks?.[0]?.status_code,
+    taskStatusMessage: postData.tasks?.[0]?.status_message,
+    taskIdReturned: Boolean(postData.tasks?.[0]?.id),
+  });
 
   if (postData.status_code !== 20000) {
     throw new Error(
@@ -219,14 +286,27 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
   const task = await pollDataForSeoTask(taskId, auth);
   const items = task.result?.[0]?.items ?? [];
 
-  return normalizeItemsToProducts(items);
+  const products = normalizeItemsToProducts(items);
+
+  console.log("[dataforseo] search_complete", {
+    keyword,
+    taskId,
+    rawItemCount: items.length,
+    normalizedProductCount: products.length,
+  });
+
+  return products;
 }
 
 async function pollDataForSeoTask(taskId: string, auth: string): Promise<DataForSeoTask> {
   const deadline = Date.now() + MAX_POLL_DURATION_MS;
+  const startedAt = Date.now();
   let lastStatusMessage = "Unknown error";
+  let attempt = 0;
 
   while (Date.now() < deadline) {
+    attempt += 1;
+
     const getResponse = await fetch(
       `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
       {
@@ -246,6 +326,25 @@ async function pollDataForSeoTask(taskId: string, auth: string): Promise<DataFor
 
     const task = getData.tasks?.[0];
     lastStatusMessage = task?.status_message ?? "Unknown error";
+    const resultPresent = task?.result != null;
+
+    // Diagnostic only -- never logs credentials or the Authorization header.
+    // taskStatusCode/taskStatusMessage are surfaced here (and in the
+    // timeout error below) purely for human inspection: DataForSEO's
+    // specific in-progress/failure status codes for this endpoint are not
+    // published in any first-party machine-readable source we could
+    // verify, so this code does not branch on them (see the resultPresent
+    // check below). Logging the raw values lets a real run against live
+    // DataForSEO reveal what those codes actually are, without guessing.
+    console.log("[dataforseo] poll_attempt", {
+      taskId,
+      attempt,
+      elapsedMs: Date.now() - startedAt,
+      httpStatus: getResponse.status,
+      taskStatusCode: task?.status_code,
+      taskStatusMessage: task?.status_message,
+      resultPresent,
+    });
 
     // DataForSEO documents `result` as always null at task_post time, and
     // the same null-until-ready contract holds for task_get across their
@@ -255,12 +354,19 @@ async function pollDataForSeoTask(taskId: string, auth: string): Promise<DataFor
     // determined by result presence instead: a non-null result -- including
     // a non-null empty array, a legitimate zero-match search -- means the
     // task has completed. A null/undefined result means it isn't ready yet.
-    if (task && task.result != null) {
+    if (task && resultPresent) {
       return task;
     }
 
     await sleep(POLL_INTERVAL_MS);
   }
+
+  console.error("[dataforseo] poll_timeout", {
+    taskId,
+    attempts: attempt,
+    elapsedMs: Date.now() - startedAt,
+    lastStatusMessage,
+  });
 
   throw new Error(
     `DataForSEO task did not complete within ${MAX_POLL_DURATION_MS}ms (last status: ${lastStatusMessage})`
