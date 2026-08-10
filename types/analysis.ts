@@ -18,9 +18,14 @@ export type MarketAnalysisText = {
   overview: string;
   demand_analysis: string;
   competition_analysis: string;
+  trend_analysis: string;
   profitability_analysis: string;
+  positioning: string;
   risk_analysis: string;
   opportunity_analysis: string;
+  strategy: string;
+  recommended_product_profile: string;
+  final_recommendation: string;
 };
 
 export type ProductWithAnalysis = Product & {

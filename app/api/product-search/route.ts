@@ -10,7 +10,12 @@ export async function POST(req: Request) {
       filters.query ||
       filters.search ||
       "wireless earbuds";
-    const products = await searchDataForSeoProducts(String(search));
+
+    const requestedCount = Number.isFinite(Number(filters.count))
+      ? Number(filters.count)
+      : undefined;
+
+    const products = await searchDataForSeoProducts(String(search), requestedCount);
 
     return NextResponse.json(products);
   } catch (error: unknown) {

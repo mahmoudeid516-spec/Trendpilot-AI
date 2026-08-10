@@ -3,6 +3,8 @@ type ProductSearchFilters = {
   platform?: string;
   query?: string;
   search?: string;
+  /** Requested product count (10/20/30/50/100). Optional -- server defaults to 20. */
+  count?: number;
 };
 
 export async function productSearch(filters: ProductSearchFilters) {
@@ -21,6 +23,7 @@ export async function productSearch(filters: ProductSearchFilters) {
       },
       body: JSON.stringify({
         keyword: search,
+        count: filters?.count,
       }),
     }
   );

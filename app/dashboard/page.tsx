@@ -9,15 +9,12 @@ import StatsCards from "../../components/dashboard/StatsCards";
 import BusinessOverview from "../../components/dashboard/BusinessOverview";
 import AIInsights from "../../components/dashboard/AIInsights";
 import AICommandCenter from "../../components/dashboard/AICommandCenter";
-import SearchBar from "../../components/dashboard/SearchBar";
+import ProductResearchPanel from "../../components/product-research/ProductResearchPanel";
 import ProductsTable from "../../components/dashboard/ProductsTable";
 import ProductDetails from "../../components/dashboard/ProductDetails";
 import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
-import { importProducts } from "../../lib/importers/importProducts";
-import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
-import { productSearch } from "../../services/productSearch";
 import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
@@ -28,13 +25,9 @@ export default function DashboardPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
 
-  const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     async function checkUser() {
@@ -55,46 +48,6 @@ export default function DashboardPage() {
     checkUser();
   }, [hasSupabaseClient, router]);
 
-  async function handleSearch(
-    searchText: string,
-    selectedPlatform: string
-  ) {
-    if (isSearching) {
-      return;
-    }
-
-    if (!searchText.trim()) {
-      alert("Please enter a product name.");
-      return;
-    }
-
-    setIsSearching(true);
-
-    try {
-      const products = await productSearch({
-        keyword: searchText,
-        platform: selectedPlatform,
-      });
-
-      const mappedProducts: Product[] = ensureUniqueProductIds(
-        products as Product[]
-      );
-
-      setSearchResults(mappedProducts);
-
-      await importProducts(mappedProducts);
-
-      setSearch(searchText);
-      setPlatform(selectedPlatform);
-      setRefreshKey((prev) => prev + 1);
-    } catch (error) {
-      console.error("Product search failed:", error);
-    } finally {
-      setIsSearching(false);
-    }
-
-  }
-
   return (
     <div className="flex min-h-screen bg-gray-100">
 
@@ -114,13 +67,11 @@ export default function DashboardPage() {
 
           <AICommandCenter />
 
-          <SearchBar 
-            search={search}
-            setSearch={setSearch}
-            platform={platform}
-            setPlatform={setPlatform}
-            onSearch={handleSearch}
+          <ProductResearchPanel
+            onProductsSaved={() => setRefreshKey((prev) => prev + 1)}
           />
+
+          <h2 className="mt-10 text-2xl font-bold text-gray-900">Saved Products</h2>
 
           {/* TEMP DISABLED
 
@@ -157,10 +108,10 @@ export default function DashboardPage() {
 */}
 
 <ProductsTable
-  products={searchResults}
+  products={[]}
   refreshKey={refreshKey}
-  search={search}
-  platform={platform}
+  search=""
+  platform="All"
   onSelectProduct={(product) => {
     setSelectedProduct(product);
     setShowProductModal(true);

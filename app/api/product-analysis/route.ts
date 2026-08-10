@@ -23,9 +23,14 @@ function fallbackMarketAnalysis(reason: string): {
       overview: "Not available.",
       demand_analysis: "Not available.",
       competition_analysis: "Not available.",
+      trend_analysis: "Not available.",
       profitability_analysis: "Not available.",
+      positioning: "Not available.",
       risk_analysis: "Not available.",
       opportunity_analysis: "Not available.",
+      strategy: "Not available.",
+      recommended_product_profile: "Not available.",
+      final_recommendation: "Not available.",
     },
   };
 }

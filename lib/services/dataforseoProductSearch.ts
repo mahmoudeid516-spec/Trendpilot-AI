@@ -179,7 +179,20 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
   return ensureUniqueProductIds(products);
 }
 
-export async function searchDataForSeoProducts(keyword: string): Promise<Product[]> {
+export const PRODUCT_COUNT_OPTIONS = [10, 20, 30, 50, 100] as const;
+export const DEFAULT_PRODUCT_COUNT = 20;
+const MIN_PRODUCT_COUNT = 1;
+const MAX_PRODUCT_COUNT = 100;
+
+function normalizeRequestedCount(count?: number): number {
+  if (!Number.isFinite(count)) return DEFAULT_PRODUCT_COUNT;
+  return Math.min(MAX_PRODUCT_COUNT, Math.max(MIN_PRODUCT_COUNT, Math.round(count as number)));
+}
+
+export async function searchDataForSeoProducts(
+  keyword: string,
+  requestedCount?: number
+): Promise<Product[]> {
   const login = process.env.DATAFORSEO_LOGIN;
   const password = process.env.DATAFORSEO_PASSWORD;
 
@@ -230,10 +243,11 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
   }
 
   const languageCode = process.env.DATAFORSEO_LANGUAGE_CODE ?? "en";
-  const depth = 30;
+  const count = normalizeRequestedCount(requestedCount);
+  const depth = count;
 
   // Diagnostic only -- never logs credentials or the Authorization header.
-  console.log("[dataforseo] search_start", { keyword, locationCode, languageCode, depth });
+  console.log("[dataforseo] search_start", { keyword, locationCode, languageCode, depth, requestedCount: count });
 
   const auth = Buffer.from(`${login}:${password}`).toString("base64");
 
@@ -286,13 +300,19 @@ export async function searchDataForSeoProducts(keyword: string): Promise<Product
   const task = await pollDataForSeoTask(taskId, auth);
   const items = task.result?.[0]?.items ?? [];
 
-  const products = normalizeItemsToProducts(items);
+  const normalized = normalizeItemsToProducts(items);
+  // Never return more than requested, and never pad with fabricated
+  // products if fewer real ones survived normalization -- the caller sees
+  // exactly how many real products came back via products.length.
+  const products = normalized.slice(0, count);
 
   console.log("[dataforseo] search_complete", {
     keyword,
     taskId,
+    requestedCount: count,
     rawItemCount: items.length,
-    normalizedProductCount: products.length,
+    normalizedProductCount: normalized.length,
+    returnedProductCount: products.length,
   });
 
   return products;

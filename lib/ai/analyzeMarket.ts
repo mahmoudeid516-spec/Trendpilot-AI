@@ -103,14 +103,23 @@ Return ONLY valid JSON in this exact shape, no markdown, no explanation:
     "explanation": "2-3 sentence natural-language summary grounded in the statistics above"
   },
   "market_analysis": {
-    "overview": "...",
+    "overview": "market opportunity overview",
     "demand_analysis": "...",
     "competition_analysis": "...",
+    "trend_analysis": "...",
     "profitability_analysis": "...",
-    "risk_analysis": "...",
-    "opportunity_analysis": "..."
+    "positioning": "who the target customer is and how to position the product",
+    "risk_analysis": "main risks",
+    "opportunity_analysis": "...",
+    "strategy": "recommended go-to-market strategy",
+    "recommended_product_profile": "what characteristics a seller should look for in this market",
+    "final_recommendation": "one concise closing recommendation"
   }
 }
+
+For any field where the statistics above do not provide enough basis to
+support a real conclusion, write "Insufficient data to determine." for that
+field instead of guessing.
 `;
 
   const response = await openai.responses.create({
