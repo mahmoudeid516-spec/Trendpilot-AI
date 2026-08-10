@@ -3,17 +3,19 @@
 import { useState } from "react";
 import type { Product } from "../../types/Product";
 import type { ProductAnalysisResponse, ProductWithAnalysis } from "../../types/analysis";
-import { DEFAULT_PRODUCT_COUNT } from "../../lib/services/dataforseoProductSearch";
+import { DEFAULT_PRODUCT_COUNT } from "../../lib/services/productCount";
 import { productSearch } from "../../services/productSearch";
 import { importProducts } from "../../lib/importers/importProducts";
 import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { explainProduct } from "../../lib/scoring/explainProduct";
 import { selectTopPicks } from "../../lib/scoring/topPicks";
+import { toUserFacingError, type UserFacingError } from "../../lib/errors/toUserFacingError";
 import SearchControls, { type SearchPhase } from "./SearchControls";
 import MarketOverview from "./MarketOverview";
 import AIMarketReport from "./AIMarketReport";
 import TopPicks from "./TopPicks";
 import ProductGrid from "./ProductGrid";
+import ExportControls from "./ExportControls";
 
 type Props = {
   onProductsSaved?: () => void;
@@ -25,7 +27,7 @@ type Props = {
 // scoring/top-picks/per-product analysis working even if the analysis
 // endpoint can't be reached at all, since these are pure functions with no
 // server-only dependencies.
-function buildLocalFallback(keyword: string, products: Product[], reason: string): ProductAnalysisResponse {
+function buildLocalFallback(keyword: string, products: Product[]): ProductAnalysisResponse {
   const productsWithAnalysis: ProductWithAnalysis[] = products.map((product) => ({
     ...product,
     analysis: explainProduct(product),
@@ -42,7 +44,8 @@ function buildLocalFallback(keyword: string, products: Product[], reason: string
       competition: "Medium",
       profitability: "Medium",
       risk: "Medium",
-      explanation: `Products loaded successfully, but AI market analysis could not be reached (${reason}). Product scoring, Top Picks and per-product analysis below are still real, computed data.`,
+      explanation:
+        "Products loaded successfully, but AI market analysis could not be reached. Product scoring, Top Picks and per-product analysis below are still real, computed data.",
     },
     market_analysis: {
       overview: "Not available.",
@@ -66,7 +69,7 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
   const [keyword, setKeyword] = useState("");
   const [count, setCount] = useState(DEFAULT_PRODUCT_COUNT);
   const [phase, setPhase] = useState<SearchPhase>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [uiError, setUiError] = useState<UserFacingError | null>(null);
   const [result, setResult] = useState<ProductAnalysisResponse | null>(null);
   const [requestedCount, setRequestedCount] = useState(DEFAULT_PRODUCT_COUNT);
   const [searchedAt, setSearchedAt] = useState<Date | null>(null);
@@ -76,12 +79,12 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
 
     const trimmed = keyword.trim();
     if (!trimmed) {
-      setErrorMessage("Please enter a keyword to search.");
+      setUiError({ title: "Enter a keyword", message: "Please enter a keyword to search." });
       setPhase("error");
       return;
     }
 
-    setErrorMessage(null);
+    setUiError(null);
     setResult(null);
     setPhase("searching");
     setRequestedCount(count);
@@ -91,8 +94,12 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
       const raw = await productSearch({ keyword: trimmed, count });
       products = ensureUniqueProductIds(raw as Product[]);
     } catch (error) {
+      // Full technical detail (never containing credentials -- every
+      // DataForSEO/OpenAI error message in this codebase is built without
+      // them) stays in the console/server logs; the UI only ever shows the
+      // classified, generic message below.
       console.error("Product search failed:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Product search failed.");
+      setUiError(toUserFacingError(error instanceof Error ? error.message : "Product search failed."));
       setPhase("error");
       return;
     }
@@ -128,8 +135,7 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
       setResult(analysis);
     } catch (error) {
       console.error("Product analysis request failed, using local fallback:", error);
-      const reason = error instanceof Error ? error.message : "unknown error";
-      setResult(buildLocalFallback(trimmed, products, reason));
+      setResult(buildLocalFallback(trimmed, products));
     }
 
     setSearchedAt(new Date());
@@ -147,10 +153,11 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
         phase={phase}
       />
 
-      {phase === "error" && errorMessage && (
+      {phase === "error" && uiError && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          <p className="font-semibold">Search failed</p>
-          <p className="mt-1">{errorMessage}</p>
+          <p className="font-semibold">{uiError.title}</p>
+          <p className="mt-1">{uiError.message}</p>
+          {uiError.hint && <p className="mt-2 text-xs text-red-500">{uiError.hint}</p>}
         </div>
       )}
 
@@ -163,6 +170,10 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
 
       {phase === "done" && result && (
         <>
+          <div className="flex justify-end">
+            <ExportControls result={result} requestedCount={requestedCount} />
+          </div>
+
           <MarketOverview
             keyword={result.keyword}
             requestedCount={requestedCount}

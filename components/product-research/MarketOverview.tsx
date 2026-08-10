@@ -43,11 +43,17 @@ export default function MarketOverview({
           <h2 className="mt-3 text-3xl font-extrabold text-gray-900">{summary.verdict}</h2>
 
           <p className="mt-2 text-sm text-gray-500">
-            &quot;{keyword}&quot; &middot; Products analyzed: {returnedCount}
-            {returnedCount !== requestedCount && (
-              <> (requested {requestedCount}, {returnedCount} real products returned)</>
-            )}
+            &quot;{keyword}&quot;
             {searchedAt && <> &middot; {searchedAt.toLocaleTimeString()}</>}
+          </p>
+
+          <p className="mt-1 text-sm font-medium text-gray-700">
+            Showing {returnedCount} real product{returnedCount === 1 ? "" : "s"}
+            {returnedCount !== requestedCount ? (
+              <span className="text-orange-600"> &middot; Requested {requestedCount}</span>
+            ) : (
+              <> &middot; Requested {requestedCount}</>
+            )}
           </p>
         </div>
 

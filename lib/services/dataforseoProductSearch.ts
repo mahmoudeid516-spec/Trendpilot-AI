@@ -1,6 +1,7 @@
 import type { Product } from "../../types/Product";
 import { buildStableProductId, ensureUniqueProductIds } from "./productIdentity";
 import { scoreProduct } from "../scoring/opportunityScore";
+import { DEFAULT_PRODUCT_COUNT } from "./productCount";
 
 type DataForSeoItem = {
   title?: string;
@@ -179,8 +180,6 @@ function normalizeItemsToProducts(items: DataForSeoItem[]): Product[] {
   return ensureUniqueProductIds(products);
 }
 
-export const PRODUCT_COUNT_OPTIONS = [10, 20, 30, 50, 100] as const;
-export const DEFAULT_PRODUCT_COUNT = 20;
 const MIN_PRODUCT_COUNT = 1;
 const MAX_PRODUCT_COUNT = 100;
 

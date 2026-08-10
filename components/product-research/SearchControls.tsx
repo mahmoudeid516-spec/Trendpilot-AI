@@ -1,6 +1,6 @@
 "use client";
 
-import { PRODUCT_COUNT_OPTIONS } from "../../lib/services/dataforseoProductSearch";
+import { PRODUCT_COUNT_OPTIONS } from "../../lib/services/productCount";
 
 export type SearchPhase = "idle" | "searching" | "analyzing" | "done" | "error" | "empty";
 
@@ -13,9 +13,11 @@ type Props = {
   phase: SearchPhase;
 };
 
+// These two labels map 1:1 to the two real network requests this panel
+// makes (search, then analysis) -- no fabricated intermediate stages.
 const PHASE_LABEL: Partial<Record<SearchPhase, string>> = {
-  searching: "Finding products...",
-  analyzing: "Analyzing market data and building AI report...",
+  searching: "Searching for products...",
+  analyzing: "Analyzing market and building AI report...",
 };
 
 export default function SearchControls({ keyword, setKeyword, count, setCount, onSearch, phase }: Props) {

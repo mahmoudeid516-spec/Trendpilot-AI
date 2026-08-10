@@ -30,11 +30,16 @@ export async function productSearch(filters: ProductSearchFilters) {
 
   if (!response.ok) {
     const contentType = response.headers.get("content-type") ?? "";
-    const responseBody = contentType.includes("application/json")
-      ? JSON.stringify(await response.json())
-      : await response.text();
 
-    throw new Error(responseBody || "Product Search Failed");
+    if (contentType.includes("application/json")) {
+      const body = await response.json().catch(() => null);
+      throw new Error(
+        (typeof body?.error === "string" && body.error) || `Product search failed (HTTP ${response.status}).`
+      );
+    }
+
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Product search failed (HTTP ${response.status}).`);
   }
 
   return await response.json();

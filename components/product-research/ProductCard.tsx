@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { ProductWithAnalysis } from "../../types/analysis";
 import ScoreBadge from "./ScoreBadge";
 import DecisionBadge from "./DecisionBadge";
@@ -18,11 +19,13 @@ export default function ProductCard({ product }: { product: ProductWithAnalysis 
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow transition hover:shadow-xl">
-      <div className="relative">
-        <img
+      <div className="relative h-48 w-full">
+        <Image
           src={product.image || "https://placehold.co/400x300?text=No+Image"}
           alt={product.name}
-          className="h-48 w-full object-cover"
+          fill
+          unoptimized
+          className="object-cover"
         />
         <div className="absolute left-3 top-3">
           <DecisionBadge decision={product.decision} />
