@@ -3,12 +3,10 @@ type Props = {
 };
 
 const suggestions = [
-  "Find winning Shopify products",
-  "Products with AI score above 90",
-  "Low competition gadgets",
-  "Trending TikTok products",
-  "High profit beauty products",
-  "Best Amazon opportunities",
+  "What products are trending in the fitness market?",
+  "Is smart watch a good niche to enter?",
+  "What product categories have low competition?",
+  "Analyze the opportunity for smart watches.",
 ];
 
 export default function SuggestionChips({ onSelect }: Props) {

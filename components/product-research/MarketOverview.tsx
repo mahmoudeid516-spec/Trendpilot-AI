@@ -48,12 +48,10 @@ export default function MarketOverview({
           </p>
 
           <p className="mt-1 text-sm font-medium text-gray-700">
-            Showing {returnedCount} real product{returnedCount === 1 ? "" : "s"}
-            {returnedCount !== requestedCount ? (
-              <span className="text-orange-600"> &middot; Requested {requestedCount}</span>
-            ) : (
-              <> &middot; Requested {requestedCount}</>
-            )}
+            Requested {requestedCount} &middot;{" "}
+            <span className={returnedCount !== requestedCount ? "text-orange-600" : ""}>
+              {returnedCount} real product{returnedCount === 1 ? "" : "s"} returned
+            </span>
           </p>
         </div>
 

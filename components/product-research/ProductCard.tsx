@@ -12,7 +12,12 @@ const COMPETITION_STYLES: Record<string, string> = {
   High: "bg-red-100 text-red-700",
 };
 
-export default function ProductCard({ product }: { product: ProductWithAnalysis }) {
+type Props = {
+  product: ProductWithAnalysis;
+  onSelectProduct?: (product: ProductWithAnalysis) => void;
+};
+
+export default function ProductCard({ product, onSelectProduct }: Props) {
   const [expanded, setExpanded] = useState(false);
   const rating = Number(product.store_rating ?? product.supplier_rating ?? 0);
   const orders = Number(product.orders ?? product.sales ?? 0);
@@ -99,25 +104,32 @@ export default function ProductCard({ product }: { product: ProductWithAnalysis 
           </div>
         )}
 
-        <div className="mt-4 flex gap-2">
+        {/* Same View / Supplier / Report action set and color convention used
+            on the Saved Products table, so both parts of the app behave
+            consistently. */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <a
             href={product.product_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 rounded-xl bg-purple-600 py-2 text-center text-sm font-semibold text-white hover:bg-purple-700"
+            className="rounded-xl bg-blue-600 py-2 text-center text-sm font-semibold text-white hover:bg-blue-700"
           >
-            View Product
+            View
           </a>
-          {product.supplier_url && product.supplier_url !== product.product_url && (
-            <a
-              href={product.supplier_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 rounded-xl bg-gray-100 py-2 text-center text-sm font-semibold text-gray-700 hover:bg-gray-200"
-            >
-              Supplier
-            </a>
-          )}
+          <a
+            href={product.supplier_url || product.product_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-xl bg-green-600 py-2 text-center text-sm font-semibold text-white hover:bg-green-700"
+          >
+            Supplier
+          </a>
+          <button
+            onClick={() => onSelectProduct?.(product)}
+            className="rounded-xl bg-purple-600 py-2 text-center text-sm font-semibold text-white hover:bg-purple-700"
+          >
+            Report
+          </button>
         </div>
       </div>
     </div>

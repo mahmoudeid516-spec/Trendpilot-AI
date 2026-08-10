@@ -30,14 +30,14 @@ export default function AIRecommendation({ product }: Props) {
         🔥 Winning Probability{" "}
         <strong
           className={`${
-            (product.opportunity_score ?? 0) >= 90
+            (product.winning_probability ?? 0) >= 90
               ? "text-green-300"
-              : (product.opportunity_score ?? 0) >= 75
+              : (product.winning_probability ?? 0) >= 75
               ? "text-yellow-300"
               : "text-red-300"
           }`}
         >
-          {product.opportunity_score?.toFixed(1)}%
+          {product.winning_probability ?? "N/A"}%
         </strong>
       </p>
 

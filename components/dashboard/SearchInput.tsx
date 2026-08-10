@@ -17,16 +17,16 @@ export default function SearchInput({
       <input
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Find products under $20..."
+        placeholder="Ask about a market, niche, or opportunity..."
         className="flex-1 border rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-600"
       />
 
       <button
         onClick={onSearch}
         disabled={loading}
-        className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-8 rounded-xl transition"
+        className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-8 rounded-xl transition whitespace-nowrap"
       >
-        {loading ? "Thinking..." : "Ask AI"}
+        {loading ? "Thinking..." : "Ask TrendPilot AI"}
       </button>
 
     </div>

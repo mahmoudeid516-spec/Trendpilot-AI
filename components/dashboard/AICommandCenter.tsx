@@ -53,7 +53,7 @@ export default function AICommandCenter() {
           <div>
 
             <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-              AI Copilot
+              🧠 AI Advisor
             </span>
 
             <h2 className="mt-5 text-4xl font-bold">
@@ -61,9 +61,9 @@ export default function AICommandCenter() {
             </h2>
 
             <p className="mt-3 max-w-2xl text-purple-100">
-              Find winning products, compare niches,
-              discover profitable opportunities and receive
-              AI-powered business recommendations.
+              Get market insights, product ideas, and strategic recommendations.
+              Ask a question the way you&apos;d ask a research analyst &mdash;
+              not a product database.
             </p>
 
           </div>

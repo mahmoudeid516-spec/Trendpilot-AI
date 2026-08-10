@@ -18,7 +18,12 @@ const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
 const DECISIONS = ["All", "Strong Buy", "Buy", "Test", "Watch", "Avoid"];
 const COMPETITION_LEVELS = ["All", "Low", "Medium", "High"];
 
-export default function ProductGrid({ products }: { products: ProductWithAnalysis[] }) {
+type Props = {
+  products: ProductWithAnalysis[];
+  onSelectProduct?: (product: ProductWithAnalysis) => void;
+};
+
+export default function ProductGrid({ products, onSelectProduct }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("opportunity_score");
   const [decisionFilter, setDecisionFilter] = useState("All");
   const [competitionFilter, setCompetitionFilter] = useState("All");
@@ -92,7 +97,7 @@ export default function ProductGrid({ products }: { products: ProductWithAnalysi
       ) : (
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredAndSorted.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onSelectProduct={onSelectProduct} />
           ))}
         </div>
       )}

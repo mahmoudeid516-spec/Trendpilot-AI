@@ -14,8 +14,11 @@ export default function SearchResults({ results }: Props) {
 
   return (
     <div className="mt-10">
+      <p className="text-xs font-semibold uppercase tracking-wide text-purple-500">
+        AI-Suggested Products
+      </p>
       <h2 className="text-3xl font-bold mb-6">
-        Found {results.length} Products
+        {results.length} product{results.length === 1 ? "" : "s"} matching your question
       </h2>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

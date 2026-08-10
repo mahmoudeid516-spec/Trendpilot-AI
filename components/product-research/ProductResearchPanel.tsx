@@ -19,6 +19,7 @@ import ExportControls from "./ExportControls";
 
 type Props = {
   onProductsSaved?: () => void;
+  onSelectProduct?: (product: ProductWithAnalysis) => void;
 };
 
 // Used only if the /api/product-analysis request itself fails outright
@@ -65,7 +66,7 @@ function buildLocalFallback(keyword: string, products: Product[]): ProductAnalys
   };
 }
 
-export default function ProductResearchPanel({ onProductsSaved }: Props) {
+export default function ProductResearchPanel({ onProductsSaved, onSelectProduct }: Props) {
   const [keyword, setKeyword] = useState("");
   const [count, setCount] = useState(DEFAULT_PRODUCT_COUNT);
   const [phase, setPhase] = useState<SearchPhase>("idle");
@@ -154,23 +155,35 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
       />
 
       {phase === "error" && uiError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          <p className="font-semibold">{uiError.title}</p>
-          <p className="mt-1">{uiError.message}</p>
-          {uiError.hint && <p className="mt-2 text-xs text-red-500">{uiError.hint}</p>}
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+          <span className="mt-0.5 text-lg">⚠️</span>
+          <div>
+            <p className="font-semibold">{uiError.title}</p>
+            <p className="mt-1">{uiError.message}</p>
+            {uiError.hint && <p className="mt-2 text-xs text-red-500">{uiError.hint}</p>}
+          </div>
         </div>
       )}
 
       {phase === "empty" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
-          <p className="text-lg font-semibold text-gray-700">No products found</p>
-          <p className="mt-1">Try a different or broader keyword.</p>
+        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+          <p className="text-3xl">🔍</p>
+          <p className="mt-3 text-lg font-semibold text-gray-700">No products found</p>
+          <p className="mt-1 text-gray-500">Try a different or broader keyword.</p>
         </div>
       )}
 
       {phase === "done" && result && (
-        <>
-          <div className="flex justify-end">
+        <div className="space-y-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Results
+              </p>
+              <h2 className="text-xl font-bold text-gray-900">
+                Analysis for &quot;{result.keyword}&quot;
+              </h2>
+            </div>
             <ExportControls result={result} requestedCount={requestedCount} />
           </div>
 
@@ -187,8 +200,8 @@ export default function ProductResearchPanel({ onProductsSaved }: Props) {
 
           <TopPicks picks={result.top_picks} />
 
-          <ProductGrid products={result.products} />
-        </>
+          <ProductGrid products={result.products} onSelectProduct={onSelectProduct} />
+        </div>
       )}
     </div>
   );

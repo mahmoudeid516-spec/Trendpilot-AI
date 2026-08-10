@@ -65,13 +65,55 @@ export default function DashboardPage() {
 
           <AIInsights />
 
-          <AICommandCenter />
+          {/* Two distinct tools, deliberately presented as separate blocks:
+              an AI advisor you talk to (ask questions, get strategy), and a
+              product search engine you query (real products, real actions).
+              The eyebrow labels + icons reinforce that distinction at a
+              glance, without duplicating each other's UI. */}
+          <section className="mt-12">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-sm text-white">
+                🧠
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-purple-600">
+                  AI Advisor
+                </p>
+                <p className="text-sm text-gray-500">
+                  Ask questions and get market intelligence &mdash; not a product list.
+                </p>
+              </div>
+            </div>
 
-          <ProductResearchPanel
-            onProductsSaved={() => setRefreshKey((prev) => prev + 1)}
-          />
+            <AICommandCenter />
+          </section>
 
-          <h2 className="mt-10 text-2xl font-bold text-gray-900">Saved Products</h2>
+          <section className="mt-12">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm text-white">
+                🔎
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
+                  Product Search Engine
+                </p>
+                <p className="text-sm text-gray-500">
+                  Search real products and evaluate opportunities with evidence.
+                </p>
+              </div>
+            </div>
+
+            <ProductResearchPanel
+              onProductsSaved={() => setRefreshKey((prev) => prev + 1)}
+              onSelectProduct={(product) => {
+                setSelectedProduct(product);
+                setShowProductModal(true);
+              }}
+            />
+          </section>
+
+          <h2 className="mt-12 text-2xl font-bold text-gray-900">Saved Products</h2>
+          <p className="mb-4 text-sm text-gray-500">Products you&apos;ve previously searched and saved.</p>
 
           {/* TEMP DISABLED
 
