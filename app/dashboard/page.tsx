@@ -49,11 +49,11 @@ export default function DashboardPage() {
   }, [hasSupabaseClient, router]);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen flex-col bg-gray-100 lg:flex-row">
 
 <Sidebar />
 
-      <main className="flex-1 p-10">
+      <main className="min-w-0 flex-1 p-5 sm:p-10">
 
         <div className="max-w-7xl mx-auto">
 

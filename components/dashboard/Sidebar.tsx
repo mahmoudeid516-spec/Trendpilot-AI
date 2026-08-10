@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -11,12 +12,16 @@ import {
   Settings,
   Crown,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const router = useRouter();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   async function handleLogout() {
     const { error } = await supabase.auth.signOut();
@@ -61,9 +66,8 @@ export default function Sidebar() {
     },
   ];
 
-  return (
-    <aside className="w-72 bg-white shadow-xl border-r min-h-screen flex flex-col">
-
+  const navContent = (
+    <>
       <div className="p-8 border-b">
         <h1 className="text-3xl font-bold text-purple-700">
           TrendPilot AI
@@ -86,6 +90,7 @@ export default function Sidebar() {
             <Link
               key={item.title}
               href={item.href}
+              onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition
               ${
                 active
@@ -112,7 +117,51 @@ export default function Sidebar() {
         </button>
 
       </div>
+    </>
+  );
 
-    </aside>
+  return (
+    <>
+      {/* Mobile/tablet top bar with menu button. Hidden on desktop where the
+          persistent sidebar (below) is shown instead. */}
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b bg-white px-5 py-4 shadow-sm lg:hidden">
+        <span className="text-xl font-bold text-purple-700">TrendPilot AI</span>
+
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation menu"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-700 hover:bg-purple-100"
+        >
+          <Menu size={22} />
+        </button>
+      </div>
+
+      {/* Mobile/tablet drawer + backdrop */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
+
+          <aside className="relative z-50 flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-xl">
+            <button
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation menu"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100"
+            >
+              <X size={20} />
+            </button>
+
+            {navContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop persistent sidebar */}
+      <aside className="hidden w-72 shrink-0 flex-col border-r bg-white shadow-xl lg:flex lg:min-h-screen">
+        {navContent}
+      </aside>
+    </>
   );
 }

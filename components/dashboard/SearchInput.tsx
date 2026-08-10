@@ -12,19 +12,19 @@ export default function SearchInput({
   onSearch,
 }: Props) {
   return (
-    <div className="flex gap-4 mt-8">
+    <div className="mt-8 flex flex-col gap-4 sm:flex-row">
 
       <input
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Ask about a market, niche, or opportunity..."
-        className="flex-1 border rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-600"
+        className="min-w-0 flex-1 rounded-xl border px-5 py-4 outline-none focus:ring-2 focus:ring-purple-600"
       />
 
       <button
         onClick={onSearch}
         disabled={loading}
-        className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-8 rounded-xl transition whitespace-nowrap"
+        className="whitespace-nowrap rounded-xl bg-purple-600 px-8 py-4 text-white transition hover:bg-purple-700 disabled:bg-gray-400"
       >
         {loading ? "Thinking..." : "Ask TrendPilot AI"}
       </button>

@@ -46,17 +46,17 @@ export default function AICommandCenter() {
   return (
     <section className="mb-10 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl">
 
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 p-8 text-white">
+      <div className="p-6 text-white sm:p-8 bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700">
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
-          <div>
+          <div className="min-w-0">
 
             <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
               🧠 AI Advisor
             </span>
 
-            <h2 className="mt-5 text-4xl font-bold">
+            <h2 className="mt-5 break-words text-3xl font-bold sm:text-4xl">
               Ask TrendPilot AI
             </h2>
 
@@ -68,7 +68,7 @@ export default function AICommandCenter() {
 
           </div>
 
-          <div className="rounded-2xl bg-white/10 p-6 backdrop-blur">
+          <div className="shrink-0 rounded-2xl bg-white/10 p-6 backdrop-blur">
 
             <p className="text-sm text-purple-200">
               AI Status
@@ -88,7 +88,7 @@ export default function AICommandCenter() {
 
       </div>
 
-      <div className="p-8">
+      <div className="p-5 sm:p-8">
 
         <SearchInput
           prompt={prompt}
