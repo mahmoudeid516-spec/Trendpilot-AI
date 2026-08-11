@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/dashboard/Sidebar";
 import DashboardHero from "../../components/dashboard/DashboardHero";
@@ -9,15 +10,13 @@ import StatsCards from "../../components/dashboard/StatsCards";
 import BusinessOverview from "../../components/dashboard/BusinessOverview";
 import AIInsights from "../../components/dashboard/AIInsights";
 import AICommandCenter from "../../components/dashboard/AICommandCenter";
-import SearchBar from "../../components/dashboard/SearchBar";
+import ProductResearchPanel from "../../components/product-research/ProductResearchPanel";
 import ProductsTable from "../../components/dashboard/ProductsTable";
 import ProductDetails from "../../components/dashboard/ProductDetails";
 import TrendChart from "../../components/dashboard/TrendChart";
 import AISalesForecast from "../../components/dashboard/AISalesForecast";
 import MarketingKit from "../../components/dashboard/MarketingKit";
-import { importProducts } from "../../lib/importers/importProducts";
-import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
-import { productSearch } from "../../services/productSearch";
+import Eyebrow from "../../components/ui/Eyebrow";
 import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
@@ -28,13 +27,9 @@ export default function DashboardPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
 
-  const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     async function checkUser() {
@@ -55,74 +50,66 @@ export default function DashboardPage() {
     checkUser();
   }, [hasSupabaseClient, router]);
 
-  async function handleSearch(
-    searchText: string,
-    selectedPlatform: string
-  ) {
-    if (isSearching) {
-      return;
-    }
-
-    if (!searchText.trim()) {
-      alert("Please enter a product name.");
-      return;
-    }
-
-    setIsSearching(true);
-
-    try {
-      const products = await productSearch({
-        keyword: searchText,
-        platform: selectedPlatform,
-      });
-
-      const mappedProducts: Product[] = ensureUniqueProductIds(
-        products as Product[]
-      );
-
-      setSearchResults(mappedProducts);
-
-      await importProducts(mappedProducts);
-
-      setSearch(searchText);
-      setPlatform(selectedPlatform);
-      setRefreshKey((prev) => prev + 1);
-    } catch (error) {
-      console.error("Product search failed:", error);
-    } finally {
-      setIsSearching(false);
-    }
-
-  }
-
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen flex-col bg-[var(--surface-app)] lg:flex-row">
 
-<Sidebar />
+      <Sidebar />
 
-      <main className="flex-1 p-10">
+      <main className="min-w-0 flex-1 p-4 sm:p-8 lg:p-10">
 
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto max-w-7xl space-y-10">
 
-          <DashboardHero totalProducts={0} winningProducts={0} /> 
+          <DashboardHero totalProducts={0} winningProducts={0} />
 
-          <StatsCards refreshKey={refreshKey} />
-
-          <BusinessOverview />
+          <section className="space-y-6">
+            <StatsCards refreshKey={refreshKey} />
+            <BusinessOverview />
+          </section>
 
           <AIInsights />
 
-          <AICommandCenter />
+          {/* Two distinct tools, deliberately presented as separate blocks:
+              an AI advisor you talk to (ask questions, get strategy), and a
+              product search engine you query (real products, real actions).
+              The eyebrow labels + icons reinforce that distinction at a
+              glance, without duplicating each other's UI. */}
+          <section>
+            <div className="mb-4 flex flex-col gap-1">
+              <Eyebrow icon="🧠" label="AI Advisor" tone="ai" />
+              <p className="text-sm text-[var(--ink-500)]">
+                Ask questions and get market intelligence &mdash; not a product list.
+              </p>
+            </div>
 
-          <SearchBar 
-            search={search}
-            setSearch={setSearch}
-            platform={platform}
-            setPlatform={setPlatform}
-            onSearch={handleSearch}
-          />
+            <AICommandCenter />
+          </section>
 
-          {/* TEMP DISABLED
+          <section>
+            <div className="mb-4 flex flex-col gap-1">
+              <Eyebrow icon="🔎" label="Product Search Engine" tone="data" />
+              <p className="text-sm text-[var(--ink-500)]">
+                Search real products and evaluate opportunities with evidence.
+              </p>
+            </div>
+
+            <ProductResearchPanel
+              onProductsSaved={() => setRefreshKey((prev) => prev + 1)}
+              onSelectProduct={(product) => {
+                setSelectedProduct(product);
+                setShowProductModal(true);
+              }}
+            />
+          </section>
+
+          <section>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-[var(--ink-900)]">Saved Product Library</h2>
+              <p className="mt-1 text-sm text-[var(--ink-500)]">
+                Products you&apos;ve previously searched and saved &mdash; separate from live search results above.
+              </p>
+            </div>
+
+            {/* TEMP DISABLED
 
 <ProGate>
   <AIAnalyzer
@@ -156,45 +143,43 @@ export default function DashboardPage() {
 
 */}
 
-<ProductsTable
-  products={searchResults}
-  refreshKey={refreshKey}
-  search={search}
-  platform={platform}
-  onSelectProduct={(product) => {
-    setSelectedProduct(product);
-    setShowProductModal(true);
-  }}
-/>
+            <ProductsTable
+              products={[]}
+              refreshKey={refreshKey}
+              search=""
+              platform="All"
+              onSelectProduct={(product) => {
+                setSelectedProduct(product);
+                setShowProductModal(true);
+              }}
+            />
+          </section>
 
-{showProductModal && selectedProduct && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
+          {showProductModal && selectedProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6">
 
-    <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white">
+              <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-[var(--surface-card)] shadow-2xl">
 
-      <button
-        onClick={() => setShowProductModal(false)}
-        className="absolute right-6 top-6 text-4xl font-bold text-gray-500 hover:text-black"
-      >
-        ×
-      </button>
+                <button
+                  onClick={() => setShowProductModal(false)}
+                  aria-label="Close product report"
+                  className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--ink-700)] shadow-md hover:bg-white"
+                >
+                  <X size={18} />
+                </button>
 
-      <ProductDetails product={selectedProduct} />
+                <ProductDetails product={selectedProduct} />
 
-      <AISalesForecast
-        product={selectedProduct}
-      />
+                <AISalesForecast product={selectedProduct} />
 
-      <MarketingKit
-        productName={selectedProduct.name}
-      />
+                <MarketingKit productName={selectedProduct.name} />
 
-    </div>
+              </div>
 
-  </div>
-)}
+            </div>
+          )}
 
-<TrendChart />
+          <TrendChart />
           {/* TEMP DISABLED */}
 
         </div>

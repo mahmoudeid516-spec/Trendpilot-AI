@@ -15,16 +15,20 @@ import SearchInput from "./SearchInput";
 import SuggestionChips from "./SuggestionChips";
 import AIRecommendation from "./AIRecommendation";
 import SearchResults from "./SearchResults";
+import Card from "../ui/Card";
+import Eyebrow from "../ui/Eyebrow";
 
 export default function AICommandCenter() {
   const [prompt, setPrompt] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasAsked, setHasAsked] = useState(false);
 
   async function handleAskAI() {
     if (!prompt.trim()) return;
 
     setLoading(true);
+    setHasAsked(true);
 
     try {
       const filters = await aiSearch(prompt);
@@ -44,51 +48,27 @@ export default function AICommandCenter() {
   const bestProduct = getBestProduct(results);
 
   return (
-    <section className="mb-10 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl">
-
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 p-8 text-white">
-
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
-          <div>
-
-            <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
-              AI Copilot
-            </span>
-
-            <h2 className="mt-5 text-4xl font-bold">
-              Ask TrendPilot AI
-            </h2>
-
-            <p className="mt-3 max-w-2xl text-purple-100">
-              Find winning products, compare niches,
-              discover profitable opportunities and receive
-              AI-powered business recommendations.
-            </p>
-
-          </div>
-
-          <div className="rounded-2xl bg-white/10 p-6 backdrop-blur">
-
-            <p className="text-sm text-purple-200">
-              AI Status
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-green-300">
-              ● Online
-            </h3>
-
-            <p className="mt-3 text-sm text-purple-100">
-              GPT Connected
-            </p>
-
-          </div>
-
+    <Card padding="none">
+      <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="min-w-0">
+          <Eyebrow icon="🧠" label="AI Strategic Advisor" tone="ai" />
+          <h2 className="mt-3 break-words text-2xl font-bold text-[var(--ink-900)] sm:text-[28px]">
+            Ask TrendPilot AI
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-[var(--ink-500)]">
+            Get market insights, product ideas, and strategic recommendations.
+            Ask a question the way you&apos;d ask a research analyst &mdash;
+            not a product database.
+          </p>
         </div>
 
+        <div className="flex shrink-0 items-center gap-2 self-start rounded-full border border-[var(--accent-positive)]/25 bg-[var(--accent-positive-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-positive)] sm:self-auto">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-positive)]" />
+          AI Online &middot; GPT Connected
+        </div>
       </div>
 
-      <div className="p-8">
+      <div className="p-5 sm:p-8">
 
         <SearchInput
           prompt={prompt}
@@ -104,21 +84,30 @@ export default function AICommandCenter() {
         </div>
 
         {loading && (
-
-          <div className="mt-8 rounded-2xl border border-purple-100 bg-purple-50 p-6">
-
-            <div className="animate-pulse space-y-4">
-
-              <div className="h-5 w-48 rounded bg-purple-200" />
-
-              <div className="h-4 w-full rounded bg-purple-100" />
-
-              <div className="h-4 w-4/5 rounded bg-purple-100" />
-
+          <div className="mt-8 rounded-2xl border border-[var(--accent-ai)]/15 bg-[var(--accent-ai-soft)] p-6">
+            <div className="flex items-center gap-3">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent-ai)]" />
+              <p className="text-sm font-semibold text-[var(--accent-ai)]">
+                Reasoning through your market question&hellip;
+              </p>
             </div>
 
+            <div className="mt-4 animate-pulse space-y-3">
+              <div className="h-3 w-2/3 rounded bg-white/70" />
+              <div className="h-3 w-full rounded bg-white/70" />
+              <div className="h-3 w-4/5 rounded bg-white/70" />
+            </div>
           </div>
+        )}
 
+        {!loading && hasAsked && results.length === 0 && (
+          <div className="mt-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-8 text-center">
+            <p className="text-2xl">🧭</p>
+            <p className="mt-2 font-semibold text-[var(--ink-900)]">No matching opportunities found</p>
+            <p className="mt-1 text-sm text-[var(--ink-500)]">
+              Try rephrasing your question, or ask about a broader market or category.
+            </p>
+          </div>
         )}
 
         {!loading && bestProduct && (
@@ -147,6 +136,6 @@ export default function AICommandCenter() {
 
       </div>
 
-    </section>
+    </Card>
   );
 }

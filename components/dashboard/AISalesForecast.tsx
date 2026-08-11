@@ -1,6 +1,9 @@
 "use client";
 
 import type { Product } from "../../types/Product";
+import Card from "../ui/Card";
+import MetricTile from "../ui/MetricTile";
+import Pill from "../ui/Pill";
 
 type Props = {
   product: Partial<Product>;
@@ -61,88 +64,58 @@ export default function AISalesForecast({ product }: Props) {
   };
 
   return (
-    <div className="mt-8 rounded-3xl bg-white shadow-xl border border-gray-100 p-8">
+    <div className="mt-6 border-t border-[var(--border-subtle)] p-6 sm:p-8">
 
-      <h2 className="text-3xl font-bold mb-8">
-        📈 AI Sales Forecast
-      </h2>
-
-      <div className="grid md:grid-cols-4 gap-6">
-
-        <div className="rounded-2xl bg-blue-50 p-6">
-          <p className="text-gray-500">30-Day Orders</p>
-          <h2 className="text-4xl font-bold mt-3">
-            {periods[1].orders}
-          </h2>
-        </div>
-
-        <div className="rounded-2xl bg-green-50 p-6">
-          <p className="text-gray-500">30-Day Revenue</p>
-          <h2 className="text-4xl font-bold mt-3">
-            ${periods[1].revenue.toLocaleString()}
-          </h2>
-        </div>
-
-        <div className="rounded-2xl bg-purple-50 p-6">
-          <p className="text-gray-500">30-Day Profit</p>
-          <h2 className="text-4xl font-bold mt-3">
-            ${periods[1].profit.toLocaleString()}
-          </h2>
-        </div>
-
-        <div className="rounded-2xl bg-orange-50 p-6">
-          <p className="text-gray-500">Confidence</p>
-          <h2 className="text-4xl font-bold mt-3">
-            {confidence}%
-          </h2>
-        </div>
-
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-[var(--ink-900)]">AI Sales Forecast</h2>
+        <Pill tone="ai">Projection</Pill>
       </div>
 
-      <div className="mt-8 grid md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="rounded-xl bg-[var(--accent-data-soft)] p-5">
+          <MetricTile label="30-Day Orders" value={periods[1].orders} tone="data" />
+        </div>
+        <div className="rounded-xl bg-[var(--accent-positive-soft)] p-5">
+          <MetricTile label="30-Day Revenue" value={`$${periods[1].revenue.toLocaleString()}`} tone="positive" />
+        </div>
+        <div className="rounded-xl bg-[var(--accent-ai-soft)] p-5">
+          <MetricTile label="30-Day Profit" value={`$${periods[1].profit.toLocaleString()}`} tone="ai" />
+        </div>
+        <div className="rounded-xl bg-[var(--accent-warning-soft)] p-5">
+          <MetricTile label="Confidence" value={`${confidence}%`} tone="warning" />
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
         {periods.map((period) => (
-          <div
-            key={period.days}
-            className="rounded-2xl border border-gray-200 p-5"
-          >
-            <p className="text-sm text-gray-500">
-              Next {period.days} Days
-            </p>
-
-            <p className="mt-2 text-2xl font-bold">
-              {period.orders} orders
-            </p>
-
-            <p className="mt-2 text-gray-700">
-              Revenue ${period.revenue.toLocaleString()}
-            </p>
-
-            <p className="text-gray-700">
-              Profit ${period.profit.toLocaleString()}
-            </p>
-          </div>
+          <Card key={period.days} padding="sm">
+            <p className="text-sm text-[var(--ink-500)]">Next {period.days} Days</p>
+            <p className="mt-2 text-xl font-bold text-[var(--ink-900)]">{period.orders} orders</p>
+            <p className="mt-2 text-sm text-[var(--ink-700)]">Revenue ${period.revenue.toLocaleString()}</p>
+            <p className="text-sm text-[var(--ink-700)]">Profit ${period.profit.toLocaleString()}</p>
+          </Card>
         ))}
       </div>
 
-      <div className="mt-8 rounded-2xl bg-gray-50 p-6">
-        <h3 className="text-xl font-bold mb-4">
+      <div className="mt-6 rounded-xl bg-[var(--surface-muted)] p-6">
+        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--ink-400)]">
           Scenario Forecast (30 Days)
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
-            <span>Conservative</span>
-            <strong>{scenario.conservative} orders</strong>
+            <span className="text-[var(--ink-500)]">Conservative</span>
+            <strong className="text-[var(--ink-900)]">{scenario.conservative} orders</strong>
           </div>
 
           <div className="flex items-center justify-between">
-            <span>Base</span>
-            <strong>{scenario.base} orders</strong>
+            <span className="text-[var(--ink-500)]">Base</span>
+            <strong className="text-[var(--ink-900)]">{scenario.base} orders</strong>
           </div>
 
           <div className="flex items-center justify-between">
-            <span>Aggressive</span>
-            <strong>{scenario.aggressive} orders</strong>
+            <span className="text-[var(--ink-500)]">Aggressive</span>
+            <strong className="text-[var(--ink-900)]">{scenario.aggressive} orders</strong>
           </div>
         </div>
       </div>

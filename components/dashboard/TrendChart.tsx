@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import Card from "../ui/Card";
 
 const data = [
   { day: "Mon", trend: 25 },
@@ -22,29 +23,34 @@ const data = [
 
 export default function TrendChart() {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">
-        📈 Product Trend
-      </h2>
+    <Card>
+      <h2 className="mb-6 text-xl font-bold text-[var(--ink-900)]">Product Trend</h2>
 
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
 
-          <XAxis dataKey="day" />
+          <XAxis dataKey="day" stroke="var(--ink-400)" fontSize={12} />
 
-          <YAxis />
+          <YAxis stroke="var(--ink-400)" fontSize={12} />
 
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              borderRadius: 12,
+              border: "1px solid var(--border-subtle)",
+              boxShadow: "var(--shadow-card)",
+            }}
+          />
 
           <Line
             type="monotone"
             dataKey="trend"
-            stroke="#7C3AED"
-            strokeWidth={4}
+            stroke="#2563eb"
+            strokeWidth={3}
+            dot={{ r: 3 }}
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </Card>
   );
 }

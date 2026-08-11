@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product } from "../../types/Product";
+import Card from "../ui/Card";
 
 type Props = {
   products: Product[];
@@ -12,97 +13,65 @@ export default function ProductComparison({ products }: Props) {
   const top = products.slice(0, 3);
 
   return (
-    <div className="mt-10 rounded-3xl border bg-white p-8 shadow">
+    <Card className="mt-8">
 
-      <h2 className="text-3xl font-bold mb-6">
-        🥊 AI Product Comparison
-      </h2>
+      <h2 className="mb-5 text-lg font-bold text-[var(--ink-900)]">AI Product Comparison</h2>
 
-      <table className="w-full">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[480px] text-sm">
 
-        <thead>
+          <thead>
+            <tr className="border-b border-[var(--border-subtle)] text-left text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">
+              <th className="py-3">Metric</th>
+              {top.map((p) => (
+                <th key={p.id} className="py-3 pl-4 font-semibold">
+                  {p.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
 
-          <tr className="border-b">
+          <tbody>
+            <tr className="border-b border-[var(--border-subtle)]">
+              <td className="py-3 text-[var(--ink-500)]">AI Score</td>
+              {top.map((p) => (
+                <td key={p.id} className="py-3 pl-4 font-semibold text-[var(--ink-900)]">
+                  {p.ai_score}
+                </td>
+              ))}
+            </tr>
 
-            <th className="text-left py-3">
-              Metric
-            </th>
+            <tr className="border-b border-[var(--border-subtle)]">
+              <td className="py-3 text-[var(--ink-500)]">Profit</td>
+              {top.map((p) => (
+                <td key={p.id} className="py-3 pl-4 font-semibold text-[var(--ink-900)]">
+                  ${p.profit}
+                </td>
+              ))}
+            </tr>
 
-            {top.map((p) => (
-              <th key={p.id}>
-                {p.name}
-              </th>
-            ))}
+            <tr className="border-b border-[var(--border-subtle)]">
+              <td className="py-3 text-[var(--ink-500)]">Competition</td>
+              {top.map((p) => (
+                <td key={p.id} className="py-3 pl-4 font-semibold text-[var(--ink-900)]">
+                  {p.competition}
+                </td>
+              ))}
+            </tr>
 
-          </tr>
+            <tr>
+              <td className="py-3 text-[var(--ink-500)]">Opportunity</td>
+              {top.map((p) => (
+                <td className="py-3 pl-4 font-bold text-[var(--accent-positive)]" key={p.id}>
+                  {Math.round(p.opportunity_score ?? 0)}
+                </td>
+              ))}
+            </tr>
+          </tbody>
 
-        </thead>
+        </table>
+      </div>
 
-        <tbody>
-
-          <tr className="border-b">
-
-            <td className="py-4">
-              AI Score
-            </td>
-
-            {top.map((p) => (
-              <td key={p.id}>
-                {p.ai_score}
-              </td>
-            ))}
-
-          </tr>
-
-          <tr className="border-b">
-
-            <td className="py-4">
-              Profit
-            </td>
-
-            {top.map((p) => (
-              <td key={p.id}>
-                ${p.profit}
-              </td>
-            ))}
-
-          </tr>
-
-          <tr className="border-b">
-
-            <td className="py-4">
-              Competition
-            </td>
-
-            {top.map((p) => (
-              <td key={p.id}>
-                {p.competition}
-              </td>
-            ))}
-
-          </tr>
-
-          <tr>
-
-            <td className="py-4">
-              Opportunity
-            </td>
-
-            {top.map((p) => (
-              <td
-                className="font-bold text-green-600"
-                key={p.id}
-              >
-                {Math.round(p.opportunity_score ?? 0)}
-              </td>
-            ))}
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
+    </Card>
   );
 }

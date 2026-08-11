@@ -1,4 +1,5 @@
 type ProductPayloadSource = {
+  user_id?: unknown;
   name?: unknown;
   image?: unknown;
   platform?: unknown;
@@ -35,6 +36,7 @@ type ProductPayloadSource = {
   cta?: unknown;
   viral_score?: unknown;
   opportunity_score?: unknown;
+  winning_probability?: unknown;
   roi?: unknown;
   supplier_url?: unknown;
   product_url?: unknown;
@@ -42,6 +44,7 @@ type ProductPayloadSource = {
 };
 
 export const PRODUCT_INSERT_COLUMNS = [
+  "user_id",
   "name",
   "image",
   "platform",
@@ -80,6 +83,7 @@ export const PRODUCT_INSERT_COLUMNS = [
   "cta",
   "viral_score",
   "opportunity_score",
+  "winning_probability",
   "roi",
 ] as const;
 
@@ -113,6 +117,7 @@ export function sanitizeProductInsertRow(row: Record<string, unknown>): ProductI
 
 export function buildProductInsertPayload(product: ProductPayloadSource): ProductInsertPayload {
   const payload = stripUndefinedValues({
+    user_id: asString(product.user_id),
     name: asString(product.name),
     image: asString(product.image),
     platform: asString(product.platform),
@@ -148,6 +153,7 @@ export function buildProductInsertPayload(product: ProductPayloadSource): Produc
     cta: asString(product.cta),
     viral_score: asNumber(product.viral_score),
     opportunity_score: asNumber(product.opportunity_score),
+    winning_probability: asNumber(product.winning_probability),
     roi: asNumber(product.roi),
     supplier_url: asString(product.supplier_url),
     product_url: asString(product.product_url),

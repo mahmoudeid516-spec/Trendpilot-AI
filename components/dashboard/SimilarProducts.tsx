@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { Product } from "../../types/Product";
 
 type Props = {
@@ -24,39 +25,32 @@ export default function SimilarProducts({
   if (!similar.length) return null;
 
   return (
-    <div className="mt-10">
+    <div className="border-t border-[var(--border-subtle)] pt-6">
 
-      <h2 className="text-2xl font-bold mb-5">
-        🔥 Similar Winning Products
-      </h2>
+      <h2 className="mb-4 text-lg font-bold text-[var(--ink-900)]">Similar Products</h2>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
         {similar.map((item) => (
 
           <div
             key={item.id}
-            className="rounded-2xl border p-4 hover:shadow-lg transition"
+            className="tp-card tp-card-interactive overflow-hidden"
           >
+            <div className="relative h-32 w-full">
+              <Image src={item.image} alt={item.name} fill unoptimized className="object-cover" />
+            </div>
 
-            <img
-              src={item.image}
-              alt={item.name}
-              className="rounded-xl h-40 w-full object-cover"
-            />
+            <div className="p-4">
+              <h3 className="line-clamp-2 text-sm font-bold text-[var(--ink-900)]">
+                {item.name}
+              </h3>
 
-            <h3 className="font-bold mt-3 line-clamp-2">
-              {item.name}
-            </h3>
-
-            <p className="text-green-600 font-bold mt-2">
-              ${item.buy_price}
-            </p>
-
-            <p className="mt-2">
-              🤖 AI {item.ai_score}
-            </p>
-
+              <div className="mt-2 flex items-center justify-between text-sm">
+                <span className="font-bold text-[var(--accent-positive)]">${item.buy_price}</span>
+                <span className="text-[var(--ink-500)]">AI {item.ai_score}</span>
+              </div>
+            </div>
           </div>
 
         ))}

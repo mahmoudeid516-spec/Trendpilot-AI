@@ -33,8 +33,10 @@ AI product search uses DataForSEO as the only provider.
 	- required
 	- DataForSEO API password
 - `DATAFORSEO_LOCATION_CODE`:
-	- optional (default `2840`)
-	- geographic location code for search
+	- **required** — there is no default. Amazon Merchant Products search will fail immediately with a configuration error if this is not set.
+	- must be obtained from your own DataForSEO account by calling `GET https://api.dataforseo.com/v3/merchant/amazon/locations` (with your `DATAFORSEO_LOGIN`/`DATAFORSEO_PASSWORD`) and using the `location_code` from the entry whose `country_iso_code` matches your target market (e.g. `US`).
+	- `2840` is **not** a confirmed valid value for this endpoint. It's DataForSEO's documented "United States" example for their general SERP/Keywords Data/Ads product lines, but Merchant Amazon Products location codes appear to use a different, 7-digit numbering space (documented examples in DataForSEO's own spec: `9045969`, `9041134`) — do not assume `2840` will work here, and do not guess a replacement value without confirming it against a real `/locations` response.
+	- example: `DATAFORSEO_LOCATION_CODE=<value you obtained from the /locations endpoint for your market>`
 - `DATAFORSEO_LANGUAGE_CODE`:
 	- optional (default `en`)
 	- language code for search

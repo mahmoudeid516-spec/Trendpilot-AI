@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { supabase } from "../../lib/supabase";
 import type { Product } from "../../types/Product";
+import Card from "../ui/Card";
+import ProgressBar from "../ui/ProgressBar";
+import { buttonClass } from "../ui/button";
+import { toneForScore } from "../ui/tone";
 
 type Props = {
   products?: Product[];
@@ -32,7 +37,7 @@ export default function ProductsTable({
       if (error) {
         console.error("Failed loading products:", error.message);
       }
-  
+
       setSavedProducts(ensureUniqueProductIds(data || []));
     }
 
@@ -53,275 +58,137 @@ export default function ProductsTable({
 
     const productName = (p.name ?? "").toLowerCase();
     const searchText = (search ?? "").toLowerCase();
-  
+
     const matchSearch =
       searchText === "" ||
       productName.includes(searchText);
-  
+
     const matchPlatform =
       platform === "All" ||
       (p.platform ?? "") === platform;
-  
+
     return matchSearch && matchPlatform;
   });
   const displayedProducts = [...filtered].sort((a, b) => {
     return (b.ai_score ?? 0) - (a.ai_score ?? 0);
   });
   const stableDisplayedProducts = ensureUniqueProductIds(displayedProducts);
-  
-   
-  function competitionColor(level:string){
 
-    switch(level){
-
+  function competitionClasses(level: string) {
+    switch (level) {
       case "Low":
-        return "bg-green-100 text-green-700";
-
+        return "bg-[var(--accent-positive-soft)] text-[var(--accent-positive)]";
       case "Medium":
-        return "bg-yellow-100 text-yellow-700";
-
+        return "bg-[var(--accent-warning-soft)] text-[var(--accent-warning)]";
       case "High":
-        return "bg-red-100 text-red-700";
-
+        return "bg-[var(--accent-risk-soft)] text-[var(--accent-risk)]";
       default:
-        return "bg-gray-100";
-
+        return "bg-[var(--surface-muted)] text-[var(--ink-500)]";
     }
-
   }
 
   return (
-
-<div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
-
-<h2 className="text-3xl font-bold mb-8">
-
-🔥 Winning Products
-
-</h2>
-
-<div className="overflow-x-auto">
-
-<table className="w-full">
-
-<thead>
-
-<tr className="border-b text-gray-500">
-
-<th className="text-left py-4">
-Product
-</th>
-
-<th>
-Platform
-</th>
-
-<th>
-AI
-</th>
-
-<th>
-Trend
-</th>
-
-<th>
-Competition
-</th>
-
-<th>
-Profit
-</th>
-
-<th>
-
-</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{stableDisplayedProducts.length === 0 && (
-  <tr>
-    <td colSpan={7} className="py-12 text-center">
-      <p className="text-xl font-bold text-gray-700">
-        No products found yet
-      </p>
-
-      <p className="mt-2 text-gray-500">
-        Try searching for a product keyword or import demo products to get started.
-      </p>
-    </td>
-  </tr>
-)}
-
-{stableDisplayedProducts.map((product) => (
-
-<tr
-key={String(product.id)}
-className="border-b hover:bg-purple-50 transition duration-300"
->
-
-<td className="py-6">
-
-<div className="flex gap-4 items-center">
-
-<img
-  src={product.image || "https://picsum.photos/200"}
-  alt={product.name}
-  className="w-20 h-20 rounded-2xl object-cover shadow"
-/>
-
-<div>
-
-<h3 className="font-bold text-lg">
-
-{product.name}
-
-</h3>
-
-<p className="text-gray-500">
-
-{product.category}
-
-</p>
-
-</div>
-
-</div>
-
-</td>
-
-<td>
-
-<span className="font-semibold">
-
-{product.platform}
-
-</span>
-
-</td>
-
-<td className="w-48">
-
-<div className="w-full bg-gray-200 rounded-full h-3">
-
-<div
-
-className="bg-green-500 h-3 rounded-full"
-
-style={{
-width:`${product.ai_score}%`
-}}
-
->
-
-</div>
-
-</div>
-
-<p className="mt-2 font-bold text-green-600">
-
-{product.ai_score}%
-
-</p>
-
-</td>
-
-<td>
-
-<span className="font-bold text-blue-600">
-
-{product.trend_score}
-
-</span>
-
-</td>
-
-<td>
-
-<span
-
-className={`px-4 py-2 rounded-full text-sm font-bold ${competitionColor(product.competition)}`}
-
->
-
-{product.competition}
-
-</span>
-
-</td>
-
-<td>
-
-<p className="font-bold text-purple-700 text-lg">
-
-${product.profit}
-
-</p>
-
-</td>
-
-<td>
-
-<div className="flex gap-2">
-
-<a
-href={product.product_url}
-target="_blank"
-rel="noopener noreferrer"
-className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700"
->
-
-View
-
-</a>
-
-<a
-href={product.supplier_url}
-target="_blank"
-rel="noopener noreferrer"
-className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700"
->
-
-Supplier
-
-</a>
-
-<button
-onClick={() => onSelectProduct(product)}
-className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
->
-Report
-</button>
-
-</div>
-
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-{filtered.length===0 &&(
-
-<div className="text-center py-20 text-gray-500">
-
-No Products Found
-
-</div>
-
-)}
-
-</div>
-
-</div>
-
+    <Card padding="none">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead>
+            <tr className="border-b border-[var(--border-subtle)] text-left text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">
+              <th className="px-6 py-4 font-semibold">Product</th>
+              <th className="px-3 py-4 font-semibold">Platform</th>
+              <th className="px-3 py-4 font-semibold">AI Score</th>
+              <th className="px-3 py-4 font-semibold">Trend</th>
+              <th className="px-3 py-4 font-semibold">Competition</th>
+              <th className="px-3 py-4 font-semibold">Profit</th>
+              <th className="px-6 py-4 font-semibold text-right">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {stableDisplayedProducts.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-6 py-16 text-center">
+                  <p className="text-2xl">📭</p>
+                  <p className="mt-3 text-lg font-semibold text-[var(--ink-900)]">Your saved library is empty</p>
+                  <p className="mt-1 text-[var(--ink-500)]">
+                    Products you search for above and save will show up here for quick access later.
+                  </p>
+                </td>
+              </tr>
+            )}
+
+            {stableDisplayedProducts.map((product) => (
+              <tr
+                key={String(product.id)}
+                className="border-b border-[var(--border-subtle)] transition-colors hover:bg-[var(--surface-muted)]"
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
+                      <Image
+                        src={product.image || "https://picsum.photos/200"}
+                        alt={product.name}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold text-[var(--ink-900)]">{product.name}</h3>
+                      <p className="truncate text-xs text-[var(--ink-400)]">{product.category}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td className="px-3 py-4 font-medium text-[var(--ink-700)]">{product.platform}</td>
+
+                <td className="w-40 px-3 py-4">
+                  <ProgressBar value={product.ai_score} tone={toneForScore(product.ai_score)} />
+                  <p className="mt-1.5 text-xs font-bold text-[var(--accent-positive)]">{product.ai_score}%</p>
+                </td>
+
+                <td className="px-3 py-4 font-bold text-[var(--accent-data)]">{product.trend_score}</td>
+
+                <td className="px-3 py-4">
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${competitionClasses(product.competition)}`}>
+                    {product.competition}
+                  </span>
+                </td>
+
+                <td className="px-3 py-4 text-base font-bold text-[var(--ink-900)]">${product.profit}</td>
+
+                <td className="px-6 py-4">
+                  <div className="flex justify-end gap-2">
+                    <a
+                      href={product.product_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonClass({ tone: "data", variant: "outline", size: "sm" })}
+                    >
+                      View
+                    </a>
+
+                    <a
+                      href={product.supplier_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonClass({ tone: "positive", variant: "outline", size: "sm" })}
+                    >
+                      Supplier
+                    </a>
+
+                    <button
+                      onClick={() => onSelectProduct(product)}
+                      className={buttonClass({ tone: "ai", size: "sm" })}
+                    >
+                      Report
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
-
 }

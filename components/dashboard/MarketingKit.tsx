@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Pill from "../ui/Pill";
+import { buttonClass } from "../ui/button";
 
 type Props = {
   productName: string;
@@ -15,6 +17,15 @@ type MarketingResponse = {
   email_marketing?: string;
   hashtags?: string[];
 };
+
+const SECTIONS: Array<{ key: keyof MarketingResponse; icon: string; title: string }> = [
+  { key: "facebook_ad", icon: "📘", title: "Facebook Ad" },
+  { key: "instagram_caption", icon: "📷", title: "Instagram Caption" },
+  { key: "tiktok_hook", icon: "🎬", title: "TikTok Hook" },
+  { key: "seo_title", icon: "🔍", title: "SEO Title" },
+  { key: "seo_description", icon: "🧩", title: "SEO Description" },
+  { key: "email_marketing", icon: "📧", title: "Email Marketing" },
+];
 
 export default function MarketingKit({
   productName,
@@ -80,139 +91,64 @@ ${hashtagsText}
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
+    <div className="border-t border-[var(--border-subtle)] p-6 sm:p-8">
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--ink-900)]">AI Marketing Kit</h2>
+          <Pill tone="ai">AI-Generated</Pill>
+        </div>
 
-        <h2 className="text-3xl font-bold">
-          🚀 AI Marketing Kit
-        </h2>
-
-        <button
-          onClick={copyAll}
-          className="bg-gray-900 text-white px-5 py-2 rounded-xl"
-        >
-          Copy All
-        </button>
-
+        {marketing && (
+          <button onClick={copyAll} className={buttonClass({ tone: "neutral", size: "sm" })}>
+            Copy All
+          </button>
+        )}
       </div>
 
       <button
         onClick={generateMarketing}
         disabled={loading}
-        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl"
+        className={buttonClass({ tone: "ai" })}
       >
         {loading ? "Generating..." : "Generate Marketing Kit"}
       </button>
 
       {marketing && (
-        <div className="space-y-6 mt-8">
+        <div className="mt-6 space-y-4">
+          {SECTIONS.map(({ key, icon, title }) => (
+            <div key={key} className="rounded-xl bg-[var(--surface-muted)] p-5">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="font-bold text-[var(--ink-900)]">
+                  {icon} {title}
+                </h3>
 
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">📘 Facebook Ad</h3>
+                <button
+                  onClick={() => copy(marketing[key] as string ?? "")}
+                  className={buttonClass({ tone: "ai", variant: "outline", size: "sm" })}
+                >
+                  Copy
+                </button>
+              </div>
 
-              <button
-                onClick={() => copy(marketing.facebook_ad ?? "")}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Copy
-              </button>
+              <p className="text-sm leading-6 text-[var(--ink-700)]">{marketing[key] as string}</p>
             </div>
+          ))}
 
-            <p>{marketing.facebook_ad}</p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">📷 Instagram Caption</h3>
-
-              <button
-                onClick={() => copy(marketing.instagram_caption ?? "")}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Copy
-              </button>
-            </div>
-
-            <p>{marketing.instagram_caption}</p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">🎬 TikTok Hook</h3>
-
-              <button
-                onClick={() => copy(marketing.tiktok_hook ?? "")}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Copy
-              </button>
-            </div>
-
-            <p>{marketing.tiktok_hook}</p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">🔍 SEO Title</h3>
-
-              <button
-                onClick={() => copy(marketing.seo_title ?? "")}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Copy
-              </button>
-            </div>
-
-            <p>{marketing.seo_title}</p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">🧩 SEO Description</h3>
-
-              <button
-                onClick={() => copy(marketing.seo_description ?? "")}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Copy
-              </button>
-            </div>
-
-            <p>{marketing.seo_description}</p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">📧 Email Marketing</h3>
-
-              <button
-                onClick={() => copy(marketing.email_marketing ?? "")}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Copy
-              </button>
-            </div>
-
-            <p>{marketing.email_marketing}</p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-xl">🏷️ Hashtags</h3>
+          <div className="rounded-xl bg-[var(--surface-muted)] p-5">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="font-bold text-[var(--ink-900)]">🏷️ Hashtags</h3>
 
               <button
                 onClick={() => copy((marketing.hashtags ?? []).join(" "))}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg"
+                className={buttonClass({ tone: "ai", variant: "outline", size: "sm" })}
               >
                 Copy
               </button>
             </div>
 
-            <p>{(marketing.hashtags ?? []).join(" ")}</p>
+            <p className="text-sm leading-6 text-[var(--ink-700)]">{(marketing.hashtags ?? []).join(" ")}</p>
           </div>
-
         </div>
       )}
 

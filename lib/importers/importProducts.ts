@@ -4,8 +4,16 @@ import { insertWithCompatibility } from "../services/supabaseCompatibility";
 import type { Product } from "../../types/Product";
 
 export async function importProducts(products: Array<Product | Record<string, unknown>>) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) return false;
+
+  const userId = session.user.id;
+
   for (const product of products) {
-    const payload = buildProductInsertPayload(product);
+    const payload = buildProductInsertPayload({ ...product, user_id: userId });
 
     try {
       const { data: existing } = await supabase
@@ -26,11 +34,11 @@ export async function importProducts(products: Array<Product | Record<string, un
       );
 
       if (error) {
-        console.error("Failed to import product:", error);
+        console.error("Failed to import product:", JSON.stringify(error, null, 2));
         return false;
       }
     } catch (error) {
-      console.error("Failed to import product:", error);
+      console.error("Failed to import product:", JSON.stringify(error, null, 2));
       return false;
     }
   }

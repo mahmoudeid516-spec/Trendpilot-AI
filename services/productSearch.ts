@@ -3,6 +3,8 @@ type ProductSearchFilters = {
   platform?: string;
   query?: string;
   search?: string;
+  /** Requested product count (10/20/30/50/100). Optional -- server defaults to 20. */
+  count?: number;
 };
 
 export async function productSearch(filters: ProductSearchFilters) {
@@ -21,17 +23,23 @@ export async function productSearch(filters: ProductSearchFilters) {
       },
       body: JSON.stringify({
         keyword: search,
+        count: filters?.count,
       }),
     }
   );
 
   if (!response.ok) {
     const contentType = response.headers.get("content-type") ?? "";
-    const responseBody = contentType.includes("application/json")
-      ? JSON.stringify(await response.json())
-      : await response.text();
 
-    throw new Error(responseBody || "Product Search Failed");
+    if (contentType.includes("application/json")) {
+      const body = await response.json().catch(() => null);
+      throw new Error(
+        (typeof body?.error === "string" && body.error) || `Product search failed (HTTP ${response.status}).`
+      );
+    }
+
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Product search failed (HTTP ${response.status}).`);
   }
 
   return await response.json();

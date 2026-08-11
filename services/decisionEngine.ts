@@ -3,18 +3,22 @@ export type DecisionResult = {
     risk: "Low" | "Medium" | "High";
     difficulty: "Easy" | "Medium" | "Hard";
     demand: "Very High" | "High" | "Medium" | "Low";
-    winningProbability: number;
     confidence: number;
     reasons: string[];
   };
-  
+
   export function analyzeProduct(product: any): DecisionResult {
     const ai = Number(product.ai_score ?? 0);
     const trend = Number(product.trend_score ?? 0);
     const profit = Number(product.profit ?? 0);
     const competition = product.competition ?? "Medium";
-  
-    const winningProbability = Math.min(
+
+    // Internal-only heuristic used solely to bucket verdict/risk/difficulty
+    // below. Deliberately NOT exposed on DecisionResult and NOT called
+    // "winning probability" anywhere -- the app's one canonical winning
+    // probability is product.winning_probability from
+    // lib/scoring/opportunityScore.ts.
+    const verdictScore = Math.min(
       100,
       Math.round(
         ai * 0.4 +
@@ -27,15 +31,15 @@ export type DecisionResult = {
           : 30) * 0.1
       )
     );
-  
+
     let verdict: DecisionResult["verdict"] = "Avoid";
-  
+
     if (
-      winningProbability >= 90 &&
+      verdictScore >= 90 &&
       competition === "Low"
     ) {
       verdict = "Strong Buy";
-    } else if (winningProbability >= 70) {
+    } else if (verdictScore >= 70) {
       verdict = "Good Opportunity";
     }
   
@@ -80,16 +84,15 @@ if (competition === "Low") {
   reasons.push("Low competition.");
 }
 
-if (winningProbability >= 90) {
+if (verdictScore >= 90) {
   reasons.push("Excellent winning probability.");
 }
-  
+
 return {
     verdict,
     risk,
     difficulty,
     demand,
-    winningProbability,
     confidence: ai,
     reasons,
   };
