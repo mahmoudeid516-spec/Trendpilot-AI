@@ -36,6 +36,7 @@ type ProductPayloadSource = {
   cta?: unknown;
   viral_score?: unknown;
   opportunity_score?: unknown;
+  winning_probability?: unknown;
   roi?: unknown;
   supplier_url?: unknown;
   product_url?: unknown;
@@ -82,6 +83,7 @@ export const PRODUCT_INSERT_COLUMNS = [
   "cta",
   "viral_score",
   "opportunity_score",
+  "winning_probability",
   "roi",
 ] as const;
 
@@ -151,6 +153,7 @@ export function buildProductInsertPayload(product: ProductPayloadSource): Produc
     cta: asString(product.cta),
     viral_score: asNumber(product.viral_score),
     opportunity_score: asNumber(product.opportunity_score),
+    winning_probability: asNumber(product.winning_probability),
     roi: asNumber(product.roi),
     supplier_url: asString(product.supplier_url),
     product_url: asString(product.product_url),
