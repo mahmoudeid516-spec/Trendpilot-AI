@@ -103,7 +103,7 @@ export default function ProductDetails({
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Final AI Decision</p>
           <p className="mt-1 text-xl font-extrabold text-[var(--ink-900)]">{decision.verdict}</p>
         </div>
-        <MetricTile label="Winning Prob." value={`${winning}%`} tone={toneForScore(winning)} size="sm" />
+        <MetricTile label="Report Win Prob." value={`${winning}%`} tone={toneForScore(winning)} size="sm" hint="Independent estimate" />
         <MetricTile label="Risk" value={decision.risk} tone={toneForInverseScore(riskValue)} size="sm" />
         <MetricTile label="Difficulty" value={decision.difficulty} tone="neutral" size="sm" />
         <MetricTile label="Demand" value={decision.demand} tone="data" size="sm" />
@@ -140,8 +140,9 @@ export default function ProductDetails({
           </div>
 
           <div className="mt-6 rounded-xl border border-[var(--border-subtle)] p-5">
-            <p className="mb-3 text-sm font-bold text-[var(--ink-900)]">Recommended Budget</p>
+            <p className="mb-1 text-sm font-bold text-[var(--ink-900)]">Recommended Budget</p>
             <p className="text-2xl font-extrabold text-[var(--ink-900)]">${market.recommendedBudget}</p>
+            <p className="mt-1 text-xs text-[var(--ink-400)]">Estimated -- a starting-point heuristic, not tied to real ad-platform data.</p>
           </div>
         </div>
 
@@ -152,7 +153,7 @@ export default function ProductDetails({
           <ScoreRow title={`Demand (${decision.demand})`} value={Math.min(100, aiScore)} tone="data" />
           <ScoreRow title="Profit Score" value={profit} tone="positive" />
           <ScoreRow title={`Risk (${decision.risk})`} value={riskValue} tone={toneForInverseScore(riskValue)} />
-          <ScoreRow title="Winning Probability" value={winning} tone={toneForScore(winning)} />
+          <ScoreRow title="Winning Probability (this report's estimate)" value={winning} tone={toneForScore(winning)} />
         </div>
 
         {/* Column 3: market analysis + actions */}
@@ -206,21 +207,24 @@ export default function ProductDetails({
 
           {/* AI Business Coach -- deterministic planning output, not an AI call */}
           <div className="rounded-xl border border-[var(--border-subtle)] p-6">
-            <h3 className="mb-4 text-base font-bold text-[var(--ink-900)]">💼 Business Coach</h3>
+            <h3 className="text-base font-bold text-[var(--ink-900)]">💼 Business Coach</h3>
+            <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">
+              General guidance heuristics -- not calculated from this product&apos;s real market data.
+            </p>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              <MetricTile label="Selling Price" value={`$${plan.sellingPrice}`} size="sm" />
-              <MetricTile label="Expected Profit" value={`$${plan.expectedProfit}`} tone="positive" size="sm" />
-              <MetricTile label="Daily Budget" value={`$${plan.dailyBudget}`} size="sm" />
+              <MetricTile label="Suggested Selling Price" value={`$${plan.sellingPrice}`} size="sm" />
+              <MetricTile label="Suggested Profit" value={`$${plan.expectedProfit}`} tone="positive" size="sm" />
+              <MetricTile label="Suggested Daily Budget" value={`$${plan.dailyBudget}`} size="sm" />
               <MetricTile label="Break-even" value={`${plan.breakEvenSales}/day`} size="sm" />
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Best Platform</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Suggested Platform</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{plan.bestPlatform}</p>
 
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Best Countries</p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Common Target Countries</p>
                 <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-[var(--ink-700)]">
                   {plan.bestCountries.map((country) => (
                     <li key={country}>{country}</li>
@@ -229,7 +233,7 @@ export default function ProductDetails({
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Launch Strategy</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">General Launch Playbook</p>
                 <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-sm text-[var(--ink-700)]">
                   {plan.strategy.map((step) => (
                     <li key={step}>{step}</li>
@@ -241,7 +245,10 @@ export default function ProductDetails({
 
           {/* ROI Calculator */}
           <div className="rounded-xl border border-[var(--border-subtle)] p-6">
-            <h3 className="mb-4 text-base font-bold text-[var(--ink-900)]">💰 ROI Calculator</h3>
+            <h3 className="text-base font-bold text-[var(--ink-900)]">💰 ROI Calculator</h3>
+            <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">
+              Illustrative example only -- assumes 50 sales at $200 total ad spend, not real sales data.
+            </p>
 
             <div className="space-y-2 text-sm text-[var(--ink-700)]">
               <div className="flex justify-between">

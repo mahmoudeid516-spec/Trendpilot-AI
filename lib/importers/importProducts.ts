@@ -4,12 +4,18 @@ import { insertWithCompatibility } from "../services/supabaseCompatibility";
 import type { Product } from "../../types/Product";
 
 export async function importProducts(products: Array<Product | Record<string, unknown>>) {
-  for (const product of products) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return false;
-  const userId = session.user.id;    const payload = buildProductInsertPayload({ ...product, user_id: userId });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    console.log("[importProducts] user_id:", userId, "payload.user_id:", payload.user_id);    try {
+  if (!session) return false;
+
+  const userId = session.user.id;
+
+  for (const product of products) {
+    const payload = buildProductInsertPayload({ ...product, user_id: userId });
+
+    try {
       const { data: existing } = await supabase
         .from("products")
         .select("id")
