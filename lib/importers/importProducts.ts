@@ -5,9 +5,11 @@ import type { Product } from "../../types/Product";
 
 export async function importProducts(products: Array<Product | Record<string, unknown>>) {
   for (const product of products) {
-    const payload = buildProductInsertPayload(product);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return false;
+  const userId = session.user.id;    const payload = buildProductInsertPayload({ ...product, user_id: userId });
 
-    try {
+    console.log("[importProducts] user_id:", userId, "payload.user_id:", payload.user_id);    try {
       const { data: existing } = await supabase
         .from("products")
         .select("id")
@@ -26,11 +28,11 @@ export async function importProducts(products: Array<Product | Record<string, un
       );
 
       if (error) {
-        console.error("Failed to import product:", error);
+        console.error("Failed to import product:", JSON.stringify(error, null, 2));
         return false;
       }
     } catch (error) {
-      console.error("Failed to import product:", error);
+      console.error("Failed to import product:", JSON.stringify(error, null, 2));
       return false;
     }
   }
