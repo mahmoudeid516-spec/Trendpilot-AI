@@ -20,14 +20,14 @@ type Props = {
   allProducts?: Product[];
 };
 
-function ScoreRow({ title, value, tone }: { title: string; value: number; tone: Tone }) {
+function ScoreRow({ title, value, tone }: { title: string; value: number | null; tone: Tone }) {
   return (
     <div className="mb-4">
       <div className="mb-1.5 flex justify-between text-sm">
         <span className="font-medium text-[var(--ink-700)]">{title}</span>
-        <span className="font-bold text-[var(--ink-900)]">{value}%</span>
+        <span className="font-bold text-[var(--ink-900)]">{value === null ? "N/A" : `${value}%`}</span>
       </div>
-      <ProgressBar value={value} tone={tone} />
+      <ProgressBar value={value ?? 0} tone={value === null ? "neutral" : tone} />
     </div>
   );
 }
@@ -70,7 +70,13 @@ export default function ProductDetails({
     200,
     50
   );
-  const winning = decision.winningProbability;
+  // Canonical winning probability -- the same value shown on the product
+  // card (lib/scoring/opportunityScore.ts). Not persisted for saved
+  // products yet (see PRODUCT_INSERT_COLUMNS), so it can be undefined for
+  // a product reopened from the Saved Product Library; hasWinningProbability
+  // controls whether we show a real number or an honest "N/A".
+  const hasWinningProbability = typeof product.winning_probability === "number";
+  const winning = product.winning_probability ?? 0;
 
   const profit = Math.min(
     100,
@@ -103,7 +109,12 @@ export default function ProductDetails({
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Final AI Decision</p>
           <p className="mt-1 text-xl font-extrabold text-[var(--ink-900)]">{decision.verdict}</p>
         </div>
-        <MetricTile label="Report Win Prob." value={`${winning}%`} tone={toneForScore(winning)} size="sm" hint="Independent estimate" />
+        <MetricTile
+          label="Winning Prob."
+          value={hasWinningProbability ? `${winning}%` : "N/A"}
+          tone={hasWinningProbability ? toneForScore(winning) : "neutral"}
+          size="sm"
+        />
         <MetricTile label="Risk" value={decision.risk} tone={toneForInverseScore(riskValue)} size="sm" />
         <MetricTile label="Difficulty" value={decision.difficulty} tone="neutral" size="sm" />
         <MetricTile label="Demand" value={decision.demand} tone="data" size="sm" />
@@ -153,7 +164,11 @@ export default function ProductDetails({
           <ScoreRow title={`Demand (${decision.demand})`} value={Math.min(100, aiScore)} tone="data" />
           <ScoreRow title="Profit Score" value={profit} tone="positive" />
           <ScoreRow title={`Risk (${decision.risk})`} value={riskValue} tone={toneForInverseScore(riskValue)} />
-          <ScoreRow title="Winning Probability (this report's estimate)" value={winning} tone={toneForScore(winning)} />
+          <ScoreRow
+            title="Winning Probability"
+            value={hasWinningProbability ? winning : null}
+            tone={toneForScore(winning)}
+          />
         </div>
 
         {/* Column 3: market analysis + actions */}
@@ -214,7 +229,7 @@ export default function ProductDetails({
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
               <MetricTile label="Suggested Selling Price" value={`$${plan.sellingPrice}`} size="sm" />
-              <MetricTile label="Suggested Profit" value={`$${plan.expectedProfit}`} tone="positive" size="sm" />
+              <MetricTile label="Estimated Profit" value={`$${plan.expectedProfit}`} tone="positive" size="sm" />
               <MetricTile label="Suggested Daily Budget" value={`$${plan.dailyBudget}`} size="sm" />
               <MetricTile label="Break-even" value={`${plan.breakEvenSales}/day`} size="sm" />
             </div>
@@ -224,7 +239,10 @@ export default function ProductDetails({
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Suggested Platform</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{plan.bestPlatform}</p>
 
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Common Target Countries</p>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Best Countries</p>
+                  <Pill tone="neutral" className="whitespace-nowrap text-[10px]">General recommendation</Pill>
+                </div>
                 <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-[var(--ink-700)]">
                   {plan.bestCountries.map((country) => (
                     <li key={country}>{country}</li>
@@ -233,7 +251,10 @@ export default function ProductDetails({
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">General Launch Playbook</p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Launch Strategy</p>
+                  <Pill tone="neutral" className="whitespace-nowrap text-[10px]">General recommendation</Pill>
+                </div>
                 <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-sm text-[var(--ink-700)]">
                   {plan.strategy.map((step) => (
                     <li key={step}>{step}</li>
