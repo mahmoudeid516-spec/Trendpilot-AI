@@ -65,7 +65,7 @@ export default function MarketOverview({
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
         <div className="rounded-xl bg-[var(--surface-muted)] p-4 text-center">
           <p className="text-xs uppercase tracking-wide text-[var(--ink-400)]">Demand</p>
           <p className={`mt-1 text-lg font-bold ${toneText[levelTone(summary.demand, true)]}`}>{summary.demand}</p>

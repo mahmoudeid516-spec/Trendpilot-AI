@@ -10,7 +10,7 @@ const CARDS: Array<{ title: string; value: string; subtitle: string; icon: strin
 
 export default function BusinessOverview() {
   return (
-    <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {CARDS.map((card) => (
         <StatTile key={card.title} {...card} />
       ))}

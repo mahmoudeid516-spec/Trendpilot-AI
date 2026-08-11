@@ -30,9 +30,12 @@ const GHOST_TONE: Record<Tone, string> = {
   neutral: "text-[var(--ink-700)] hover:bg-[var(--surface-muted)]",
 };
 
+// min-h-11 (44px) keeps every button a valid touch target even where the
+// visual padding is compact -- the flex centering above keeps small-size
+// text/icons visually unchanged, just given a taller tappable box.
 const SIZE: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-xs",
-  md: "px-5 py-2.5 text-sm",
+  sm: "min-h-11 px-3 py-1.5 text-xs",
+  md: "min-h-11 px-5 py-2.5 text-sm",
 };
 
 /** Shared button visual language: one function, three variants, six tones.

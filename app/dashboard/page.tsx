@@ -163,7 +163,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setShowProductModal(false)}
                   aria-label="Close product report"
-                  className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[var(--ink-700)] shadow-md hover:bg-white"
+                  className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--ink-700)] shadow-md hover:bg-white"
                 >
                   <X size={18} />
                 </button>

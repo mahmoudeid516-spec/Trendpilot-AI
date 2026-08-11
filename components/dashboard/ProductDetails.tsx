@@ -12,6 +12,7 @@ import Pill from "../ui/Pill";
 import MetricTile from "../ui/MetricTile";
 import ScoreRing from "../ui/ScoreRing";
 import ProgressBar from "../ui/ProgressBar";
+import DataTierBadge, { type DataTier } from "../ui/DataTierBadge";
 import { buttonClass } from "../ui/button";
 import { toneForInverseScore, toneForScore, type Tone } from "../ui/tone";
 
@@ -20,11 +21,24 @@ type Props = {
   allProducts?: Product[];
 };
 
-function ScoreRow({ title, value, tone }: { title: string; value: number | null; tone: Tone }) {
+function ScoreRow({
+  title,
+  value,
+  tone,
+  tier,
+}: {
+  title: string;
+  value: number | null;
+  tone: Tone;
+  tier?: DataTier;
+}) {
   return (
     <div className="mb-4">
-      <div className="mb-1.5 flex justify-between text-sm">
-        <span className="font-medium text-[var(--ink-700)]">{title}</span>
+      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
+        <span className="flex items-center gap-2 font-medium text-[var(--ink-700)]">
+          {title}
+          {tier && <DataTierBadge tier={tier} />}
+        </span>
         <span className="font-bold text-[var(--ink-900)]">{value === null ? "N/A" : `${value}%`}</span>
       </div>
       <ProgressBar value={value ?? 0} tone={value === null ? "neutral" : tone} />
@@ -128,7 +142,12 @@ export default function ProductDetails({
             <Image src={product.image} alt={product.name} fill unoptimized className="object-cover" />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase tracking-wide text-[var(--ink-400)]">Listing Details</h3>
+            <DataTierBadge tier="real" />
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-[var(--surface-muted)] p-4">
               <p className="text-xs text-[var(--ink-400)]">Buy Price</p>
               <p className="mt-1 text-lg font-bold text-[var(--ink-900)]">${product.buy_price}</p>
@@ -151,9 +170,12 @@ export default function ProductDetails({
           </div>
 
           <div className="mt-6 rounded-xl border border-[var(--border-subtle)] p-5">
-            <p className="mb-1 text-sm font-bold text-[var(--ink-900)]">Recommended Budget</p>
-            <p className="text-2xl font-extrabold text-[var(--ink-900)]">${market.recommendedBudget}</p>
-            <p className="mt-1 text-xs text-[var(--ink-400)]">Estimated -- a starting-point heuristic, not tied to real ad-platform data.</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-[var(--ink-900)]">Recommended Budget</p>
+              <DataTierBadge tier="estimate" />
+            </div>
+            <p className="mt-1 text-2xl font-extrabold text-[var(--ink-900)]">${market.recommendedBudget}</p>
+            <p className="mt-1 text-xs text-[var(--ink-400)]">A starting-point heuristic, not tied to real ad-platform data.</p>
           </div>
         </div>
 
@@ -161,13 +183,14 @@ export default function ProductDetails({
         <div>
           <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--ink-400)]">Opportunity Breakdown</h3>
 
-          <ScoreRow title={`Demand (${decision.demand})`} value={Math.min(100, aiScore)} tone="data" />
-          <ScoreRow title="Profit Score" value={profit} tone="positive" />
-          <ScoreRow title={`Risk (${decision.risk})`} value={riskValue} tone={toneForInverseScore(riskValue)} />
+          <ScoreRow title={`Demand (${decision.demand})`} value={Math.min(100, aiScore)} tone="data" tier="estimate" />
+          <ScoreRow title="Profit Score" value={profit} tone="positive" tier="estimate" />
+          <ScoreRow title={`Risk (${decision.risk})`} value={riskValue} tone={toneForInverseScore(riskValue)} tier="estimate" />
           <ScoreRow
             title="Winning Probability"
             value={hasWinningProbability ? winning : null}
             tone={toneForScore(winning)}
+            tier="real"
           />
         </div>
 
@@ -175,9 +198,12 @@ export default function ProductDetails({
         <div className="space-y-6">
 
           <div className="rounded-xl border border-[var(--accent-data)]/15 bg-[var(--accent-data-soft)] p-6">
-            <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-[var(--ink-900)]">
-              📊 Market Analysis
-            </h3>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-2 text-base font-bold text-[var(--ink-900)]">
+                📊 Market Analysis
+              </h3>
+              <DataTierBadge tier="estimate" />
+            </div>
 
             <div className="space-y-4">
               <ScoreRow title="Viral Potential" value={market.viralPotential} tone="data" />
@@ -211,7 +237,7 @@ export default function ProductDetails({
             <div className="rounded-xl border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[var(--ink-900)]">AI Marketing Strategy</h3>
-                <Pill tone="ai">AI-Generated</Pill>
+                <DataTierBadge tier="ai" />
               </div>
 
               <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-[var(--ink-700)]">
@@ -222,9 +248,12 @@ export default function ProductDetails({
 
           {/* AI Business Coach -- deterministic planning output, not an AI call */}
           <div className="rounded-xl border border-[var(--border-subtle)] p-6">
-            <h3 className="text-base font-bold text-[var(--ink-900)]">💼 Business Coach</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-base font-bold text-[var(--ink-900)]">💼 Business Coach</h3>
+              <DataTierBadge tier="estimate" />
+            </div>
             <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">
-              General guidance heuristics -- not calculated from this product&apos;s real market data.
+              Calculated from this product&apos;s price and AI score -- not real market data.
             </p>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -241,7 +270,7 @@ export default function ProductDetails({
 
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Best Countries</p>
-                  <Pill tone="neutral" className="whitespace-nowrap text-[10px]">General recommendation</Pill>
+                  <DataTierBadge tier="general" />
                 </div>
                 <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-[var(--ink-700)]">
                   {plan.bestCountries.map((country) => (
@@ -253,7 +282,7 @@ export default function ProductDetails({
               <div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Launch Strategy</p>
-                  <Pill tone="neutral" className="whitespace-nowrap text-[10px]">General recommendation</Pill>
+                  <DataTierBadge tier="general" />
                 </div>
                 <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-sm text-[var(--ink-700)]">
                   {plan.strategy.map((step) => (
@@ -266,7 +295,10 @@ export default function ProductDetails({
 
           {/* ROI Calculator */}
           <div className="rounded-xl border border-[var(--border-subtle)] p-6">
-            <h3 className="text-base font-bold text-[var(--ink-900)]">💰 ROI Calculator</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-base font-bold text-[var(--ink-900)]">💰 ROI Calculator</h3>
+              <DataTierBadge tier="estimate" />
+            </div>
             <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">
               Illustrative example only -- assumes 50 sales at $200 total ad spend, not real sales data.
             </p>
