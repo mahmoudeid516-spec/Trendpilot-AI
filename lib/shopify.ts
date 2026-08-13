@@ -3,9 +3,10 @@ import { shopifyApi, ApiVersion, type Shopify } from "@shopify/shopify-api";
 
 export const SHOPIFY_API_VERSION = ApiVersion.July26;
 
-// Minimum scope needed for reading/importing a connected store's products.
-// Do not add write scopes unless a feature actually needs them.
-export const SHOPIFY_SCOPES = ["read_products"];
+// read_products: reading/importing a connected store's own catalog.
+// write_products: pushing a TrendPilot-discovered product INTO the store
+// (lib/services/shopifyProductPush.ts / POST /api/shopify/push).
+export const SHOPIFY_SCOPES = ["read_products", "write_products"];
 
 export const SHOPIFY_CALLBACK_PATH = "/api/shopify/callback";
 

@@ -3,6 +3,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { analyzeProduct } from "../../services/decisionEngine";
 import { generateMarketing } from "../../lib/services/generateMarketing";
+import {
+  getShopifyConnectionStatus,
+  beginShopifyConnect,
+  pushProductToShopify,
+} from "../../lib/services/shopifyStoreClient";
 import { analyzeMarket } from "../../services/marketAnalyzer";
 import SimilarProducts from "./SimilarProducts";
 import { calculateROI } from "../../services/roiCalculator";
@@ -52,6 +57,14 @@ export default function ProductDetails({
 }: Props) {
   const [marketing, setMarketing] = useState("");
   const [loading, setLoading] = useState(false);
+  const [shopifyLoading, setShopifyLoading] = useState(false);
+  const [shopifyNeedsConnect, setShopifyNeedsConnect] = useState(false);
+  const [shopifyShopInput, setShopifyShopInput] = useState("");
+  const [shopifyResult, setShopifyResult] = useState<
+    | { type: "success"; productId: string; adminUrl: string }
+    | { type: "error"; text: string }
+    | null
+  >(null);
 
   if (!product) return null;
 
@@ -71,6 +84,62 @@ export default function ProductDetails({
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleImportToShopify() {
+    if (shopifyLoading) return;
+
+    setShopifyResult(null);
+
+    try {
+      setShopifyLoading(true);
+
+      const status = await getShopifyConnectionStatus();
+
+      if (!status.connected) {
+        setShopifyNeedsConnect(true);
+        return;
+      }
+
+      const result = await pushProductToShopify(product);
+
+      setShopifyResult({
+        type: "success",
+        productId: result.shopify_product_id,
+        adminUrl: result.shopify_admin_url,
+      });
+    } catch (error: unknown) {
+      setShopifyResult({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to import product to Shopify.",
+      });
+    } finally {
+      setShopifyLoading(false);
+    }
+  }
+
+  async function handleConnectShopify() {
+    const shop = shopifyShopInput.trim().toLowerCase();
+
+    if (!shop) {
+      setShopifyResult({ type: "error", text: "Enter your Shopify store domain." });
+      return;
+    }
+
+    try {
+      setShopifyLoading(true);
+      setShopifyResult(null);
+
+      const url = await beginShopifyConnect(shop);
+
+      window.location.href = url;
+    } catch (error: unknown) {
+      setShopifyResult({
+        type: "error",
+        text: error instanceof Error ? error.message : "Unable to start the Shopify connection.",
+      });
+      setShopifyLoading(false);
     }
   }
 
@@ -228,10 +297,60 @@ export default function ProductDetails({
               {loading ? "Generating..." : "🚀 Generate Marketing"}
             </button>
 
-            <button className={buttonClass({ tone: "positive", className: "flex-1 py-3" })}>
-              🛒 Import to Shopify
+            <button
+              onClick={handleImportToShopify}
+              disabled={shopifyLoading}
+              className={buttonClass({ tone: "positive", className: "flex-1 py-3" })}
+            >
+              {shopifyLoading ? "Importing..." : "🛒 Import to Shopify"}
             </button>
           </div>
+
+          {shopifyNeedsConnect && (
+            <div className="rounded-xl border border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] p-5">
+              <h3 className="mb-1 text-sm font-bold text-[var(--ink-900)]">Connect your Shopify store</h3>
+              <p className="mb-3 text-xs text-[var(--ink-400)]">
+                No connected Shopify store found. Enter your store domain to connect it, then import again.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  placeholder="your-store.myshopify.com"
+                  value={shopifyShopInput}
+                  onChange={(e) => setShopifyShopInput(e.target.value)}
+                  className="tp-focus-ring min-h-11 flex-1 rounded-lg border border-[var(--border-subtle)] px-4 text-sm outline-none"
+                />
+                <button
+                  onClick={handleConnectShopify}
+                  disabled={shopifyLoading}
+                  className={buttonClass({ tone: "positive", className: "min-h-11 px-5" })}
+                >
+                  {shopifyLoading ? "Connecting..." : "Connect Shopify"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {shopifyResult && shopifyResult.type === "success" && (
+            <div className="rounded-xl border border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] p-5 text-sm text-[var(--ink-900)]">
+              Imported to Shopify (product ID {shopifyResult.productId}).{" "}
+              <a
+                href={shopifyResult.adminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold underline"
+              >
+                View it in Shopify admin
+              </a>
+              .
+            </div>
+          )}
+
+          {shopifyResult && shopifyResult.type === "error" && (
+            <div className="rounded-xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-5 text-sm text-[var(--ink-900)]">
+              {shopifyResult.text}
+            </div>
+          )}
 
           {marketing && (
             <div className="rounded-xl border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] p-5">
