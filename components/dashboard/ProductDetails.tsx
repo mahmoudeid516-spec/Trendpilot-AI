@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { analyzeProduct } from "../../services/decisionEngine";
+import type { Decision } from "../../lib/scoring/opportunityScore";
 import { generateMarketing } from "../../lib/services/generateMarketing";
 import {
   getShopifyConnectionStatus,
@@ -27,6 +28,30 @@ import { toneForInverseScore, toneForScore, type Tone } from "../ui/tone";
 type Props = {
   product: Product;
   allProducts?: Product[];
+};
+
+// The header verdict must read from the same source of truth as the
+// product card's DecisionBadge (product.decision, computed once by
+// lib/scoring/opportunityScore.ts at search time) -- not re-derived by a
+// second formula. It previously used services/decisionEngine.ts's own
+// independently-computed verdict (a different weighted formula, a 3-value
+// enum instead of the canonical 5-value one, and a hard-coded "profit as if
+// it were a percentage" bug), which could disagree with the "BUY"/"Strong
+// Buy"/etc badge already shown on the card for the exact same product.
+const DECISION_TONE: Record<Decision, Tone> = {
+  "Strong Buy": "positive",
+  Buy: "positive",
+  Test: "warning",
+  Watch: "warning",
+  Avoid: "risk",
+};
+
+const DECISION_ICON: Record<Decision, string> = {
+  "Strong Buy": "🏆",
+  Buy: "👍",
+  Test: "🧪",
+  Watch: "👀",
+  Avoid: "⚠️",
 };
 
 function ScoreRow({
@@ -237,9 +262,12 @@ export default function ProductDetails({
 
   const riskValue = decision.risk === "Low" ? 20 : decision.risk === "Medium" ? 55 : 90;
 
-  const verdictTone: Tone =
-    decision.verdict === "Strong Buy" ? "positive" : decision.verdict === "Good Opportunity" ? "warning" : "risk";
-  const verdictIcon = decision.verdict === "Strong Buy" ? "🏆" : decision.verdict === "Good Opportunity" ? "👍" : "⚠️";
+  // Canonical decision -- same field DecisionBadge reads on the product
+  // card, so this Report never disagrees with the card that opened it.
+  const canonicalDecision = product.decision as Decision;
+  const verdictTone: Tone = DECISION_TONE[canonicalDecision] ?? "neutral";
+  const verdictIcon = DECISION_ICON[canonicalDecision] ?? "❓";
+  const verdictLabel = product.decision || "N/A";
 
   return (
     <section className="overflow-hidden rounded-2xl bg-[var(--surface-card)]">
@@ -247,7 +275,7 @@ export default function ProductDetails({
       {/* 1. OVERVIEW -- identity + the one number worth seeing first. */}
       <div className="flex flex-wrap items-start justify-between gap-6 border-b border-[var(--border-subtle)] p-6 sm:p-8">
         <div className="min-w-0 pr-8">
-          <Pill tone={verdictTone}>{verdictIcon} {decision.verdict}</Pill>
+          <Pill tone={verdictTone}>{verdictIcon} {verdictLabel}</Pill>
           <h2 className="mt-3 break-words text-2xl font-bold text-[var(--ink-900)] sm:text-3xl">{product.name}</h2>
           <p className="mt-2 text-sm text-[var(--ink-500)]">{product.category}</p>
         </div>
@@ -259,7 +287,7 @@ export default function ProductDetails({
       <div className="grid grid-cols-2 gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] p-6 sm:grid-cols-3 lg:grid-cols-6 sm:p-8">
         <div className="col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Final AI Decision</p>
-          <p className="mt-1 text-xl font-extrabold text-[var(--ink-900)]">{decision.verdict}</p>
+          <p className="mt-1 text-xl font-extrabold text-[var(--ink-900)]">{verdictLabel}</p>
         </div>
         <MetricTile
           label="Winning Prob."
