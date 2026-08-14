@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { analyzeProduct } from "../../services/decisionEngine";
 import { generateMarketing } from "../../lib/services/generateMarketing";
@@ -8,10 +8,13 @@ import {
   beginShopifyConnect,
   pushProductToShopify,
 } from "../../lib/services/shopifyStoreClient";
+import { analyzeProductDeep } from "../../lib/services/analyzeProductDeep";
 import { analyzeMarket } from "../../services/marketAnalyzer";
 import SimilarProducts from "./SimilarProducts";
+import AIProductAnalysisModal from "./AIProductAnalysisModal";
 import { calculateROI } from "../../services/roiCalculator";
 import type { Product } from "../../types/Product";
+import type { ProductDeepAnalysis } from "../../types/productAnalyzer";
 import { generateBusinessPlan } from "../../services/businessCoach";
 import Pill from "../ui/Pill";
 import MetricTile from "../ui/MetricTile";
@@ -65,6 +68,14 @@ export default function ProductDetails({
     | { type: "error"; text: string }
     | null
   >(null);
+  const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<ProductDeepAnalysis | null>(null);
+  const [aiAnalysisError, setAiAnalysisError] = useState<string | null>(null);
+  const [showAiAnalysisModal, setShowAiAnalysisModal] = useState(false);
+  // Avoids a repeat OpenAI call for the same product within this modal
+  // instance -- no database/Redis cache, just an in-memory map for the
+  // session this component is mounted.
+  const aiAnalysisCache = useRef<Map<string, ProductDeepAnalysis>>(new Map());
 
   if (!product) return null;
 
@@ -140,6 +151,33 @@ export default function ProductDetails({
         text: error instanceof Error ? error.message : "Unable to start the Shopify connection.",
       });
       setShopifyLoading(false);
+    }
+  }
+
+  async function handleAnalyzeProduct() {
+    if (aiAnalysisLoading) return;
+
+    setAiAnalysisError(null);
+
+    const cached = aiAnalysisCache.current.get(product.id);
+    if (cached) {
+      setAiAnalysis(cached);
+      setShowAiAnalysisModal(true);
+      return;
+    }
+
+    try {
+      setAiAnalysisLoading(true);
+
+      const result = await analyzeProductDeep(product);
+
+      aiAnalysisCache.current.set(product.id, result);
+      setAiAnalysis(result);
+      setShowAiAnalysisModal(true);
+    } catch (error: unknown) {
+      setAiAnalysisError(error instanceof Error ? error.message : "Failed to analyze product.");
+    } finally {
+      setAiAnalysisLoading(false);
     }
   }
 
@@ -288,7 +326,21 @@ export default function ProductDetails({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <button
+            onClick={handleAnalyzeProduct}
+            disabled={aiAnalysisLoading}
+            className={buttonClass({ tone: "ai", className: "w-full py-3" })}
+          >
+            {aiAnalysisLoading ? "Analyzing product..." : "🧠 AI Product Analysis"}
+          </button>
+
+          {aiAnalysisError && (
+            <div className="rounded-xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-4 text-sm text-[var(--ink-900)]">
+              {aiAnalysisError}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={handleGenerateMarketing}
               disabled={loading}
@@ -460,6 +512,14 @@ export default function ProductDetails({
       <div className="px-6 pb-6 sm:px-8 sm:pb-8">
         <SimilarProducts current={product} products={allProducts} />
       </div>
+
+      {showAiAnalysisModal && aiAnalysis && (
+        <AIProductAnalysisModal
+          productName={product.name}
+          analysis={aiAnalysis}
+          onClose={() => setShowAiAnalysisModal(false)}
+        />
+      )}
 
     </section>
   );
