@@ -3,7 +3,6 @@
 import { Search } from "lucide-react";
 import { PRODUCT_COUNT_OPTIONS } from "../../lib/services/productCount";
 import Card from "../ui/Card";
-import Eyebrow from "../ui/Eyebrow";
 import { buttonClass } from "../ui/button";
 
 export type SearchPhase = "idle" | "searching" | "analyzing" | "done" | "error" | "empty";
@@ -31,14 +30,7 @@ export default function SearchControls({ keyword, setKeyword, count, setCount, o
 
   return (
     <Card>
-      <Eyebrow icon="🔎" label="Product Search Engine" tone="data" />
-
-      <h2 className="mt-3 text-2xl font-bold text-[var(--ink-900)]">Find Winning Products</h2>
-      <p className="mt-1 text-sm text-[var(--ink-500)]">
-        Search real products and evaluate them using market evidence &mdash; not AI guesses.
-      </p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-medium text-[var(--ink-400)]">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-xs font-medium text-[var(--ink-400)]">
         {PIPELINE_STEPS.map((step, i) => (
           <span key={step} className="flex items-center gap-2">
             <span className="flex items-center gap-1.5 rounded-full bg-[var(--surface-muted)] px-2.5 py-1">

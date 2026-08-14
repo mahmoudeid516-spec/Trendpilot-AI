@@ -144,9 +144,10 @@ function DashboardPageContent() {
 
           <section>
             <div className="mb-4 flex flex-col gap-1">
-              <Eyebrow icon="🔎" label="Product Search Engine" tone="data" />
+              <Eyebrow icon="🔎" label="Product Research" tone="data" />
+              <h2 className="text-2xl font-bold text-[var(--ink-900)]">Find Winning Products</h2>
               <p className="text-sm text-[var(--ink-500)]">
-                Search real products and evaluate opportunities with evidence.
+                Search real products and evaluate opportunities with evidence &mdash; not AI guesses.
               </p>
             </div>
 

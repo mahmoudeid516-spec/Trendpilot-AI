@@ -11,6 +11,7 @@ import { explainProduct } from "../../lib/scoring/explainProduct";
 import { selectTopPicks } from "../../lib/scoring/topPicks";
 import { toUserFacingError, type UserFacingError } from "../../lib/errors/toUserFacingError";
 import SearchControls, { type SearchPhase } from "./SearchControls";
+import ResultsSummaryStrip from "./ResultsSummaryStrip";
 import MarketOverview from "./MarketOverview";
 import AIMarketReport from "./AIMarketReport";
 import TopPicks from "./TopPicks";
@@ -154,6 +155,18 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
         phase={phase}
       />
 
+      {phase === "idle" && (
+        <div className="rounded-2xl border border-dashed border-[var(--border-subtle)] bg-[var(--surface-card)] p-10 text-center">
+          <p className="text-3xl">🧭</p>
+          <p className="mt-3 text-lg font-semibold text-[var(--ink-900)]">
+            Search for a product to discover opportunities.
+          </p>
+          <p className="mt-1 text-[var(--ink-500)]">
+            Enter a keyword above and choose how many products to evaluate, then run a search.
+          </p>
+        </div>
+      )}
+
       {phase === "error" && uiError && (
         <div className="flex items-start gap-3 rounded-2xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-5 text-sm text-[var(--accent-risk)]">
           <span className="mt-0.5 text-lg">⚠️</span>
@@ -188,6 +201,8 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
             </div>
             <ExportControls result={result} requestedCount={requestedCount} />
           </div>
+
+          <ResultsSummaryStrip products={result.products} />
 
           <MarketOverview
             keyword={result.keyword}

@@ -72,8 +72,9 @@ export default function ProductCard({ product, onSelectProduct }: Props) {
           {typeof product.roi === "number" && <> &middot; ROI {product.roi}%</>}
         </p>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           <ScoreBadge label="Win Prob." value={product.winning_probability} suffix="%" />
+          <ScoreBadge label="Demand" value={product.demand_score} />
           <ScoreBadge label="Risk" value={product.risk_score} direction="lower-is-better" />
         </div>
 
@@ -88,14 +89,17 @@ export default function ProductCard({ product, onSelectProduct }: Props) {
 
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="mt-4 flex items-center gap-1 text-left text-sm font-semibold text-[var(--accent-ai)] hover:text-[#5b3ce0]"
+          className="mt-4 flex items-center gap-1 text-left text-sm font-semibold text-[var(--accent-data)] hover:text-[#1d4fd1]"
         >
-          {expanded ? "Hide AI Analysis" : "View AI Analysis"}
+          {expanded ? "Hide Quick Analysis" : "View Quick Analysis"}
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
         {expanded && (
           <div className="mt-3 space-y-3 rounded-xl bg-[var(--surface-muted)] p-4 text-sm">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--ink-400)]">
+              Computed from this product&apos;s real data &mdash; not an AI call. Open the full Report for AI Product Analysis.
+            </p>
             <div>
               <p className="font-semibold text-[var(--ink-900)]">Why</p>
               <ul className="mt-1 list-disc space-y-1 pl-5 text-[var(--ink-500)]">

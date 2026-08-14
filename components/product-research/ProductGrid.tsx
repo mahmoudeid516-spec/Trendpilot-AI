@@ -31,12 +31,17 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("opportunity_score");
   const [decisionFilter, setDecisionFilter] = useState("All");
   const [competitionFilter, setCompetitionFilter] = useState("All");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const filteredAndSorted = useMemo(() => {
+    const priceCeiling = maxPrice.trim() === "" ? null : Number(maxPrice);
+    const hasValidPriceCeiling = priceCeiling !== null && Number.isFinite(priceCeiling);
+
     const filtered = products.filter((p) => {
       const matchesDecision = decisionFilter === "All" || p.decision === decisionFilter;
       const matchesCompetition = competitionFilter === "All" || p.competition === competitionFilter;
-      return matchesDecision && matchesCompetition;
+      const matchesPrice = !hasValidPriceCeiling || p.buy_price <= priceCeiling;
+      return matchesDecision && matchesCompetition && matchesPrice;
     });
 
     const sorted = [...filtered].sort((a, b) => {
@@ -46,7 +51,7 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
     });
 
     return sorted;
-  }, [products, sortKey, decisionFilter, competitionFilter]);
+  }, [products, sortKey, decisionFilter, competitionFilter, maxPrice]);
 
   return (
     <Card>
@@ -79,6 +84,19 @@ export default function ProductGrid({ products, onSelectProduct }: Props) {
               </option>
             ))}
           </select>
+
+          <label className="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-white px-3 py-2 text-sm text-[var(--ink-700)]">
+            Max buy price
+            <input
+              type="number"
+              min={0}
+              inputMode="decimal"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Any"
+              className="w-16 outline-none placeholder:text-[var(--ink-400)]"
+            />
+          </label>
 
           <select
             value={sortKey}

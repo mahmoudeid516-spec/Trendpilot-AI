@@ -54,6 +54,37 @@ function ScoreRow({
   );
 }
 
+// Consistent section wrapper so the report reads as a clear top-to-bottom
+// sequence (overview -> decision metrics -> market analysis -> financial
+// estimates -> AI analysis -> listing details -> source info -> actions)
+// instead of a single dense multi-column block.
+function Section({
+  title,
+  icon,
+  tier,
+  caption,
+  children,
+}: {
+  title: string;
+  icon?: string;
+  tier?: DataTier;
+  caption?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--border-subtle)] p-6">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-base font-bold text-[var(--ink-900)]">
+          {icon} {title}
+        </h3>
+        {tier && <DataTierBadge tier={tier} />}
+      </div>
+      {caption && <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">{caption}</p>}
+      <div className={caption ? "" : "mt-4"}>{children}</div>
+    </div>
+  );
+}
+
 export default function ProductDetails({
   product,
   allProducts = [],
@@ -213,7 +244,7 @@ export default function ProductDetails({
   return (
     <section className="overflow-hidden rounded-2xl bg-[var(--surface-card)]">
 
-      {/* Header: identity + the one number worth seeing first (AI confidence). */}
+      {/* 1. OVERVIEW -- identity + the one number worth seeing first. */}
       <div className="flex flex-wrap items-start justify-between gap-6 border-b border-[var(--border-subtle)] p-6 sm:p-8">
         <div className="min-w-0 pr-8">
           <Pill tone={verdictTone}>{verdictIcon} {decision.verdict}</Pill>
@@ -224,7 +255,7 @@ export default function ProductDetails({
         <ScoreRing value={aiScore} tone={toneForScore(aiScore)} label="AI Score" size={104} />
       </div>
 
-      {/* Final AI decision strip -- the investment-summary row. */}
+      {/* 2. KEY DECISION METRICS -- the investment-summary row. */}
       <div className="grid grid-cols-2 gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] p-6 sm:grid-cols-3 lg:grid-cols-6 sm:p-8">
         <div className="col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-400)]">Final AI Decision</p>
@@ -241,192 +272,49 @@ export default function ProductDetails({
         <MetricTile label="Demand" value={decision.demand} tone="data" size="sm" />
       </div>
 
-      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-3">
+      <div className="space-y-6 p-6 sm:p-8">
 
-        {/* Column 1: identity + pricing */}
-        <div>
-          <div className="relative h-56 w-full overflow-hidden rounded-2xl">
-            <Image src={product.image} alt={product.name} fill unoptimized className="object-cover" />
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-[var(--ink-400)]">Listing Details</h3>
-            <DataTierBadge tier="real" />
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-[var(--surface-muted)] p-4">
-              <p className="text-xs text-[var(--ink-400)]">Buy Price</p>
-              <p className="mt-1 text-lg font-bold text-[var(--ink-900)]">${product.buy_price}</p>
+        {/* Opportunity Breakdown -- part of key decision metrics, right after the strip. */}
+        <Section title="Opportunity Breakdown">
+          <div className="grid gap-x-8 sm:grid-cols-2">
+            <div>
+              <ScoreRow title={`Demand (${decision.demand})`} value={Math.min(100, aiScore)} tone="data" tier="estimate" />
+              <ScoreRow title="Profit Score" value={profit} tone="positive" tier="estimate" />
             </div>
-
-            <div className="rounded-xl bg-[var(--surface-muted)] p-4">
-              <p className="text-xs text-[var(--ink-400)]">Selling Price</p>
-              <p className="mt-1 text-lg font-bold text-[var(--ink-900)]">${product.selling_price}</p>
-            </div>
-
-            <div className="rounded-xl bg-[var(--accent-positive-soft)] p-4">
-              <p className="text-xs text-[var(--ink-400)]">Profit</p>
-              <p className="mt-1 text-lg font-bold text-[var(--accent-positive)]">${product.profit}</p>
-            </div>
-
-            <div className="rounded-xl bg-[var(--accent-data-soft)] p-4">
-              <p className="text-xs text-[var(--ink-400)]">Platform</p>
-              <p className="mt-1 text-lg font-bold text-[var(--accent-data)]">{product.platform}</p>
+            <div>
+              <ScoreRow title={`Risk (${decision.risk})`} value={riskValue} tone={toneForInverseScore(riskValue)} tier="estimate" />
+              <ScoreRow
+                title="Winning Probability"
+                value={hasWinningProbability ? winning : null}
+                tone={toneForScore(winning)}
+                tier="real"
+              />
             </div>
           </div>
+        </Section>
 
-          <div className="mt-6 rounded-xl border border-[var(--border-subtle)] p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-[var(--ink-900)]">Recommended Budget</p>
-              <DataTierBadge tier="estimate" />
-            </div>
-            <p className="mt-1 text-2xl font-extrabold text-[var(--ink-900)]">${market.recommendedBudget}</p>
-            <p className="mt-1 text-xs text-[var(--ink-400)]">A starting-point heuristic, not tied to real ad-platform data.</p>
-          </div>
-        </div>
+        {/* 3. MARKET ANALYSIS */}
+        <Section title="Market Analysis" icon="📊" tier="estimate">
+          <ScoreRow title="Viral Potential" value={market.viralPotential} tone="data" />
 
-        {/* Column 2: scored evidence */}
-        <div>
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--ink-400)]">Opportunity Breakdown</h3>
-
-          <ScoreRow title={`Demand (${decision.demand})`} value={Math.min(100, aiScore)} tone="data" tier="estimate" />
-          <ScoreRow title="Profit Score" value={profit} tone="positive" tier="estimate" />
-          <ScoreRow title={`Risk (${decision.risk})`} value={riskValue} tone={toneForInverseScore(riskValue)} tier="estimate" />
-          <ScoreRow
-            title="Winning Probability"
-            value={hasWinningProbability ? winning : null}
-            tone={toneForScore(winning)}
-            tier="real"
-          />
-        </div>
-
-        {/* Column 3: market analysis + actions */}
-        <div className="space-y-6">
-
-          <div className="rounded-xl border border-[var(--accent-data)]/15 bg-[var(--accent-data-soft)] p-6">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="flex items-center gap-2 text-base font-bold text-[var(--ink-900)]">
-                📊 Market Analysis
-              </h3>
-              <DataTierBadge tier="estimate" />
-            </div>
-
-            <div className="space-y-4">
-              <ScoreRow title="Viral Potential" value={market.viralPotential} tone="data" />
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <p className="text-[var(--ink-700)]">
-                  Est. CPM <strong className="block text-[var(--ink-900)]">${market.cpm}</strong>
-                </p>
-                <p className="text-[var(--ink-700)]">
-                  Est. CPA <strong className="block text-[var(--ink-900)]">${market.cpa}</strong>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleAnalyzeProduct}
-            disabled={aiAnalysisLoading}
-            className={buttonClass({ tone: "ai", className: "w-full py-3" })}
-          >
-            {aiAnalysisLoading ? "Analyzing product..." : "🧠 AI Product Analysis"}
-          </button>
-
-          {aiAnalysisError && (
-            <div className="rounded-xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-4 text-sm text-[var(--ink-900)]">
-              {aiAnalysisError}
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleGenerateMarketing}
-              disabled={loading}
-              className={buttonClass({ tone: "ai", className: "flex-1 py-3" })}
-            >
-              {loading ? "Generating..." : "🚀 Generate Marketing"}
-            </button>
-
-            <button
-              onClick={handleImportToShopify}
-              disabled={shopifyLoading}
-              className={buttonClass({ tone: "positive", className: "flex-1 py-3" })}
-            >
-              {shopifyLoading ? "Importing..." : "🛒 Import to Shopify"}
-            </button>
-          </div>
-
-          {shopifyNeedsConnect && (
-            <div className="rounded-xl border border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] p-5">
-              <h3 className="mb-1 text-sm font-bold text-[var(--ink-900)]">Connect your Shopify store</h3>
-              <p className="mb-3 text-xs text-[var(--ink-400)]">
-                No connected Shopify store found. Enter your store domain to connect it, then import again.
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  type="text"
-                  placeholder="your-store.myshopify.com"
-                  value={shopifyShopInput}
-                  onChange={(e) => setShopifyShopInput(e.target.value)}
-                  className="tp-focus-ring min-h-11 flex-1 rounded-lg border border-[var(--border-subtle)] px-4 text-sm outline-none"
-                />
-                <button
-                  onClick={handleConnectShopify}
-                  disabled={shopifyLoading}
-                  className={buttonClass({ tone: "positive", className: "min-h-11 px-5" })}
-                >
-                  {shopifyLoading ? "Connecting..." : "Connect Shopify"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {shopifyResult && shopifyResult.type === "success" && (
-            <div className="rounded-xl border border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] p-5 text-sm text-[var(--ink-900)]">
-              Imported to Shopify (product ID {shopifyResult.productId}).{" "}
-              <a
-                href={shopifyResult.adminUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold underline"
-              >
-                View it in Shopify admin
-              </a>
-              .
-            </div>
-          )}
-
-          {shopifyResult && shopifyResult.type === "error" && (
-            <div className="rounded-xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-5 text-sm text-[var(--ink-900)]">
-              {shopifyResult.text}
-            </div>
-          )}
-
-          {marketing && (
-            <div className="rounded-xl border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[var(--ink-900)]">AI Marketing Strategy</h3>
-                <DataTierBadge tier="ai" />
-              </div>
-
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-[var(--ink-700)]">
-                {marketing}
-              </pre>
-            </div>
-          )}
-
-          {/* AI Business Coach -- deterministic planning output, not an AI call */}
-          <div className="rounded-xl border border-[var(--border-subtle)] p-6">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-bold text-[var(--ink-900)]">💼 Business Coach</h3>
-              <DataTierBadge tier="estimate" />
-            </div>
-            <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">
-              Calculated from this product&apos;s price and AI score -- not real market data.
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <p className="text-[var(--ink-700)]">
+              Est. CPM <strong className="block text-[var(--ink-900)]">${market.cpm}</strong>
             </p>
+            <p className="text-[var(--ink-700)]">
+              Est. CPA <strong className="block text-[var(--ink-900)]">${market.cpa}</strong>
+            </p>
+          </div>
+        </Section>
 
+        {/* 4. BUSINESS COACH / FINANCIAL ESTIMATES */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Section
+            title="Business Coach"
+            icon="💼"
+            tier="estimate"
+            caption="Calculated from this product's price and AI score -- not real market data."
+          >
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
               <MetricTile label="Suggested Selling Price" value={`$${plan.sellingPrice}`} size="sm" />
               <MetricTile label="Estimated Profit" value={`$${plan.expectedProfit}`} tone="positive" size="sm" />
@@ -462,18 +350,14 @@ export default function ProductDetails({
                 </ol>
               </div>
             </div>
-          </div>
+          </Section>
 
-          {/* ROI Calculator */}
-          <div className="rounded-xl border border-[var(--border-subtle)] p-6">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-bold text-[var(--ink-900)]">💰 ROI Calculator</h3>
-              <DataTierBadge tier="estimate" />
-            </div>
-            <p className="mb-4 mt-1 text-xs text-[var(--ink-400)]">
-              Illustrative example only -- assumes 50 sales at $200 total ad spend, not real sales data.
-            </p>
-
+          <Section
+            title="ROI Calculator"
+            icon="💰"
+            tier="estimate"
+            caption="Illustrative example only -- assumes 50 sales at $200 total ad spend, not real sales data."
+          >
             <div className="space-y-2 text-sm text-[var(--ink-700)]">
               <div className="flex justify-between">
                 <span>Revenue</span>
@@ -503,8 +387,213 @@ export default function ProductDetails({
               </div>
               <ProgressBar value={Math.min(100, Math.max(0, roi.roi))} tone="positive" />
             </div>
+          </Section>
+        </div>
+
+        {/* 5. AI PRODUCT ANALYSIS -- the real OpenAI-generated deep dive, kept as-is. */}
+        <div className="rounded-xl border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] p-6">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-base font-bold text-[var(--ink-900)]">
+              🧠 AI Product Analysis
+            </h3>
+            <DataTierBadge tier="ai" />
+          </div>
+          <p className="mb-4 text-xs text-[var(--ink-400)]">
+            A full OpenAI-generated opportunity analysis: score, verdict, risks, target customer, and more.
+          </p>
+
+          <button
+            onClick={handleAnalyzeProduct}
+            disabled={aiAnalysisLoading}
+            className={buttonClass({ tone: "ai", className: "w-full py-3" })}
+          >
+            {aiAnalysisLoading ? "Analyzing product..." : "Run AI Product Analysis"}
+          </button>
+
+          {aiAnalysisError && (
+            <div className="mt-4 rounded-xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-4 text-sm text-[var(--ink-900)]">
+              {aiAnalysisError}
+            </div>
+          )}
+        </div>
+
+        {/* 6. LISTING DETAILS */}
+        <Section title="Listing Details" tier="real">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="relative h-56 w-full overflow-hidden rounded-2xl">
+              <Image src={product.image} alt={product.name} fill unoptimized className="object-cover" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 content-start">
+              <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+                <p className="text-xs text-[var(--ink-400)]">Buy Price</p>
+                <p className="mt-1 text-lg font-bold text-[var(--ink-900)]">${product.buy_price}</p>
+              </div>
+
+              <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+                <p className="text-xs text-[var(--ink-400)]">Selling Price</p>
+                <p className="mt-1 text-lg font-bold text-[var(--ink-900)]">${product.selling_price}</p>
+              </div>
+
+              <div className="rounded-xl bg-[var(--accent-positive-soft)] p-4">
+                <p className="text-xs text-[var(--ink-400)]">Profit</p>
+                <p className="mt-1 text-lg font-bold text-[var(--accent-positive)]">${product.profit}</p>
+              </div>
+
+              <div className="rounded-xl bg-[var(--accent-data-soft)] p-4">
+                <p className="text-xs text-[var(--ink-400)]">Platform</p>
+                <p className="mt-1 text-lg font-bold text-[var(--accent-data)]">{product.platform}</p>
+              </div>
+            </div>
           </div>
 
+          <div className="mt-4 rounded-xl border border-[var(--border-subtle)] p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-[var(--ink-900)]">Recommended Budget</p>
+              <DataTierBadge tier="estimate" />
+            </div>
+            <p className="mt-1 text-2xl font-extrabold text-[var(--ink-900)]">${market.recommendedBudget}</p>
+            <p className="mt-1 text-xs text-[var(--ink-400)]">A starting-point heuristic, not tied to real ad-platform data.</p>
+          </div>
+        </Section>
+
+        {/* 7. SOURCE INFORMATION -- real fields already on every Product, not surfaced elsewhere in this report. */}
+        <Section title="Source Information" tier="real">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+              <p className="text-xs text-[var(--ink-400)]">Source</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{product.source}{product.store_name ? ` · ${product.store_name}` : ""}</p>
+            </div>
+
+            <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+              <p className="text-xs text-[var(--ink-400)]">Country</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{product.country || "Not available"}</p>
+            </div>
+
+            {product.brand && (
+              <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+                <p className="text-xs text-[var(--ink-400)]">Brand</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{product.brand}</p>
+              </div>
+            )}
+
+            {product.asin && (
+              <div className="rounded-xl bg-[var(--surface-muted)] p-4">
+                <p className="text-xs text-[var(--ink-400)]">ASIN</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{product.asin}</p>
+              </div>
+            )}
+
+            {product.delivery_info && (
+              <div className="rounded-xl bg-[var(--surface-muted)] p-4 sm:col-span-2">
+                <p className="text-xs text-[var(--ink-400)]">Delivery</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">{product.delivery_info}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-3">
+            <a
+              href={product.product_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonClass({ tone: "data", variant: "outline", size: "sm" })}
+            >
+              View Listing
+            </a>
+            {product.supplier_url && (
+              <a
+                href={product.supplier_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonClass({ tone: "positive", variant: "outline", size: "sm" })}
+              >
+                View Supplier{product.supplier ? ` (${product.supplier})` : ""}
+              </a>
+            )}
+          </div>
+        </Section>
+
+        {/* 8. EXISTING ACTIONS */}
+        <div>
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--ink-400)]">Actions</h3>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleGenerateMarketing}
+              disabled={loading}
+              className={buttonClass({ tone: "ai", className: "flex-1 py-3" })}
+            >
+              {loading ? "Generating..." : "🚀 Generate Marketing"}
+            </button>
+
+            <button
+              onClick={handleImportToShopify}
+              disabled={shopifyLoading}
+              className={buttonClass({ tone: "positive", className: "flex-1 py-3" })}
+            >
+              {shopifyLoading ? "Importing..." : "🛒 Import to Shopify"}
+            </button>
+          </div>
+
+          {shopifyNeedsConnect && (
+            <div className="mt-4 rounded-xl border border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] p-5">
+              <h3 className="mb-1 text-sm font-bold text-[var(--ink-900)]">Connect your Shopify store</h3>
+              <p className="mb-3 text-xs text-[var(--ink-400)]">
+                No connected Shopify store found. Enter your store domain to connect it, then import again.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  placeholder="your-store.myshopify.com"
+                  value={shopifyShopInput}
+                  onChange={(e) => setShopifyShopInput(e.target.value)}
+                  className="tp-focus-ring min-h-11 flex-1 rounded-lg border border-[var(--border-subtle)] px-4 text-sm outline-none"
+                />
+                <button
+                  onClick={handleConnectShopify}
+                  disabled={shopifyLoading}
+                  className={buttonClass({ tone: "positive", className: "min-h-11 px-5" })}
+                >
+                  {shopifyLoading ? "Connecting..." : "Connect Shopify"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {shopifyResult && shopifyResult.type === "success" && (
+            <div className="mt-4 rounded-xl border border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] p-5 text-sm text-[var(--ink-900)]">
+              Imported to Shopify (product ID {shopifyResult.productId}).{" "}
+              <a
+                href={shopifyResult.adminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold underline"
+              >
+                View it in Shopify admin
+              </a>
+              .
+            </div>
+          )}
+
+          {shopifyResult && shopifyResult.type === "error" && (
+            <div className="mt-4 rounded-xl border border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] p-5 text-sm text-[var(--ink-900)]">
+              {shopifyResult.text}
+            </div>
+          )}
+
+          {marketing && (
+            <div className="mt-4 rounded-xl border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[var(--ink-900)]">AI Marketing Strategy</h3>
+                <DataTierBadge tier="ai" />
+              </div>
+
+              <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-[var(--ink-700)]">
+                {marketing}
+              </pre>
+            </div>
+          )}
         </div>
 
       </div>
