@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { startDataForSeoTask } from "../../../../lib/services/dataforseoProductSearch";
 import { searchAliExpressProducts } from "../../../../lib/services/aliexpressProductSearch";
+import type { Product } from "../../../../types/Product";
 
 type StartedTask = { platform: string; taskId: string; count: number };
+type ReadyTask = { platform: string; ready: true; products: Product[] };
 type FailedTask = { platform: string; error: string; isConfigError: boolean };
-type TaskDescriptor = StartedTask | FailedTask;
+type TaskDescriptor = StartedTask | ReadyTask | FailedTask;
 
 function isConfigurationError(message: string): boolean {
   return (
@@ -27,14 +29,13 @@ async function startSource(
     }
 
     if (platform === "AliExpress") {
-      // AliExpress has no async task model implemented (see
-      // lib/services/aliexpressProductSearch.ts) -- calling it here always
-      // resolves to its honest configuration/not-implemented error rather
-      // than ever returning a pollable task.
-      await searchAliExpressProducts(keyword, requestedCount ?? 20);
-      // Unreachable today, kept for shape-completeness if this source
-      // gains a real async task model later.
-      return { platform, error: "Unexpected: AliExpress search returned without error.", isConfigError: false };
+      // AliExpress's aliexpress.affiliate.product.query is a single
+      // synchronous request/response (no async task model like DataForSEO's
+      // Amazon Merchant endpoint), so it either has real products or a real
+      // error by the time this resolves -- there's nothing to hand back to
+      // /api/product-search/status to poll for this source.
+      const products = await searchAliExpressProducts(keyword, requestedCount ?? 20);
+      return { platform, ready: true, products };
     }
 
     return { platform, error: `Unknown product source "${platform}".`, isConfigError: false };
@@ -44,12 +45,15 @@ async function startSource(
   }
 }
 
-// Submits one task per requested source and returns immediately -- this
-// route still does no polling itself (Amazon's DataForSEO task is the only
-// one that's genuinely async right now; see startSource above), so it
-// stays well within Vercel's function timeout on any plan. The client
-// polls GET /api/product-search/status for whichever tasks actually
-// started.
+function isFailed(task: TaskDescriptor): task is FailedTask {
+  return "error" in task;
+}
+
+// Submits/executes one task per requested source and returns immediately --
+// Amazon's DataForSEO task is the only one that's genuinely async (started
+// here, polled via GET /api/product-search/status); AliExpress resolves
+// synchronously within this same request. Either way this route stays well
+// within Vercel's function timeout on any plan.
 export async function POST(req: Request) {
   try {
     const filters = await req.json();
@@ -64,10 +68,10 @@ export async function POST(req: Request) {
       sources.map((source) => startSource(source, String(search), requestedCount))
     );
 
-    const allFailed = tasks.every((task) => "error" in task);
+    const allFailed = tasks.every(isFailed);
 
     if (allFailed) {
-      const allConfigIssues = tasks.every((task) => "error" in task && task.isConfigError);
+      const allConfigIssues = tasks.every((task) => isFailed(task) && task.isConfigError);
       return NextResponse.json({ tasks }, { status: allConfigIssues ? 503 : 500 });
     }
 

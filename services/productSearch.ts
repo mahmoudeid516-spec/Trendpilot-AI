@@ -21,8 +21,9 @@ export type ProductSearchResult = {
 };
 
 type StartedTask = { platform: string; taskId: string; count: number };
+type ReadyTask = { platform: string; ready: true; products: Product[] };
 type FailedTask = { platform: string; error: string; isConfigError: boolean };
-type TaskDescriptor = StartedTask | FailedTask;
+type TaskDescriptor = StartedTask | ReadyTask | FailedTask;
 
 // DataForSEO's Merchant Amazon Products task is async, so the search is a
 // submit-then-poll dance across two routes (/api/product-search/start,
@@ -84,6 +85,10 @@ function isStarted(task: TaskDescriptor): task is StartedTask {
   return "taskId" in task;
 }
 
+function isReady(task: TaskDescriptor): task is ReadyTask {
+  return "ready" in task && task.ready === true;
+}
+
 /**
  * Searches one or more product sources (platform: "Amazon" | "AliExpress" |
  * "All") and returns real products plus, per source, an honest error if
@@ -120,21 +125,25 @@ export async function productSearch(filters: ProductSearchFilters): Promise<Prod
 
   const sourceErrors: ProductSourceError[] = [];
   let pending: StartedTask[] = [];
+  const productsBySource = new Map<string, Product[]>();
 
   for (const task of startBody.tasks) {
     if (isStarted(task)) {
       pending.push(task);
+    } else if (isReady(task)) {
+      // Resolved synchronously at start time (AliExpress has no async task
+      // model) -- nothing to poll for this source.
+      productsBySource.set(task.platform, task.products);
     } else {
       sourceErrors.push({ platform: task.platform, message: task.error, isConfigError: task.isConfigError });
     }
   }
 
   if (pending.length === 0) {
-    return { products: [], sourceErrors };
+    return { products: Array.from(productsBySource.values()).flat(), sourceErrors };
   }
 
   const deadline = Date.now() + MAX_POLL_DURATION_MS;
-  const productsBySource = new Map<string, Product[]>();
 
   while (pending.length > 0) {
     const tasksParam = encodeURIComponent(JSON.stringify(pending));

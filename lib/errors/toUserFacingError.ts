@@ -27,11 +27,19 @@ export function toUserFacingError(rawMessage: string): UserFacingError {
     };
   }
 
-  if (lower.includes("aliexpress")) {
+  if (lower.includes("aliexpress integration is not configured")) {
     return {
       title: "AliExpress source is not configured",
       message: "AliExpress product search isn't set up yet.",
       hint: "Configuration issue -- ALIEXPRESS_APP_KEY / ALIEXPRESS_APP_SECRET are not set.",
+    };
+  }
+
+  if (lower.includes("aliexpress")) {
+    return {
+      title: "AliExpress search is temporarily unavailable",
+      message: "The AliExpress API returned an error. Please try again shortly.",
+      hint: "Provider error -- technical details are in the server logs.",
     };
   }
 
