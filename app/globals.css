@@ -77,13 +77,13 @@ body {
    above -- no existing dashboard/product-research class is touched. */
 .tp-reveal {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 500ms ease, transform 500ms ease;
+  transform: translateY(20px) scale(0.99);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tp-reveal-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .tp-nav-elevated {
@@ -99,9 +99,103 @@ body {
 
   * {
     scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* --- Premium landing-page surface treatments ------------------------
+   Deliberately separate from the dashboard's flat .tp-card so the
+   marketing site can carry more depth/gradient without changing how
+   the product itself looks. Only used under components/landing/* and
+   the standalone /pricing page. */
+
+.tp-landing-ink {
+  background: #0b0c14;
+}
+
+.tp-glow-violet {
+  background: radial-gradient(60% 60% at 50% 40%, rgba(109, 74, 255, 0.35), transparent 70%);
+}
+
+.tp-mesh-hero {
+  background:
+    radial-gradient(48% 38% at 14% 8%, rgba(109, 74, 255, 0.16), transparent 65%),
+    radial-gradient(42% 34% at 88% 2%, rgba(37, 99, 235, 0.12), transparent 65%),
+    radial-gradient(60% 45% at 50% 100%, rgba(109, 74, 255, 0.08), transparent 70%),
+    var(--surface-app);
+}
+
+.tp-dot-grid {
+  background-image: radial-gradient(rgba(15, 18, 34, 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+:root[data-theme] .tp-dot-grid,
+.tp-dot-grid {
+  mask-image: radial-gradient(70% 70% at 50% 30%, black 20%, transparent 85%);
+}
+
+.tp-card-elevated {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.75rem;
+  box-shadow: 0 1px 2px rgba(15, 18, 34, 0.04), 0 24px 48px -24px rgba(15, 18, 34, 0.22);
+}
+
+.tp-card-elevated-interactive {
+  transition: box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1), transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 240ms ease;
+}
+
+.tp-card-elevated-interactive:hover {
+  transform: translateY(-4px);
+  border-color: rgba(109, 74, 255, 0.28);
+  box-shadow: 0 1px 2px rgba(15, 18, 34, 0.04), 0 32px 60px -24px rgba(109, 74, 255, 0.28);
+}
+
+.tp-divider-fade {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-subtle) 20%, var(--border-subtle) 80%, transparent);
+}
+
+.tp-pulse-dot {
+  position: relative;
+}
+
+.tp-pulse-dot::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: tp-pulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes tp-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-pulse-dot::before {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+.tp-tabular {
+  font-variant-numeric: tabular-nums;
 }

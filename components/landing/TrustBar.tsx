@@ -14,30 +14,24 @@ const TONE_TEXT: Record<(typeof CAPABILITIES)[number]["tone"], string> = {
   positive: "text-[var(--accent-positive)]",
 };
 
-const TONE_BG: Record<(typeof CAPABILITIES)[number]["tone"], string> = {
-  data: "bg-[var(--accent-data-soft)]",
-  ai: "bg-[var(--accent-ai-soft)]",
-  positive: "bg-[var(--accent-positive-soft)]",
-};
-
 export default function TrustBar() {
   return (
-    <section className="border-y border-[var(--border-subtle)] bg-[var(--surface-card)]">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <section className="relative border-y border-[var(--border-subtle)] bg-[var(--surface-card)]">
+      <div className="tp-divider-fade absolute inset-x-0 top-0" aria-hidden="true" />
+
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <ScrollReveal>
-          <p className="text-center text-sm font-semibold text-[var(--ink-500)]">
-            Everything you need to validate a product before you invest.
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-400)]">
+            Everything you need to validate a product before you invest
           </p>
         </ScrollReveal>
 
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mt-7 flex flex-wrap items-center justify-center divide-x divide-[var(--border-subtle)]">
           {CAPABILITIES.map((item, i) => (
-            <ScrollReveal key={item.label} delayMs={i * 60}>
-              <div className="flex flex-col items-center gap-3 rounded-2xl px-4 py-5 text-center">
-                <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${TONE_BG[item.tone]}`}>
-                  <item.icon size={20} strokeWidth={2} className={TONE_TEXT[item.tone]} />
-                </span>
-                <span className="text-sm font-semibold text-[var(--ink-900)]">{item.label}</span>
+            <ScrollReveal key={item.label} delayMs={i * 60} className="px-6 py-2 first:pl-0 last:pr-0">
+              <div className="flex items-center gap-2.5">
+                <item.icon size={16} strokeWidth={2.25} className={TONE_TEXT[item.tone]} />
+                <span className="whitespace-nowrap text-sm font-semibold text-[var(--ink-900)]">{item.label}</span>
               </div>
             </ScrollReveal>
           ))}

@@ -1,4 +1,4 @@
-import { Search, LineChart, Rocket } from "lucide-react";
+import { Search, LineChart, Rocket, ArrowRight } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 
 const STEPS = [
@@ -24,36 +24,43 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section id="how-it-works" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
       <ScrollReveal>
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-[var(--ink-900)] sm:text-4xl">How it works</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-ai)]">The workflow</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink-900)] sm:text-4xl">
+            How it works
+          </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-[var(--ink-500)]">
             From discovery to action, in one connected workflow.
           </p>
         </div>
       </ScrollReveal>
 
-      <div className="relative mt-14 grid gap-8 md:grid-cols-3">
-        <div
-          className="absolute left-0 right-0 top-11 hidden h-px bg-[var(--border-subtle)] md:block"
-          aria-hidden="true"
-        />
-
+      <div className="mt-16 flex flex-col md:flex-row md:items-stretch">
         {STEPS.map((step, i) => (
-          <ScrollReveal key={step.number} delayMs={i * 100}>
-            <div className="relative flex flex-col items-start rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-7">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-ai-soft)] text-[var(--accent-ai)]">
-                  <step.icon size={20} strokeWidth={2} />
-                </span>
-                <span className="text-sm font-bold text-[var(--ink-400)]">{step.number}</span>
-              </div>
+          <div key={step.number} className="flex flex-1 flex-col md:flex-row md:items-stretch">
+            <ScrollReveal delayMs={i * 120} className="flex-1">
+              <div className="tp-card-elevated tp-card-elevated-interactive relative h-full p-7">
+                <div className="absolute right-6 top-6 text-4xl font-black text-[var(--surface-muted)]">
+                  {step.number}
+                </div>
 
-              <h3 className="mt-5 text-lg font-bold text-[var(--ink-900)]">{step.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--ink-500)]">{step.description}</p>
-            </div>
-          </ScrollReveal>
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent-ai-soft)] to-[var(--accent-data-soft)] text-[var(--accent-ai)]">
+                  <step.icon size={22} strokeWidth={2} />
+                </span>
+
+                <h3 className="mt-6 text-lg font-bold text-[var(--ink-900)]">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--ink-500)]">{step.description}</p>
+              </div>
+            </ScrollReveal>
+
+            {i < STEPS.length - 1 && (
+              <div className="flex shrink-0 items-center justify-center py-3 md:w-10 md:py-0 lg:w-14">
+                <ArrowRight size={18} className="rotate-90 text-[var(--ink-400)] md:rotate-0" />
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </section>

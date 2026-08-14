@@ -8,7 +8,7 @@ import { buttonClass } from "../ui/button";
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -28,17 +28,19 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--surface-card)]/85 backdrop-blur-xl transition-[box-shadow,padding] duration-300 ${
-        scrolled ? "tp-nav-elevated" : ""
+      className={`sticky top-0 z-50 border-b transition-[box-shadow,padding,background-color,border-color] duration-300 ${
+        scrolled
+          ? "tp-nav-elevated border-[var(--border-subtle)] bg-[var(--surface-card)]/90 backdrop-blur-xl"
+          : "border-transparent bg-[var(--surface-card)]/60 backdrop-blur-sm"
       }`}
     >
       <div
         className={`mx-auto flex max-w-7xl items-center justify-between px-4 transition-[padding] duration-300 sm:px-6 lg:px-8 ${
-          scrolled ? "py-3" : "py-4"
+          scrolled ? "py-3" : "py-4.5"
         }`}
       >
-        <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-ai)] text-sm font-bold text-white">
+        <Link href="/" className="group flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--accent-ai)] to-[#4c2fd1] text-sm font-bold text-white shadow-[0_4px_14px_rgba(109,74,255,0.4)] transition-transform duration-300 group-hover:scale-105">
             T
           </span>
           <span className="text-[15px] font-semibold tracking-tight text-[var(--ink-900)]">
@@ -46,19 +48,29 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--ink-700)] lg:flex">
+        <nav className="hidden items-center gap-1 text-sm font-medium text-[var(--ink-700)] lg:flex">
           {NAV_LINKS.map((link) => (
-            <a key={link.label} href={link.href} className="transition-colors hover:text-[var(--ink-900)]">
+            <a
+              key={link.label}
+              href={link.href}
+              className="rounded-lg px-3.5 py-2 transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--ink-900)]"
+            >
               {link.label}
             </a>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Link href="/login" className={buttonClass({ tone: "neutral", variant: "ghost" })}>
             Log In
           </Link>
-          <Link href="/register" className={buttonClass({ tone: "ai" })}>
+          <Link
+            href="/register"
+            className={buttonClass({
+              tone: "ai",
+              className: "shadow-[0_8px_20px_-6px_rgba(109,74,255,0.55)] transition-transform hover:-translate-y-0.5",
+            })}
+          >
             Start Free
           </Link>
         </div>

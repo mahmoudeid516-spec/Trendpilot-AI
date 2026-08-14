@@ -8,6 +8,7 @@ import Features from "../components/landing/Features";
 import IntelligenceShowcase from "../components/landing/IntelligenceShowcase";
 import Differentiation from "../components/landing/Differentiation";
 import FAQ from "../components/landing/FAQ";
+import Pricing from "../components/landing/Pricing";
 import FinalCTA from "../components/landing/FinalCTA";
 import Footer from "../components/landing/Footer";
 
@@ -54,6 +55,7 @@ export default function Home() {
       <IntelligenceShowcase />
       <Differentiation />
       <FAQ />
+      <Pricing />
       <FinalCTA />
       <Footer />
     </main>
