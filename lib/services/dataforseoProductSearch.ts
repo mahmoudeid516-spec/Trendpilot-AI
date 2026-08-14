@@ -39,13 +39,6 @@ type DataForSeoResponse = {
   tasks?: DataForSeoTask[];
 };
 
-const POLL_INTERVAL_MS = 5000;
-const MAX_POLL_DURATION_MS = 120000;
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function parseDataForSeoJson<T>(response: Response, context: string): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
   const isJson = contentType.toLowerCase().includes("application/json");
@@ -188,10 +181,7 @@ function normalizeRequestedCount(count?: number): number {
   return Math.min(MAX_PRODUCT_COUNT, Math.max(MIN_PRODUCT_COUNT, Math.round(count as number)));
 }
 
-export async function searchDataForSeoProducts(
-  keyword: string,
-  requestedCount?: number
-): Promise<Product[]> {
+function getDataForSeoCredentials(): { login: string; password: string } {
   const login = process.env.DATAFORSEO_LOGIN;
   const password = process.env.DATAFORSEO_PASSWORD;
 
@@ -200,6 +190,24 @@ export async function searchDataForSeoProducts(
       "DataForSEO credentials are missing. Set DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD."
     );
   }
+
+  return { login, password };
+}
+
+// DataForSEO's Merchant Amazon Products endpoint is async: task_post below
+// only submits the task and returns its id. A separate call
+// (getDataForSeoTaskResult) checks once whether it's done -- there is no
+// server-side polling loop here. That loop used to live in this file and run
+// for up to 2 minutes inside a single serverless invocation, which Vercel
+// (particularly on Hobby, whose function timeout is far short of that) kills
+// well before DataForSEO can finish. The client (services/productSearch.ts)
+// now does the waiting, calling getDataForSeoTaskResult repeatedly on its
+// own schedule -- the browser has no execution-duration limit to fight.
+export async function startDataForSeoTask(
+  keyword: string,
+  requestedCount?: number
+): Promise<{ taskId: string; count: number }> {
+  const { login, password } = getDataForSeoCredentials();
 
   // merchant/amazon/products location codes are NOT confirmed to follow
   // DataForSEO's general SERP/Ads numbering (where 2840 = United States).
@@ -296,9 +304,67 @@ export async function searchDataForSeoProducts(
     throw new Error("DataForSEO task id was not returned.");
   }
 
-  const task = await pollDataForSeoTask(taskId, auth);
-  const items = task.result?.[0]?.items ?? [];
+  return { taskId, count };
+}
 
+// One check, not a loop: the caller (GET /api/product-search/status) is
+// itself called repeatedly by the client, so this only ever needs to report
+// whether the task is done yet.
+export async function getDataForSeoTaskResult(
+  taskId: string,
+  count: number
+): Promise<{ ready: false } | { ready: true; products: Product[] }> {
+  const { login, password } = getDataForSeoCredentials();
+  const auth = Buffer.from(`${login}:${password}`).toString("base64");
+
+  const getResponse = await fetch(
+    `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    }
+  );
+
+  const getData = await parseDataForSeoJson<
+    DataForSeoResponse & {
+      status_code?: number;
+      status_message?: string;
+    }
+  >(getResponse, "task retrieval");
+
+  const task = getData.tasks?.[0];
+  const resultPresent = task?.result != null;
+
+  // Diagnostic only -- never logs credentials or the Authorization header.
+  // taskStatusCode/taskStatusMessage are surfaced here purely for human
+  // inspection: DataForSEO's specific in-progress/failure status codes for
+  // this endpoint are not published in any first-party machine-readable
+  // source we could verify, so this code does not branch on them (see the
+  // resultPresent check below). Logging the raw values lets a real run
+  // against live DataForSEO reveal what those codes actually are, without
+  // guessing.
+  console.log("[dataforseo] status_check", {
+    taskId,
+    httpStatus: getResponse.status,
+    taskStatusCode: task?.status_code,
+    taskStatusMessage: task?.status_message,
+    resultPresent,
+  });
+
+  // DataForSEO documents `result` as always null at task_post time, and the
+  // same null-until-ready contract holds for task_get across their async
+  // APIs generally (confirmed against their official generated client
+  // models). Readiness is determined by result presence: a non-null result
+  // -- including a non-null empty array, a legitimate zero-match search --
+  // means the task has completed. A null/undefined result means it isn't
+  // ready yet, and the client will check again.
+  if (!task || !resultPresent) {
+    return { ready: false };
+  }
+
+  const items = task.result?.[0]?.items ?? [];
   const normalized = normalizeItemsToProducts(items);
   // Never return more than requested, and never pad with fabricated
   // products if fewer real ones survived normalization -- the caller sees
@@ -306,7 +372,6 @@ export async function searchDataForSeoProducts(
   const products = normalized.slice(0, count);
 
   console.log("[dataforseo] search_complete", {
-    keyword,
     taskId,
     requestedCount: count,
     rawItemCount: items.length,
@@ -314,80 +379,5 @@ export async function searchDataForSeoProducts(
     returnedProductCount: products.length,
   });
 
-  return products;
-}
-
-async function pollDataForSeoTask(taskId: string, auth: string): Promise<DataForSeoTask> {
-  const deadline = Date.now() + MAX_POLL_DURATION_MS;
-  const startedAt = Date.now();
-  let lastStatusMessage = "Unknown error";
-  let attempt = 0;
-
-  while (Date.now() < deadline) {
-    attempt += 1;
-
-    const getResponse = await fetch(
-      `https://api.dataforseo.com/v3/merchant/amazon/products/task_get/advanced/${taskId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Basic ${auth}`,
-        },
-      }
-    );
-
-    const getData = await parseDataForSeoJson<
-      DataForSeoResponse & {
-        status_code?: number;
-        status_message?: string;
-      }
-    >(getResponse, "task retrieval");
-
-    const task = getData.tasks?.[0];
-    lastStatusMessage = task?.status_message ?? "Unknown error";
-    const resultPresent = task?.result != null;
-
-    // Diagnostic only -- never logs credentials or the Authorization header.
-    // taskStatusCode/taskStatusMessage are surfaced here (and in the
-    // timeout error below) purely for human inspection: DataForSEO's
-    // specific in-progress/failure status codes for this endpoint are not
-    // published in any first-party machine-readable source we could
-    // verify, so this code does not branch on them (see the resultPresent
-    // check below). Logging the raw values lets a real run against live
-    // DataForSEO reveal what those codes actually are, without guessing.
-    console.log("[dataforseo] poll_attempt", {
-      taskId,
-      attempt,
-      elapsedMs: Date.now() - startedAt,
-      httpStatus: getResponse.status,
-      taskStatusCode: task?.status_code,
-      taskStatusMessage: task?.status_message,
-      resultPresent,
-    });
-
-    // DataForSEO documents `result` as always null at task_post time, and
-    // the same null-until-ready contract holds for task_get across their
-    // async APIs generally (confirmed against their official generated
-    // client models). Numeric in-progress status codes are not published
-    // in any first-party machine-readable source, so readiness is
-    // determined by result presence instead: a non-null result -- including
-    // a non-null empty array, a legitimate zero-match search -- means the
-    // task has completed. A null/undefined result means it isn't ready yet.
-    if (task && resultPresent) {
-      return task;
-    }
-
-    await sleep(POLL_INTERVAL_MS);
-  }
-
-  console.error("[dataforseo] poll_timeout", {
-    taskId,
-    attempts: attempt,
-    elapsedMs: Date.now() - startedAt,
-    lastStatusMessage,
-  });
-
-  throw new Error(
-    `DataForSEO task did not complete within ${MAX_POLL_DURATION_MS}ms (last status: ${lastStatusMessage})`
-  );
+  return { ready: true, products };
 }
