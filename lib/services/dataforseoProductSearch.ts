@@ -249,12 +249,12 @@ export async function startDataForSeoTask(
     });
   }
 
-  const languageCode = process.env.DATAFORSEO_LANGUAGE_CODE ?? "en";
+  const languageName = "English (United States)";
   const count = normalizeRequestedCount(requestedCount);
   const depth = count;
 
   // Diagnostic only -- never logs credentials or the Authorization header.
-  console.log("[dataforseo] search_start", { keyword, locationCode, languageCode, depth, requestedCount: count });
+  console.log("[dataforseo] search_start", { keyword, locationCode, languageName, depth, requestedCount: count });
 
   const auth = Buffer.from(`${login}:${password}`).toString("base64");
 
@@ -270,7 +270,7 @@ export async function startDataForSeoTask(
         {
           keyword,
           location_code: locationCode,
-          language_code: languageCode,
+          language_name: languageName,
           depth,
         },
       ]),
