@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { ExternalLink } from "lucide-react";
 import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { supabase } from "../../lib/supabase";
 import type { Product } from "../../types/Product";
@@ -74,6 +75,14 @@ export default function ProductsTable({
   });
   const stableDisplayedProducts = ensureUniqueProductIds(displayedProducts);
 
+  // Purely presentational: derives a human label from the product's own
+  // existing `platform` field (never hard-coded to Amazon) so the View
+  // action -- which always opens product_url exactly as before -- can
+  // tell the user where it's about to send them.
+  function viewOnLabel(productPlatform: string) {
+    return productPlatform ? `View on ${productPlatform}` : "View original listing";
+  }
+
   function competitionClasses(level: string) {
     switch (level) {
       case "Low":
@@ -102,12 +111,12 @@ export default function ProductsTable({
         <table className="w-full min-w-[900px] table-fixed text-sm">
           <colgroup>
             <col />
-            <col style={{ width: "88px" }} />
-            <col style={{ width: "124px" }} />
+            <col style={{ width: "76px" }} />
+            <col style={{ width: "112px" }} />
             <col style={{ width: "64px" }} />
-            <col style={{ width: "96px" }} />
             <col style={{ width: "88px" }} />
-            <col style={{ width: "252px" }} />
+            <col style={{ width: "80px" }} />
+            <col style={{ width: "292px" }} />
           </colgroup>
 
           <thead>
@@ -115,11 +124,11 @@ export default function ProductsTable({
               <th className={`px-4 py-4 font-semibold ${stickyProductCell} border-r border-[var(--border-subtle)]`}>
                 Product
               </th>
-              <th className="px-2 py-4 font-semibold">Platform</th>
-              <th className="px-2 py-4 font-semibold">AI Score</th>
-              <th className="px-2 py-4 font-semibold">Trend</th>
-              <th className="px-2 py-4 font-semibold">Competition</th>
-              <th className="px-2 py-4 font-semibold">Profit</th>
+              <th className="truncate px-2 py-4 font-semibold">Platform</th>
+              <th className="truncate px-2 py-4 font-semibold">AI Score</th>
+              <th className="truncate px-2 py-4 font-semibold">Trend</th>
+              <th className="truncate px-2 py-4 font-semibold">Competition</th>
+              <th className="truncate px-2 py-4 font-semibold">Profit</th>
               <th className="px-4 py-4 font-semibold">Actions</th>
             </tr>
           </thead>
@@ -187,18 +196,23 @@ export default function ProductsTable({
                       href={product.product_url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title={viewOnLabel(product.platform)}
+                      aria-label={viewOnLabel(product.platform)}
                       className={buttonClass({ tone: "data", variant: "outline", size: "sm", className: "px-2.5" })}
                     >
                       View
+                      <ExternalLink size={12} strokeWidth={2.5} aria-hidden="true" />
                     </a>
 
                     <a
                       href={product.supplier_url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title="Open supplier listing"
                       className={buttonClass({ tone: "positive", variant: "outline", size: "sm", className: "px-2.5" })}
                     >
                       Supplier
+                      <ExternalLink size={12} strokeWidth={2.5} aria-hidden="true" />
                     </a>
 
                     <button
