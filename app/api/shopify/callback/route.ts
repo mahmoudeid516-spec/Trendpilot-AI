@@ -14,9 +14,7 @@ export async function GET(req: NextRequest) {
   const userId = req.cookies.get(SHOPIFY_CONNECT_UID_COOKIE)?.value;
 
   if (!userId) {
-    return redirectTo(
-      "/dashboard/integrations?shopify_error=missing_session"
-    );
+    return redirectTo("/dashboard?shopify_error=missing_session");
   }
 
   try {
@@ -44,9 +42,7 @@ export async function GET(req: NextRequest) {
       scope: session.scope ?? null,
     });
 
-    const response = redirectTo(
-      "/dashboard/integrations?shopify_connected=1"
-    );
+    const response = redirectTo("/dashboard?shopify_connected=1");
 
     (headers as Headers).forEach((value: string, key: string) => {
       if (key.toLowerCase() === "set-cookie") {
@@ -60,9 +56,7 @@ export async function GET(req: NextRequest) {
   } catch (error: unknown) {
     console.error("Shopify OAuth callback failed:", error);
 
-    const response = redirectTo(
-      "/dashboard/integrations?shopify_error=connect_failed"
-    );
+    const response = redirectTo("/dashboard?shopify_error=connect_failed");
     response.cookies.delete(SHOPIFY_CONNECT_UID_COOKIE);
     return response;
   }

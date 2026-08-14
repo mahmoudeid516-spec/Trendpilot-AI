@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
 import { searchDataForSeoProducts } from "../../../lib/services/dataforseoProductSearch";
 
+// DataForSEO's Merchant Amazon Products endpoint is async (task_post, then
+// poll task_get for up to MAX_POLL_DURATION_MS in dataforseoProductSearch.ts
+// -- currently 120s) and that polling happens synchronously inside this one
+// request. Without an explicit maxDuration, Vercel kills the function at its
+// plan's default (10s on Hobby, 15s on Pro), well before DataForSEO can
+// finish. This raises the ceiling as a minimal stopgap -- it does not change
+// the underlying synchronous-polling architecture, and it only helps if the
+// deployment's Vercel plan actually permits 120s (Hobby's ceiling is lower
+// even with this set; Pro/Enterprise can go this high).
+export const runtime = "nodejs";
+export const maxDuration = 120;
+
 export async function POST(req: Request) {
   try {
     const filters = await req.json();

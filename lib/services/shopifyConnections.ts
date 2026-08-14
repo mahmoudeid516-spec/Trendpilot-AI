@@ -86,7 +86,19 @@ export async function getShopifyConnectionStatus(
     .eq("status", "connected")
     .maybeSingle<StoreConnectionRow>();
 
-  if (error || !data) {
+  // .maybeSingle() already distinguishes these: a genuine "no row" result
+  // comes back as { data: null, error: null } -- only a real query failure
+  // (missing table, permissions, etc.) sets `error`. Treating both the same
+  // used to hide backend problems behind an ordinary "not connected" state.
+  if (error) {
+    console.error("[shopify] connection_status_query_failed", {
+      userId,
+      message: error.message,
+    });
+    throw new Error("Unable to load Shopify connection status.");
+  }
+
+  if (!data) {
     return { connected: false, provider: "shopify" };
   }
 
@@ -118,7 +130,19 @@ export async function getValidShopifyAccessToken(
     .eq("status", "connected")
     .maybeSingle<StoreConnectionRow>();
 
-  if (error || !data || !data.shop_domain || !data.encrypted_access_token) {
+  // Same distinction as getShopifyConnectionStatus() above: a real query
+  // error must not be reported as "not connected" -- callers (the push and
+  // products routes) already have generic error handling that surfaces this
+  // correctly once it's thrown instead of swallowed.
+  if (error) {
+    console.error("[shopify] access_token_query_failed", {
+      userId,
+      message: error.message,
+    });
+    throw new Error("Unable to load the Shopify connection.");
+  }
+
+  if (!data || !data.shop_domain || !data.encrypted_access_token) {
     return null;
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/dashboard/Sidebar";
@@ -20,8 +20,21 @@ import Eyebrow from "../../components/ui/Eyebrow";
 import type { Product } from "../../types/Product";
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardPageContent />
+    </Suspense>
+  );
+}
+
+// useSearchParams() (used below to read the Shopify OAuth callback's query
+// params) requires a Suspense boundary in the App Router -- split out so the
+// default export can provide one without changing anything else about how
+// this page behaves.
+function DashboardPageContent() {
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const hasSupabaseClient = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -30,6 +43,30 @@ export default function DashboardPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Read once, from the initial render's URL, via a lazy initializer rather
+  // than an effect + setState -- the value is fully derivable from the URL
+  // Shopify's OAuth callback landed us on, and computing it here (instead of
+  // setting it from inside an effect, which triggers cascading-render
+  // warnings) also means it survives the URL-cleanup effect below without a
+  // second state update.
+  const [shopifyNotice] = useState<
+    { type: "success" | "error"; text: string } | null
+  >(() => {
+    const connected = searchParams.get("shopify_connected");
+    const error = searchParams.get("shopify_error");
+
+    if (!connected && !error) return null;
+
+    return connected
+      ? { type: "success", text: "Shopify store connected successfully." }
+      : {
+          type: "error",
+          text:
+            error === "missing_session"
+              ? "Shopify connection expired before it could complete. Please try connecting again."
+              : "Could not connect your Shopify store. Please try again.",
+        };
+  });
 
   useEffect(() => {
     async function checkUser() {
@@ -50,6 +87,15 @@ export default function DashboardPage() {
     checkUser();
   }, [hasSupabaseClient, router]);
 
+  // Strip the Shopify callback's query params from the URL so they don't
+  // persist across reloads -- shopifyNotice above already captured them.
+  useEffect(() => {
+    if (!searchParams.get("shopify_connected") && !searchParams.get("shopify_error")) return;
+
+    router.replace("/dashboard", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   return (
     <div className="flex min-h-screen flex-col bg-[var(--surface-app)] lg:flex-row">
 
@@ -58,6 +104,18 @@ export default function DashboardPage() {
       <main className="min-w-0 flex-1 p-4 sm:p-8 lg:p-10">
 
         <div className="mx-auto max-w-7xl space-y-10">
+
+          {shopifyNotice && (
+            <div
+              className={`rounded-xl border p-4 text-sm ${
+                shopifyNotice.type === "success"
+                  ? "border-[var(--accent-positive)]/20 bg-[var(--accent-positive-soft)] text-[var(--ink-900)]"
+                  : "border-[var(--accent-risk)]/20 bg-[var(--accent-risk-soft)] text-[var(--ink-900)]"
+              }`}
+            >
+              {shopifyNotice.text}
+            </div>
+          )}
 
           <DashboardHero totalProducts={0} winningProducts={0} />
 
