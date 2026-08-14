@@ -10,6 +10,7 @@ import Card from "../ui/Card";
 import ProgressBar from "../ui/ProgressBar";
 import { buttonClass } from "../ui/button";
 import { toneForScore } from "../ui/tone";
+import ShopifyImportAction from "./ShopifyImportAction";
 
 type Props = {
   products?: Product[];
@@ -75,14 +76,6 @@ export default function ProductsTable({
   });
   const stableDisplayedProducts = ensureUniqueProductIds(displayedProducts);
 
-  // Purely presentational: derives a human label from the product's own
-  // existing `platform` field (never hard-coded to Amazon) so the View
-  // action -- which always opens product_url exactly as before -- can
-  // tell the user where it's about to send them.
-  function viewOnLabel(productPlatform: string) {
-    return productPlatform ? `View on ${productPlatform}` : "View original listing";
-  }
-
   function competitionClasses(level: string) {
     switch (level) {
       case "Low":
@@ -108,15 +101,15 @@ export default function ProductsTable({
   return (
     <Card padding="none">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] table-fixed text-sm">
+        <table className="w-full min-w-[920px] table-fixed text-sm">
           <colgroup>
             <col />
-            <col style={{ width: "76px" }} />
-            <col style={{ width: "112px" }} />
-            <col style={{ width: "64px" }} />
-            <col style={{ width: "88px" }} />
+            <col style={{ width: "68px" }} />
+            <col style={{ width: "104px" }} />
+            <col style={{ width: "56px" }} />
             <col style={{ width: "80px" }} />
-            <col style={{ width: "292px" }} />
+            <col style={{ width: "72px" }} />
+            <col style={{ width: "340px" }} />
           </colgroup>
 
           <thead>
@@ -192,31 +185,38 @@ export default function ProductsTable({
 
                 <td className="px-4 py-3.5">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <a
-                      href={product.product_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={viewOnLabel(product.platform)}
-                      aria-label={viewOnLabel(product.platform)}
-                      className={buttonClass({ tone: "data", variant: "outline", size: "sm", className: "px-2.5" })}
-                    >
-                      View
-                      <ExternalLink size={12} strokeWidth={2.5} aria-hidden="true" />
-                    </a>
+                    <ShopifyImportAction product={product} />
 
-                    <a
-                      href={product.supplier_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Open supplier listing"
-                      className={buttonClass({ tone: "positive", variant: "outline", size: "sm", className: "px-2.5" })}
-                    >
-                      Supplier
-                      <ExternalLink size={12} strokeWidth={2.5} aria-hidden="true" />
-                    </a>
+                    {product.supplier_url ? (
+                      <a
+                        href={product.supplier_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open supplier listing"
+                        aria-label="Open supplier listing"
+                        className={buttonClass({ tone: "data", variant: "outline", size: "sm", className: "px-2.5" })}
+                      >
+                        Supplier
+                        <ExternalLink size={12} strokeWidth={2.5} aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <span
+                        title="No supplier listing available for this product"
+                        aria-label="No supplier listing available for this product"
+                        className={buttonClass({
+                          tone: "neutral",
+                          variant: "outline",
+                          size: "sm",
+                          className: "cursor-not-allowed px-2.5 opacity-50",
+                        })}
+                      >
+                        Supplier
+                      </span>
+                    )}
 
                     <button
                       onClick={() => onSelectProduct(product)}
+                      aria-label="Open product report"
                       className={buttonClass({ tone: "ai", size: "sm", className: "px-2.5" })}
                     >
                       Report

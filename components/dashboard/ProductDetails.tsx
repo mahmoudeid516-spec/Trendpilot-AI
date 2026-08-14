@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { ShoppingBag } from "lucide-react";
 import { analyzeProduct } from "../../services/decisionEngine";
 import type { Decision } from "../../lib/scoring/opportunityScore";
 import { generateMarketing } from "../../lib/services/generateMarketing";
@@ -558,9 +559,11 @@ export default function ProductDetails({
             <button
               onClick={handleImportToShopify}
               disabled={shopifyLoading}
+              aria-label="Import this product to my Shopify store"
               className={buttonClass({ tone: "positive", className: "flex-1 py-3" })}
             >
-              {shopifyLoading ? "Importing..." : "🛒 Import to Shopify"}
+              <ShoppingBag size={16} strokeWidth={2.25} aria-hidden="true" />
+              {shopifyLoading ? "Importing..." : "Import to Shopify"}
             </button>
           </div>
 
