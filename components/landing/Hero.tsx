@@ -1,191 +1,56 @@
 "use client";
-import DashboardPreview from "./DashboardPreview";
+
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
+import DashboardPreview from "./DashboardPreview";
+import ScrollReveal from "./ScrollReveal";
+import { buttonClass } from "../ui/button";
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[var(--accent-ai-soft)] via-[var(--surface-app)] to-[var(--surface-app)]" />
 
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50" />
+      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-12">
+          <ScrollReveal>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--accent-ai)]/20 bg-[var(--accent-ai-soft)] px-4 py-1.5 text-xs font-semibold text-[var(--accent-ai)]">
+              <Sparkles size={14} strokeWidth={2.5} />
+              AI-powered product research
+            </div>
 
-      <div className="relative max-w-7xl mx-auto px-8 py-24">
-
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
-
-          {/* LEFT */}
-
-          <div>
-
-            {/* Badge */}
-
-            <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-5 py-2 text-sm font-semibold">
-              🏆 Trusted by Shopify & Amazon Sellers
-            </span>
-
-            {/* Heading */}
-
-            <h1 className="mt-8 text-6xl font-extrabold leading-tight tracking-tight">
-
-              Find Winning Products
-
-              <br />
-
-              <span className="text-purple-600">
-
-                Before They Go Viral
-
-              </span>
-
+            <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-[var(--ink-900)] sm:text-5xl lg:text-[3.25rem]">
+              Find products worth selling before everyone else.
             </h1>
 
-            {/* Description */}
-
-            <p className="mt-8 text-xl text-gray-600 leading-9">
-
-              Discover winning products with AI. Analyze competitors,
-              estimate profit, generate marketing campaigns and launch
-              your next bestseller in minutes.
-
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink-500)]">
+              TrendPilot AI analyzes demand, competition, profitability, and market signals to help you discover
+              products with real selling potential.
             </p>
 
-            {/* Buttons */}
-
-            <div className="flex flex-wrap gap-5 mt-10">
-
-              <Link
-                href="/register"
-                className="rounded-2xl bg-purple-600 hover:bg-purple-700 transition px-8 py-5 text-white font-bold text-lg shadow-xl"
-              >
-                🚀 Start Free Trial
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Link href="/register" className={buttonClass({ tone: "ai", size: "md", className: "px-7 py-3.5 text-base" })}>
+                Start Finding Products
               </Link>
-
-              <button className="rounded-2xl border border-gray-300 bg-white px-8 py-5 font-bold hover:bg-gray-100 transition">
-                ▶ Watch Demo
-              </button>
-
+              <a
+                href="#how-it-works"
+                className={buttonClass({ tone: "neutral", variant: "outline", size: "md", className: "px-7 py-3.5 text-base" })}
+              >
+                See How It Works
+              </a>
             </div>
 
-            {/* Rating */}
+            <p className="mt-8 text-sm text-[var(--ink-400)]">Built for modern eCommerce sellers.</p>
+          </ScrollReveal>
 
-            <div className="mt-10 flex items-center gap-3 text-gray-500">
-
-              <span className="text-yellow-500 text-xl">
-                ★★★★★
-              </span>
-
-              <span>
-                Rated 4.9/5 by ecommerce sellers
-              </span>
-
+          <ScrollReveal delayMs={120}>
+            <div className="relative">
+              <div className="absolute -inset-6 -z-10 rounded-[36px] bg-[var(--accent-ai)]/10 blur-3xl" aria-hidden="true" />
+              <DashboardPreview />
             </div>
-
-            {/* Stats */}
-
-            <div className="flex flex-wrap gap-12 mt-14">
-
-              <div>
-
-                <h3 className="text-4xl font-bold">
-                  50K+
-                </h3>
-
-                <p className="text-gray-500">
-                  Products Analyzed
-                </p>
-
-              </div>
-
-              <div>
-
-                <h3 className="text-4xl font-bold">
-                  96%
-                </h3>
-
-                <p className="text-gray-500">
-                  AI Accuracy
-                </p>
-
-              </div>
-
-              <div>
-
-                <h3 className="text-4xl font-bold">
-                  24/7
-                </h3>
-
-                <p className="text-gray-500">
-                  AI Monitoring
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* Supported Platforms */}
-
-            <div className="mt-14">
-
-              <p className="text-gray-400 text-sm mb-6 uppercase tracking-widest">
-
-                SUPPORTED PLATFORMS
-
-              </p>
-
-              <div className="flex flex-wrap gap-10 items-center opacity-70">
-
-                <img
-                  src="/logos/shopify.svg"
-                  alt="Shopify"
-                  className="h-8"
-                />
-
-                <img
-                  src="/logos/amazon.svg"
-                  alt="Amazon"
-                  className="h-8"
-                />
-
-                <img
-                  src="/logos/tiktok.svg"
-                  alt="TikTok"
-                  className="h-8"
-                />
-
-                <img
-                  src="/logos/aliexpress.svg"
-                  alt="AliExpress"
-                  className="h-8"
-                />
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* RIGHT */}
-
-          <div className="relative">
-
-            {/* Glow */}
-
-            <div className="absolute -inset-8 rounded-[50px] bg-purple-500/10 blur-3xl" />
-
-            {/* Dashboard */}
-
-            <div className="relative rounded-[40px] border border-gray-200 bg-white p-6 shadow-[0_40px_100px_rgba(124,58,237,.20)] lg:scale-110 transition duration-500 hover:scale-[1.13]">
-
-            <DashboardPreview />
-
-            </div>
-
-          </div>
-
+          </ScrollReveal>
         </div>
-
       </div>
-
     </section>
   );
 }
