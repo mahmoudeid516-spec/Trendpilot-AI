@@ -71,3 +71,37 @@ body {
   outline: 2px solid var(--accent-data);
   outline-offset: 2px;
 }
+
+/* --- Landing page scroll-reveal + nav elevation --------------------
+   Shared by components/landing/*. Kept purely additive to the tokens
+   above -- no existing dashboard/product-research class is touched. */
+.tp-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 500ms ease, transform 500ms ease;
+}
+
+.tp-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tp-nav-elevated {
+  box-shadow: var(--shadow-card-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
