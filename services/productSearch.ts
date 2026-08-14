@@ -1,3 +1,5 @@
+import type { Product } from "../types/Product";
+
 type ProductSearchFilters = {
   keyword?: string;
   platform?: string;
@@ -6,6 +8,21 @@ type ProductSearchFilters = {
   /** Requested product count (10/20/30/50/100). Optional -- server defaults to 20. */
   count?: number;
 };
+
+export type ProductSourceError = {
+  platform: string;
+  message: string;
+  isConfigError: boolean;
+};
+
+export type ProductSearchResult = {
+  products: Product[];
+  sourceErrors: ProductSourceError[];
+};
+
+type StartedTask = { platform: string; taskId: string; count: number };
+type FailedTask = { platform: string; error: string; isConfigError: boolean };
+type TaskDescriptor = StartedTask | FailedTask;
 
 // DataForSEO's Merchant Amazon Products task is async, so the search is a
 // submit-then-poll dance across two routes (/api/product-search/start,
@@ -40,12 +57,49 @@ async function parseJsonOrThrow(response: Response, fallbackMessage: string) {
   return await response.json();
 }
 
-export async function productSearch(filters: ProductSearchFilters) {
+// /api/product-search/start can legitimately use a non-2xx status (503/500)
+// while still returning a meaningful, structured { tasks: [...] } body --
+// that status only means "every requested source failed to start", not
+// "the response itself is garbage". parseJsonOrThrow's generic handling
+// would discard the real per-source error in that body and replace it with
+// a vague "HTTP 503" message, so this endpoint always parses the JSON body
+// itself first and only falls back to the generic error when the body
+// genuinely isn't the expected shape (e.g. the route's outer catch, which
+// returns a plain { error } with no tasks array).
+async function parseStartResponse(
+  response: Response,
+  fallbackMessage: string
+): Promise<{ tasks: TaskDescriptor[] }> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const body = contentType.includes("application/json") ? await response.json().catch(() => null) : null;
+
+  if (body && Array.isArray(body.tasks)) {
+    return body;
+  }
+
+  throw new Error((typeof body?.error === "string" && body.error) || fallbackMessage);
+}
+
+function isStarted(task: TaskDescriptor): task is StartedTask {
+  return "taskId" in task;
+}
+
+/**
+ * Searches one or more product sources (platform: "Amazon" | "AliExpress" |
+ * "All") and returns real products plus, per source, an honest error if
+ * that source couldn't run -- never a silent fallback and never a
+ * fabricated result for a source that failed. Amazon-only behavior
+ * (platform omitted or "Amazon") is unchanged from before multi-source
+ * support was added.
+ */
+export async function productSearch(filters: ProductSearchFilters): Promise<ProductSearchResult> {
   const search =
     filters?.keyword ||
     filters?.query ||
     filters?.search ||
     "wireless earbuds";
+
+  const platform = filters?.platform || "Amazon";
 
   const startResponse = await fetch("/api/product-search/start", {
     method: "POST",
@@ -55,29 +109,52 @@ export async function productSearch(filters: ProductSearchFilters) {
     body: JSON.stringify({
       keyword: search,
       count: filters?.count,
+      platform,
     }),
   });
 
-  const { taskId, count } = await parseJsonOrThrow(
+  const startBody = await parseStartResponse(
     startResponse,
     `Product search failed (HTTP ${startResponse.status}).`
   );
 
-  const deadline = Date.now() + MAX_POLL_DURATION_MS;
+  const sourceErrors: ProductSourceError[] = [];
+  let pending: StartedTask[] = [];
 
-  while (true) {
-    const statusResponse = await fetch(
-      `/api/product-search/status?taskId=${encodeURIComponent(taskId)}&count=${encodeURIComponent(count)}`
-    );
-
-    const statusBody = await parseJsonOrThrow(
-      statusResponse,
-      `Product search failed (HTTP ${statusResponse.status}).`
-    );
-
-    if (statusBody.ready) {
-      return statusBody.products;
+  for (const task of startBody.tasks) {
+    if (isStarted(task)) {
+      pending.push(task);
+    } else {
+      sourceErrors.push({ platform: task.platform, message: task.error, isConfigError: task.isConfigError });
     }
+  }
+
+  if (pending.length === 0) {
+    return { products: [], sourceErrors };
+  }
+
+  const deadline = Date.now() + MAX_POLL_DURATION_MS;
+  const productsBySource = new Map<string, Product[]>();
+
+  while (pending.length > 0) {
+    const tasksParam = encodeURIComponent(JSON.stringify(pending));
+
+    const statusResponse = await fetch(`/api/product-search/status?tasks=${tasksParam}`);
+
+    const statusBody: {
+      ready: boolean;
+      sources: Array<{ platform: string; ready: boolean; products?: Product[] }>;
+    } = await parseJsonOrThrow(statusResponse, `Product search failed (HTTP ${statusResponse.status}).`);
+
+    for (const source of statusBody.sources) {
+      if (source.ready) {
+        productsBySource.set(source.platform, source.products ?? []);
+      }
+    }
+
+    pending = pending.filter((task) => !productsBySource.has(task.platform));
+
+    if (pending.length === 0) break;
 
     if (Date.now() >= deadline) {
       throw new Error("Product search timed out waiting for results.");
@@ -85,4 +162,8 @@ export async function productSearch(filters: ProductSearchFilters) {
 
     await sleep(POLL_INTERVAL_MS);
   }
+
+  const products = Array.from(productsBySource.values()).flat();
+
+  return { products, sourceErrors };
 }

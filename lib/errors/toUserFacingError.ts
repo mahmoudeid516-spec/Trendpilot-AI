@@ -27,6 +27,14 @@ export function toUserFacingError(rawMessage: string): UserFacingError {
     };
   }
 
+  if (lower.includes("aliexpress")) {
+    return {
+      title: "AliExpress source is not configured",
+      message: "AliExpress product search isn't set up yet.",
+      hint: "Configuration issue -- ALIEXPRESS_APP_KEY / ALIEXPRESS_APP_SECRET are not set.",
+    };
+  }
+
   if (lower.includes("dataforseo")) {
     return {
       title: "Product search is temporarily unavailable",

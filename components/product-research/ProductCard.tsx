@@ -8,6 +8,7 @@ import ScoreBadge from "./ScoreBadge";
 import DecisionBadge from "./DecisionBadge";
 import { buttonClass } from "../ui/button";
 import { toneForScore, toneText } from "../ui/tone";
+import ShopifyImportAction from "../dashboard/ShopifyImportAction";
 
 const COMPETITION_STYLES: Record<string, string> = {
   Low: "bg-[var(--accent-positive-soft)] text-[var(--accent-positive)]",
@@ -123,29 +124,38 @@ export default function ProductCard({ product, onSelectProduct }: Props) {
           </div>
         )}
 
-        {/* Same View / Supplier / Report action set kept intact from the
-            previous saved-products convention; Report is now the primary
-            (solid) action since it's the deepest, most valuable one -- the
-            other two link out and lose the user their place in the report. */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <a
-            href={product.product_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonClass({ tone: "data", variant: "outline", size: "sm" })}
-          >
-            View
-          </a>
-          <a
-            href={product.supplier_url || product.product_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonClass({ tone: "positive", variant: "outline", size: "sm" })}
-          >
-            Supplier
-          </a>
+        {/* Same To My Shopify / Supplier / Report action set as the saved
+            product table (ShopifyImportAction is the exact same component,
+            not a second implementation); Report is the primary (solid)
+            action since it's the deepest, most valuable one -- the other
+            two act on the product directly. */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <ShopifyImportAction product={product} />
+
+          {product.supplier_url ? (
+            <a
+              href={product.supplier_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open supplier listing"
+              aria-label="Open supplier listing"
+              className={buttonClass({ tone: "data", variant: "outline", size: "sm" })}
+            >
+              Supplier
+            </a>
+          ) : (
+            <span
+              title="No supplier listing available for this product"
+              aria-label="No supplier listing available for this product"
+              className={buttonClass({ tone: "neutral", variant: "outline", size: "sm", className: "cursor-not-allowed opacity-50" })}
+            >
+              Supplier
+            </span>
+          )}
+
           <button
             onClick={() => onSelectProduct?.(product)}
+            aria-label="Open product report"
             className={buttonClass({ tone: "ai", size: "sm" })}
           >
             Report

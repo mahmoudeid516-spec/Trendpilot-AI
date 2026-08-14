@@ -43,6 +43,7 @@ function DashboardPageContent() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [libraryPlatform, setLibraryPlatform] = useState("All");
   // Read once, from the initial render's URL, via a lazy initializer rather
   // than an effect + setState -- the value is fully derivable from the URL
   // Shopify's OAuth callback landed us on, and computing it here (instead of
@@ -161,11 +162,26 @@ function DashboardPageContent() {
           </section>
 
           <section>
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-[var(--ink-900)]">Saved Product Library</h2>
-              <p className="mt-1 text-sm text-[var(--ink-500)]">
-                Products you&apos;ve previously searched and saved &mdash; separate from live search results above.
-              </p>
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-[var(--ink-900)]">Saved Product Library</h2>
+                <p className="mt-1 text-sm text-[var(--ink-500)]">
+                  Products you&apos;ve previously searched and saved &mdash; separate from live search results above.
+                </p>
+              </div>
+
+              <label className="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-white px-3 py-2 text-sm text-[var(--ink-700)]">
+                Source
+                <select
+                  value={libraryPlatform}
+                  onChange={(e) => setLibraryPlatform(e.target.value)}
+                  className="font-semibold text-[var(--ink-900)] outline-none"
+                >
+                  <option value="All">All Sources</option>
+                  <option value="Amazon">Amazon</option>
+                  <option value="AliExpress">AliExpress</option>
+                </select>
+              </label>
             </div>
 
             {/* TEMP DISABLED
@@ -206,7 +222,7 @@ function DashboardPageContent() {
               products={[]}
               refreshKey={refreshKey}
               search=""
-              platform="All"
+              platform={libraryPlatform}
               onSelectProduct={(product) => {
                 setSelectedProduct(product);
                 setShowProductModal(true);

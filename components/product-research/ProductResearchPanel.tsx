@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Product } from "../../types/Product";
 import type { ProductAnalysisResponse, ProductWithAnalysis } from "../../types/analysis";
 import { DEFAULT_PRODUCT_COUNT } from "../../lib/services/productCount";
-import { productSearch } from "../../services/productSearch";
+import { productSearch, type ProductSourceError } from "../../services/productSearch";
 import { importProducts } from "../../lib/importers/importProducts";
 import { ensureUniqueProductIds } from "../../lib/services/productIdentity";
 import { explainProduct } from "../../lib/scoring/explainProduct";
@@ -70,11 +70,13 @@ function buildLocalFallback(keyword: string, products: Product[]): ProductAnalys
 export default function ProductResearchPanel({ onProductsSaved, onSelectProduct }: Props) {
   const [keyword, setKeyword] = useState("");
   const [count, setCount] = useState(DEFAULT_PRODUCT_COUNT);
+  const [platform, setPlatform] = useState("Amazon");
   const [phase, setPhase] = useState<SearchPhase>("idle");
   const [uiError, setUiError] = useState<UserFacingError | null>(null);
   const [result, setResult] = useState<ProductAnalysisResponse | null>(null);
   const [requestedCount, setRequestedCount] = useState(DEFAULT_PRODUCT_COUNT);
   const [searchedAt, setSearchedAt] = useState<Date | null>(null);
+  const [sourceErrors, setSourceErrors] = useState<ProductSourceError[]>([]);
 
   async function handleSearch() {
     if (phase === "searching" || phase === "analyzing") return;
@@ -88,13 +90,16 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
 
     setUiError(null);
     setResult(null);
+    setSourceErrors([]);
     setPhase("searching");
     setRequestedCount(count);
 
     let products: Product[];
+    let searchSourceErrors: ProductSourceError[] = [];
     try {
-      const raw = await productSearch({ keyword: trimmed, count });
-      products = ensureUniqueProductIds(raw as Product[]);
+      const searchResult = await productSearch({ keyword: trimmed, count, platform });
+      products = ensureUniqueProductIds(searchResult.products as Product[]);
+      searchSourceErrors = searchResult.sourceErrors;
     } catch (error) {
       // Full technical detail (never containing credentials -- every
       // DataForSEO/OpenAI error message in this codebase is built without
@@ -107,10 +112,24 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
     }
 
     if (products.length === 0) {
+      // A source-level failure (e.g. AliExpress not configured) is a
+      // different, more specific situation than a real zero-match search --
+      // the user should know a source couldn't run, not just see "no
+      // products found" as if every configured source legitimately
+      // returned nothing.
+      if (searchSourceErrors.length > 0) {
+        setUiError(toUserFacingError(searchSourceErrors[0].message));
+        setPhase("error");
+        setSearchedAt(new Date());
+        return;
+      }
+
       setPhase("empty");
       setSearchedAt(new Date());
       return;
     }
+
+    setSourceErrors(searchSourceErrors);
 
     // Persist to Supabase, same as the previous search flow -- keeps the
     // saved-products library and dashboard stats in sync.
@@ -151,6 +170,8 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
         setKeyword={setKeyword}
         count={count}
         setCount={setCount}
+        platform={platform}
+        setPlatform={setPlatform}
         onSearch={handleSearch}
         phase={phase}
       />
@@ -201,6 +222,22 @@ export default function ProductResearchPanel({ onProductsSaved, onSelectProduct 
             </div>
             <ExportControls result={result} requestedCount={requestedCount} />
           </div>
+
+          {sourceErrors.length > 0 && (
+            <div className="flex items-start gap-3 rounded-2xl border border-[var(--accent-warning)]/20 bg-[var(--accent-warning-soft)] p-4 text-sm text-[var(--accent-warning)]">
+              <span className="mt-0.5 text-base">⚠️</span>
+              <div>
+                <p className="font-semibold">
+                  Showing results from {sourceErrors.length === 1 ? "the other configured source" : "configured sources"} only.
+                </p>
+                {sourceErrors.map((sourceError) => (
+                  <p key={sourceError.platform} className="mt-1">
+                    {sourceError.platform}: {toUserFacingError(sourceError.message).message}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
 
           <ResultsSummaryStrip products={result.products} />
 

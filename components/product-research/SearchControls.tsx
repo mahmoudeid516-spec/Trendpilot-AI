@@ -12,9 +12,17 @@ type Props = {
   setKeyword: (value: string) => void;
   count: number;
   setCount: (value: number) => void;
+  platform: string;
+  setPlatform: (value: string) => void;
   onSearch: () => void;
   phase: SearchPhase;
 };
+
+const PLATFORM_OPTIONS = [
+  { value: "Amazon", label: "Amazon" },
+  { value: "AliExpress", label: "AliExpress" },
+  { value: "All", label: "All Sources" },
+];
 
 // These two labels map 1:1 to the two real network requests this panel
 // makes (search, then analysis) -- no fabricated intermediate stages.
@@ -25,7 +33,16 @@ const PHASE_LABEL: Partial<Record<SearchPhase, string>> = {
 
 const PIPELINE_STEPS = ["Search", "Real Products", "Opportunity Score", "Market Analysis"];
 
-export default function SearchControls({ keyword, setKeyword, count, setCount, onSearch, phase }: Props) {
+export default function SearchControls({
+  keyword,
+  setKeyword,
+  count,
+  setCount,
+  platform,
+  setPlatform,
+  onSearch,
+  phase,
+}: Props) {
   const isBusy = phase === "searching" || phase === "analyzing";
 
   return (
@@ -58,6 +75,22 @@ export default function SearchControls({ keyword, setKeyword, count, setCount, o
             className="w-full rounded-xl border border-[var(--border-subtle)] py-3 pl-10 pr-4 text-[var(--ink-900)] outline-none tp-focus-ring placeholder:text-[var(--ink-400)]"
           />
         </div>
+
+        <label className="flex items-center gap-2 rounded-xl border border-[var(--border-subtle)] px-4 py-3 text-sm text-[var(--ink-500)]">
+          Source
+          <select
+            value={platform}
+            onChange={(e) => setPlatform(e.target.value)}
+            disabled={isBusy}
+            className="font-semibold text-[var(--ink-900)] outline-none disabled:opacity-60"
+          >
+            {PLATFORM_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <label className="flex items-center gap-2 rounded-xl border border-[var(--border-subtle)] px-4 py-3 text-sm text-[var(--ink-500)]">
           Analyze
