@@ -35,7 +35,7 @@ export default function Sidebar() {
 
   const menu = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "AI Analyzer", href: "/dashboard", icon: Sparkles },
+    { title: "AI Analyzer", href: "/ai-analyzer", icon: Sparkles },
     { title: "Products", href: "/products", icon: ShoppingBag },
     { title: "Analytics", href: "/analytics", icon: BarChart3 },
     { title: "Settings", href: "/settings", icon: Settings },

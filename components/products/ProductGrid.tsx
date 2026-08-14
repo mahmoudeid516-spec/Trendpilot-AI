@@ -1,7 +1,8 @@
+import type { Product } from "../../types/Product";
 import ProductCard from "./ProductCard";
 
 type Props = {
-  products: any[];
+  products: Product[];
 };
 
 export default function ProductGrid({

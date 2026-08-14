@@ -1,47 +1,24 @@
-import { hasSupabaseConfig, supabase } from "../../lib/supabase";
+import Sidebar from "../../components/dashboard/Sidebar";
 import ProductsClient from "../../components/products/ProductsClient";
-import DashboardHero from "../../components/dashboard/DashboardHero";
 
-export default async function ProductsPage() {
-  let products: Array<{ opportunity_score?: number }> = [];
-
-  if (hasSupabaseConfig()) {
-    try {
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", {
-        ascending: false,
-      });
-
-    products = (data ?? []) as Array<{ opportunity_score?: number }>;
-    } catch (error) {
-      console.warn("Products page fallback:", error);
-    }
-  }
-
+export default function ProductsPage() {
   return (
-    <div className="max-w-7xl mx-auto p-8">
-      <h1 className="text-4xl font-bold mb-2">
-        📦 Products
-      </h1>
+    <div className="flex min-h-screen flex-col bg-[var(--surface-app)] lg:flex-row">
+      <Sidebar />
 
-      <p className="text-gray-500 mb-8">
-        Manage your winning products.
-      </p>
+      <main className="min-w-0 flex-1 p-4 sm:p-8 lg:p-10">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-4xl font-bold mb-2">
+            📦 Products
+          </h1>
 
-      <DashboardHero
-        totalProducts={products?.length ?? 0}
-        winningProducts={
-          products?.filter(
-            (p) => (p.opportunity_score ?? 0) >= 90
-          ).length ?? 0
-        }
-      />
+          <p className="text-gray-500 mb-8">
+            Manage your winning products.
+          </p>
 
-      <ProductsClient
-        products={products ?? []}
-      />
+          <ProductsClient />
+        </div>
+      </main>
     </div>
   );
 }

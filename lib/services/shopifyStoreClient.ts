@@ -51,6 +51,21 @@ export async function beginShopifyConnect(shop: string): Promise<string> {
   return data.url as string;
 }
 
+export async function disconnectShopify(): Promise<void> {
+  const authorization = await getAuthHeader();
+
+  const response = await fetch("/api/shopify/disconnect", {
+    method: "POST",
+    headers: { Authorization: authorization },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Unable to disconnect the Shopify store.");
+  }
+}
+
 export type ShopifyPushResult = {
   shopify_product_id: string;
   shopify_admin_url: string;
